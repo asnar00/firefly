@@ -15,11 +15,11 @@ h3 {
 }
 
 .shadow {
-    position: relative;
-    background-color: rgba(0, 0, 0, 0.05);
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.075);
     height: 1px;
     border-radius: 10px;
-    box-shadow: 0px 0px 7px 0px rgba(0,0,0,0.5);
+    box-shadow: 0px 0px 7px 0px rgba(0,0,0,0.75);
 }
 
 .transparent-button {
@@ -46,7 +46,7 @@ h3 {
 
 .code {
     font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;
-    font-size: 10pt;
+    font-size: 9pt;
     margin-left: 1em;
     background-color: #9ebeb9;
     padding: 0.5em;
@@ -57,13 +57,14 @@ h3 {
     overflow-y: auto; /* Enable vertical scrolling if the content overflows */
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
     min-height: 2.2em;
+    max-width: 480px;
+    max-height: 256px;
     min-width: 0; /* The div will shrink to fit its content, but not smaller than its content */
     white-space: pre; /* This prevents the content from wrapping to the next line */
     width: fit-content; /* This makes the div size to its content up to its maximum width */
     height: fit-content; /* This makes the div size to its content up to its maximum height */
     position: absolute; /* or relative, depending on your layout needs */
     top: 50%;  /* This positions the top edge of the div at the middle of its parent */
-    transform: translateY(-50%);  /* This shifts the div upwards by half of its height */
 }
 
 [contenteditable]:focus {
@@ -81,4 +82,16 @@ background-color: #AED2CB; /* light gray */
     border-radius: 3px;
     margin: 0 0px;
     vertical-align: text-top;
-  }
+}
+
+.tag-highlight {
+    display: inline-block;
+    color: #000000;
+    background-color: #b2ebe1;
+    text-decoration: none;
+    cursor: pointer;
+    padding: 0px 0px;
+    border-radius: 3px;
+    margin: 0 0px;
+    vertical-align: text-top;
+}

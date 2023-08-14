@@ -46,19 +46,22 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
     function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
 };
 window.onload = function () { main(); };
+var s_useLocalFiles = false; // change this to true to enable local file access
 var dirHandle = null;
 var s_port = 8000;
 var s_endPoint = "miso2";
 var s_allCards;
 var s_container;
+var s_viewMap = new WeakMap();
+var s_columns = [];
+var s_padding = 24; // pixels
 function main() {
     return __awaiter(this, void 0, void 0, function () {
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     console.log("ᕦ(ツ)ᕤ miso2.");
-                    s_container = document.getElementById('container');
-                    return [4 /*yield*/, setupDirectoryButton()];
+                    return [4 /*yield*/, setupEvents()];
                 case 1:
                     _a.sent();
                     return [2 /*return*/];
@@ -66,33 +69,57 @@ function main() {
         });
     });
 }
-// On page load, see if we have a handle stored:
-function checkStoredHandle() {
+function setupEvents() {
+    return __awaiter(this, void 0, void 0, function () {
+        var card;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    s_container = document.getElementById('container');
+                    return [4 /*yield*/, loadCards()];
+                case 1:
+                    _a.sent();
+                    card = findCard("function_main");
+                    if (card) {
+                        openCard(card, null);
+                    }
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+function loadCards() {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    if (!s_useLocalFiles) return [3 /*break*/, 2];
+                    return [4 /*yield*/, setupDirectoryButton()];
+                case 1:
+                    _a.sent();
+                    return [3 /*break*/, 4];
+                case 2: return [4 /*yield*/, autoImportTest()];
+                case 3:
+                    _a.sent();
+                    _a.label = 4;
+                case 4: return [2 /*return*/];
+            }
+        });
+    });
+}
+// to avoid the annoyance of having to give permissions every time, just get system to do it
+function autoImportTest() {
     return __awaiter(this, void 0, void 0, function () {
         var openDirectoryButton;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    console.log("checkStoredHandle");
-                    return [4 /*yield*/, getStoredHandle()];
-                case 1:
-                    dirHandle = _a.sent();
-                    if (!dirHandle) return [3 /*break*/, 4];
-                    console.log('We already have a directory handle:', dirHandle);
-                    return [4 /*yield*/, getPermission()];
-                case 2:
-                    _a.sent();
-                    return [4 /*yield*/, testReadLocalFile()];
-                case 3:
-                    _a.sent();
                     openDirectoryButton = document.getElementById('openDirectory');
                     openDirectoryButton.remove();
-                    return [3 /*break*/, 5];
-                case 4:
-                    console.log('No directory handle found. Ask the user.');
-                    setupDirectoryButton();
-                    _a.label = 5;
-                case 5: return [2 /*return*/];
+                    return [4 /*yield*/, Promise.all([animateLogoToLeft(), importCode("miso2", ".ts")])];
+                case 1:
+                    _a.sent();
+                    return [2 /*return*/];
             }
         });
     });
@@ -104,7 +131,6 @@ function setupDirectoryButton() {
         return __generator(this, function (_a) {
             openDirectoryButton = document.getElementById('openDirectory');
             openDirectoryButton.addEventListener('click', function () { return __awaiter(_this, void 0, void 0, function () {
-                var card;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0:
@@ -116,14 +142,9 @@ function setupDirectoryButton() {
                             return [4 /*yield*/, window.showDirectoryPicker()];
                         case 1:
                             dirHandle = _a.sent();
-                            openDirectoryButton.remove();
-                            return [4 /*yield*/, Promise.all([animateLogoToLeft(), testReadLocalFile()])];
+                            return [4 /*yield*/, Promise.all([animateLogoToLeft(), importLocalFile()])];
                         case 2:
                             _a.sent();
-                            card = findCard("function_main");
-                            if (card) {
-                                openCard(card, null);
-                            }
                             return [2 /*return*/];
                     }
                 });
@@ -132,41 +153,15 @@ function setupDirectoryButton() {
         });
     });
 }
-// get permission to use the dirHandle, or whatever
-function getPermission() {
-    return __awaiter(this, void 0, void 0, function () {
-        var permissionStatus, requestStatus;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, dirHandle.queryPermission({ mode: 'read' })];
-                case 1:
-                    permissionStatus = _a.sent();
-                    if (!(permissionStatus === 'granted')) return [3 /*break*/, 2];
-                    return [3 /*break*/, 4];
-                case 2: return [4 /*yield*/, dirHandle.requestPermission({ mode: 'read' })];
-                case 3:
-                    requestStatus = _a.sent();
-                    if (requestStatus === 'granted') {
-                        // Now you have permission, proceed with the operation
-                    }
-                    else {
-                        console.error('Permission denied');
-                    }
-                    _a.label = 4;
-                case 4: return [2 /*return*/];
-            }
-        });
-    });
-}
 // test-reads the first file and sets text in browser
-function testReadLocalFile() {
+function importLocalFile() {
     var e_1, _a;
     return __awaiter(this, void 0, void 0, function () {
         var _b, _c, entry, file, filename, parts, ext, fullText, e_1_1;
         return __generator(this, function (_d) {
             switch (_d.label) {
                 case 0:
-                    console.log("testReadLocalFile");
+                    console.log("testImportLocalFile");
                     // Assuming we are just reading the first file we find.
                     console.log("values...");
                     _d.label = 1;
@@ -184,6 +179,8 @@ function testReadLocalFile() {
                 case 4:
                     file = _d.sent();
                     filename = file.name;
+                    if (filename.startsWith("."))
+                        return [3 /*break*/, 7];
                     parts = filename.split('.');
                     ext = parts.length > 1 ? '.' + parts.pop() : '';
                     console.log("readFileAsText...");
@@ -191,7 +188,7 @@ function testReadLocalFile() {
                     return [4 /*yield*/, readFileAsText(file)];
                 case 5:
                     fullText = _d.sent();
-                    return [4 /*yield*/, testImportCode(fullText, ext)];
+                    return [4 /*yield*/, importCode(fullText, ext)];
                 case 6:
                     _d.sent();
                     return [3 /*break*/, 8];
@@ -363,7 +360,7 @@ function animateLogoToLeft() {
     });
 }
 // just a test: send the string back to the ranch, receive a full JSON analysis in the post
-function testImportCode(fullText, ext) {
+function importCode(fullText, ext) {
     return __awaiter(this, void 0, void 0, function () {
         var cards;
         return __generator(this, function (_a) {
@@ -430,25 +427,60 @@ function openOrCloseCard(button, uid) {
 // opens a card, optionally connected to a button element
 function openCard(card, button) {
     console.log("openCard", card.uid);
-    var elem = cardToHTML(card);
-    if (button) {
-        var parentCard = findCardContainingButton(button);
-        if (parentCard) {
-            var rect = getRect(parentCard);
-            var brect = getRect(button);
-            var left = rect.right + 32;
-            var top_1 = (brect.top + brect.bottom) / 2;
-            elem.style.left = "".concat(left, "px");
-            elem.style.top = "".concat(top_1, "px");
-        }
+    var cardDiv = cardToHTML(card);
+    s_container.appendChild(cardDiv); // have to do this first so
+    setPosition(cardDiv, button);
+    var bodyWidth = getBodyWidth();
+    arrangeAllViews(); // todo: call this every frame
+    var newWidth = getBodyWidth();
+    if (newWidth > bodyWidth) {
+        smoothScrollToRight(250);
     }
-    s_container.appendChild(elem);
-    return elem;
+    if (button) {
+        button.className = "tag-highlight";
+    }
+    return cardDiv;
+}
+// sets the position of a card based on its connections
+function setPosition(cardDiv, button) {
+    var parentCard = (button) ? findCardContainingButton(button) : null;
+    var xTarget = 0;
+    var yTarget = 0;
+    if (button && parentCard) {
+        var rect = getRect(parentCard);
+        var brect = getRect(button);
+        var crect = getRect(cardDiv);
+        console.log("crect", crect);
+        xTarget = rect.right + s_padding;
+        yTarget = ((brect.top + brect.bottom) / 2) - (crect.height() / 2);
+    }
+    else {
+        var crect = getRect(cardDiv);
+        console.log("crect", crect);
+        xTarget = crect.left;
+        yTarget = (window.innerHeight / 2) - (crect.height() / 2);
+    }
+    var viewInfo = new ViewInfo(cardDiv, button, parentCard);
+    //viewInfo.setPos(xTarget, yTarget);
+    viewInfo.card.style.left = "".concat(xTarget, "px");
+    viewInfo.card.style.top = "".concat(yTarget, "px");
+    viewInfo.idealRect = getRect(cardDiv);
+    s_viewMap.set(cardDiv, viewInfo);
 }
 // closes a card that's open, and all children as well
 function closeCard(cardDiv) {
+    var view = s_viewMap.get(cardDiv);
+    if (view.button) {
+        view.button.className = "tag";
+    }
     cardDiv.remove();
-    // todo: do children as well.
+    view.remove();
+    var bodyWidth = getBodyWidth();
+    arrangeAllViews(); // todo: call this every frame
+    var newWidth = getBodyWidth();
+    if (newWidth < bodyWidth) {
+        smoothScrollToRight(250);
+    }
 }
 // given a uid, finds the div with that ID (the card div)
 function findCardDiv(uid) {
@@ -473,14 +505,7 @@ function findCardContainingButton(button) {
 // given an element, returns the rectangle relative to document origin
 function getRect(el) {
     var rect = el.getBoundingClientRect();
-    return {
-        top: rect.top + window.scrollY,
-        left: rect.left + window.scrollX,
-        bottom: rect.bottom + window.scrollY,
-        right: rect.right + window.scrollX,
-        width: rect.width,
-        height: rect.height
-    };
+    return new Rect(rect.left + window.scrollX, rect.top + window.scrollY, rect.right + window.scrollX, rect.bottom + window.scrollY);
 }
 // sends a command request to the server, waits on the reply, returns dictionary object
 function runOnServer(command) {
@@ -511,5 +536,166 @@ function runOnServer(command) {
                 case 4: return [2 /*return*/, []];
             }
         });
+    });
+}
+// stores information about a div we're arranging
+var ViewInfo = /** @class */ (function () {
+    function ViewInfo(card, button, parentCard) {
+        this.column = 0; // column we're in (first one zero)
+        this.idealRect = new Rect(0, 0, 0, 0); // where we'd like to be in a perfect world
+        this.xTarget = 0; // where we're trying to get to, to avoid others
+        this.yTarget = 0; // ..
+        if (parentCard === undefined) {
+            console.log("WARNING: parentCard undefined!");
+        }
+        this.card = card;
+        this.button = button;
+        this.parentCard = parentCard;
+        if (parentCard) {
+            this.column = s_viewMap.get(parentCard).column + 1;
+        }
+        this.shadow = element("<div class=\"shadow\"><div>");
+        s_container.appendChild(this.shadow);
+        this.updateShadow();
+        addToColumnArray(this);
+    }
+    ViewInfo.prototype.remove = function () {
+        var _this = this;
+        s_columns[this.column] = s_columns[this.column].filter(function (item) { return item !== _this; });
+        this.shadow.remove();
+    };
+    ViewInfo.prototype.setPos = function (x, y) {
+        this.card.style.left = "".concat(x, "px;");
+        this.card.style.top = "".concat(y, "px;");
+    };
+    ViewInfo.prototype.yButton = function () {
+        return getRect(this.button).top;
+    };
+    ViewInfo.prototype.updateShadow = function () {
+        var sr = getRect(this.card);
+        var wh = window.innerHeight;
+        var sy = wh - ((sr.bottom / wh) * 200);
+        this.shadow.style.left = "".concat(sr.left, "px");
+        this.shadow.style.top = "".concat(sy - sr.top, "px");
+    };
+    return ViewInfo;
+}());
+;
+var Rect = /** @class */ (function () {
+    function Rect(left, top, right, bottom) {
+        this.left = left;
+        this.top = top;
+        this.right = right;
+        this.bottom = bottom;
+    }
+    Rect.prototype.width = function () { return this.right - this.left; };
+    Rect.prototype.height = function () { return this.bottom - this.top; };
+    return Rect;
+}());
+// adds a viewinfo to the columns array-of-arrays
+function addToColumnArray(v) {
+    while (s_columns.length <= v.column) {
+        s_columns.push([]);
+    }
+    s_columns[v.column].push(v);
+    s_columns[v.column].sort(function (a, b) { return (a.yButton() - b.yButton()); });
+}
+// arranges all views : computes xTarget, yTarget for each view
+function arrangeAllViews() {
+    console.log("arrangeAllViews");
+    var xPos = getRect(s_columns[0][0].card).right + s_padding;
+    for (var i = 1; i < s_columns.length; i++) {
+        var groups = splitColumnIntoGroups(i);
+        for (var _i = 0, groups_1 = groups; _i < groups_1.length; _i++) {
+            var group = groups_1[_i];
+            spaceViewsInGroup(group, xPos);
+        }
+        spaceGroupsVertically(groups);
+        // now get xPos = max of all right-edges
+        for (var _a = 0, _b = s_columns[i]; _a < _b.length; _a++) {
+            var v = _b[_a];
+            xPos = Math.max(xPos, getRect(v.card).right + s_padding);
+        }
+    }
+    var widthInPixels = getBodyWidth();
+    var newWidth = Math.max(window.innerWidth, xPos);
+    document.body.style.width = "".concat(newWidth, "px");
+}
+function splitColumnIntoGroups(i) {
+    var groups = [];
+    for (var _i = 0, _a = s_columns[i - 1]; _i < _a.length; _i++) {
+        var p = _a[_i];
+        var group = [];
+        for (var _b = 0, _c = s_columns[i]; _b < _c.length; _b++) {
+            var v = _c[_b];
+            if (v.parentCard.id === p.card.id) {
+                group.push(v);
+            }
+        }
+        if (group.length > 0) {
+            groups.push(group);
+        }
+    }
+    return groups;
+}
+function spaceViewsInGroup(group, xPos) {
+    // first find the total height of the group, plus padding
+    var sumHeight = (group.length - 1) * s_padding;
+    for (var _i = 0, group_1 = group; _i < group_1.length; _i++) {
+        var v = group_1[_i];
+        sumHeight += getRect(v.card).height();
+    }
+    // then find the centerline of the group's parent
+    var parentRect = getRect(group[0].parentCard);
+    var centerLine = (parentRect.top + parentRect.bottom) / 2;
+    // now space group out vertically around the centerline
+    var yPos = Math.max(s_padding, centerLine - (sumHeight / 2));
+    for (var _a = 0, group_2 = group; _a < group_2.length; _a++) {
+        var v = group_2[_a];
+        v.xTarget = xPos;
+        v.yTarget = yPos;
+        yPos += getRect(v.card).height() + s_padding;
+        v.card.style.left = "".concat(v.xTarget, "px");
+        v.card.style.top = "".concat(v.yTarget, "px");
+        var sr = getRect(v.card);
+        var wh = window.innerHeight;
+        var sy = wh - ((sr.bottom / wh) * 200);
+        v.shadow.style.left = "".concat(sr.left, "px");
+        v.shadow.style.top = "".concat(sy - sr.top, "px");
+    }
+}
+function spaceGroupsVertically(groups) {
+    // space groups out vertically so they don't overlap
+    for (var i = 1; i < groups.length; i++) {
+        var prevGroup = groups[i - 1];
+        var prevBottom = getRect(prevGroup[prevGroup.length - 1].card).bottom;
+        var group = groups[i];
+        var top_1 = getRect(group[0].card).top;
+        if (top_1 <= (prevBottom + s_padding)) {
+            var newTop = prevBottom + s_padding; // where group[0] has to move to
+            var diff = newTop - top_1; // therefore, how much to move by
+            for (var _i = 0, group_3 = group; _i < group_3.length; _i++) {
+                var v = group_3[_i];
+                v.yTarget += diff;
+                v.card.style.top = "".concat(v.yTarget, "px");
+                var sr = getRect(v.card);
+                var wh = window.innerHeight;
+                var sy = wh - ((sr.bottom / wh) * 200);
+                v.shadow.style.left = "".concat(sr.left, "px");
+                v.shadow.style.top = "".concat(sy - sr.top, "px");
+            }
+        }
+    }
+}
+function getBodyWidth() {
+    var bodyWidth = getComputedStyle(document.body).width;
+    return parseInt(bodyWidth, 10);
+}
+function smoothScrollToRight(duration) {
+    var maxX = document.body.scrollWidth - window.innerWidth;
+    window.scrollTo({
+        top: 0,
+        left: maxX,
+        behavior: 'smooth'
     });
 }

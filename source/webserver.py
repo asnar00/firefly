@@ -88,7 +88,10 @@ def app_process(post_data):
     cmd = post_data['command']
     if cmd=="import":
         print("app_process: IMPORT")
-        jsonObj = import_code.import_code(post_data["code"], post_data["ext"])
+        code = post_data["code"]
+        if code == "miso2": # TEST: to avoid annoyance of having to grant user permission each run
+            code = import_code.readFile("miso2.ts")
+        jsonObj = import_code.import_code(code, post_data["ext"])
         return jsonObj
     return f"${app_name}: command not supported"
 
