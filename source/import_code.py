@@ -1,6 +1,6 @@
 # ᕦ(ツ)ᕤ
 # import.py
-# author: asnaroo
+# author: asnaroo, with help from gpt4
 # purpose: to analyse a piece of (typescript or python) code [eventually C++ maybe]
 # and create a set of "cards", each of which is a single class, function, or method
 # cards are organised so that they depend on each other

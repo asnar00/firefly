@@ -47,7 +47,6 @@ h3 {
 .code {
     font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;
     font-size: 9pt;
-    margin-left: 1em;
     background-color: #9ebeb9;
     padding: 0.5em;
     border-radius: 8px;
@@ -64,7 +63,6 @@ h3 {
     width: fit-content; /* This makes the div size to its content up to its maximum width */
     height: fit-content; /* This makes the div size to its content up to its maximum height */
     position: absolute; /* or relative, depending on your layout needs */
-    top: 50%;  /* This positions the top edge of the div at the middle of its parent */
 }
 
 [contenteditable]:focus {
@@ -87,7 +85,7 @@ background-color: #AED2CB; /* light gray */
 .tag-highlight {
     display: inline-block;
     color: #000000;
-    background-color: #b2ebe1;
+    background-color: #c0ebe3;
     text-decoration: none;
     cursor: pointer;
     padding: 0px 0px;
