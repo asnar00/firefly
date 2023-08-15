@@ -26,6 +26,43 @@ let s_port = 8000;
 let s_endPoint = "miso2";
 var s_allCards;
 var s_view;
+class CodeBlock {
+    constructor(code, language, iLine) {
+        this.text = ""; // actual code text
+        this.iLine = 0; // 1-based line index in original code file
+        this.text = code;
+        this.language = language;
+        this.iLine = iLine;
+    }
+}
+class Dependency {
+    constructor(target, iChar, jChar) {
+        this.iChar = 0; // character index in code of start of symbol
+        this.jChar = 0; // character index in code after symbol
+        this.target = target;
+        this.iChar = iChar;
+        this.jChar = jChar;
+    }
+}
+;
+class Card {
+    constructor() {
+        this.uid = ""; // uid; something like kind_name, but maybe other decorators too
+        this.kind = ""; // "class" or "function" or "other"
+        this.name = ""; // name of function or class being defined
+        this.purpose = ""; // purpose
+        this.examples = ""; // examples
+        this.inputs = ""; // inputs
+        this.outputs = ""; // outputs
+        this.code = []; // actual text from code file
+        this.dependsOn = []; // cards we depend on
+        this.dependents = []; // cards that depend on us
+        this.children = []; // if we're a class, cards for methods
+        this.parent = null; // if we're a method or property, points to parent
+        this.rankFromBottom = 0; // 1 means depends on nothing; x means depends on things with rank < x
+        this.rankFromTop = 0; // 1 means nothing calls this; x means called by things with rank < x
+    }
+}
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("ᕦ(ツ)ᕤ miso2.");
@@ -49,12 +86,12 @@ function loadCards() {
             yield setupDirectoryButton();
         }
         else {
-            yield autoImportTest();
+            yield autoImport();
         }
     });
 }
 // to avoid the annoyance of having to give permissions every time, just get system to do it
-function autoImportTest() {
+function autoImport() {
     return __awaiter(this, void 0, void 0, function* () {
         const openDirectoryButton = document.getElementById('openDirectory');
         openDirectoryButton.remove();
@@ -246,43 +283,83 @@ function animateLogoToLeft() {
 function importCode(fullText, ext) {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("importing code");
-        s_allCards = yield runOnServer({ "command": "import", "code": fullText, "ext": ext });
-        const cards = s_allCards.cards;
-        console.log("nCards:", cards.length);
+        const obj = yield runOnServer({ "command": "import", "code": fullText, "ext": ext });
+        s_allCards = obj.cards;
+        console.log("nCards:", s_allCards.length);
+        let uids = [];
+        for (const card of s_allCards) {
+            uids.push(card.uid);
+        }
+        console.log(uids);
     });
 }
 // finds the card with the given UID, or null if doesn't exist
 function findCard(uid) {
-    let index = s_allCards.cards.findIndex((card) => card.uid === uid);
+    let index = s_allCards.findIndex((card) => card.uid === uid);
     if (index < 0)
         return null;
-    return s_allCards.cards[index];
+    return s_allCards[index];
 }
 // generates HTML for card, but doesn't connect it yet
 function cardToHTML(card) {
     let elem = element(`<div id="${card.uid}" class="code" spellcheck="false" contenteditable="false"></div>`);
     let text = card.code[0].text;
-    for (let i = card.dependsOn.length - 1; i >= 0; i--) {
-        const dep = card.dependsOn[i];
-        const iChar = dep.iChar;
-        const jChar = dep.jChar;
-        const before = text.slice(0, iChar);
-        const link = text.slice(iChar, jChar);
-        const after = text.slice(jChar);
-        text = `${before}<span class="tag" id="linkto_${dep.target}">${link}</span>${after}`;
+    if (card.dependsOn.length == 0) {
+        elem.innerText = text;
     }
-    elem.innerHTML = text;
-    Array.from(elem.childNodes).forEach(child => {
-        if (child.nodeType === Node.ELEMENT_NODE && child instanceof HTMLElement) {
-            if (child.tagName.toLowerCase() === 'span') {
-                child.addEventListener('click', function () {
-                    openOrCloseCard(child, child.id.slice("linkto_".length));
-                });
+    else {
+        let iChar = 0;
+        for (const dep of card.dependsOn) {
+            // add text-node going from (iChar) to (dep.iChar)
+            if (dep.iChar > iChar) {
+                elem.appendChild(document.createTextNode(text.slice(iChar, dep.iChar)));
             }
+            // add span containing the link
+            const link = text.slice(dep.iChar, dep.jChar);
+            const child = element(`<span class="tag" id="linkto_${dep.target}">${link}</span>`);
+            child.addEventListener('click', function (event) {
+                openOrCloseCard(child, child.id.slice("linkto_".length));
+                event.stopPropagation();
+            });
+            elem.appendChild(child);
+            // step
+            iChar = dep.jChar;
         }
+        // add text-node for the remaining bit of text
+        if (iChar < text.length) {
+            elem.appendChild(document.createTextNode(text.slice(iChar, text.length)));
+        }
+    }
+    elem.addEventListener('click', function () {
+        expandOrContract(elem);
     });
     return elem;
 }
+function expandOrContract(div) {
+    div.classList.toggle("code-expanded");
+    s_view.arrangeAll();
+}
+/*
+        for(let i = card.dependsOn.length-1; i >= 0; i--) {
+            const dep : Dependency = card.dependsOn[i];
+            const iChar = dep.iChar;
+            const jChar = dep.jChar;
+            const before = text.slice(0, iChar);
+            const link = text.slice(iChar, jChar);
+            const after = text.slice(jChar);
+            text = `${before}<span class="tag" id="linkto_${dep.target}">${link}</span>${after}`
+        }
+        elem.innerHTML = text;
+        Array.from(elem.childNodes).forEach(child => {
+            if (child.nodeType === Node.ELEMENT_NODE && child instanceof HTMLElement) {
+                if (child.tagName.toLowerCase() === 'span') {
+                    child.addEventListener('click', function() {
+                        openOrCloseCard(child, child.id.slice("linkto_".length));
+                    });
+                }
+            }
+        });
+*/
 // if a card view is closed, opens it; otherwise closes it
 function openOrCloseCard(button, uid) {
     const card = findCard(uid);

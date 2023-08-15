@@ -14,7 +14,7 @@ global vb
 vb = True
 
 def import_code(code: str, ext: str) -> dict:
-    print("------ import_code COME ON MOTHERFUCKERS ---------")
+    print("------ import_code ---------")
     global vb
     vb = False
     cards = importCards(code, ext)
@@ -25,6 +25,8 @@ class Language:
     def name(self) -> str:
         return ""
     def shortName(self) -> str:
+        return ""
+    def comment(self) -> str:
         return ""
     def importCards(self, text):
         return []
@@ -89,6 +91,7 @@ class Dependency:
 class Python(Language):
     def name(self): return "python"
     def shortName(self): return "py"
+    def comment(self): return "#"
     def importCards(self, text, minIndent) -> List[Card]:
         lines = text.split("\n")
         card = None
@@ -123,6 +126,7 @@ class Python(Language):
 class Typescript(Language):
     def name(self): return "typescript"
     def shortName(self): return "ts"
+    def comment(self): return "//"
     def importCards(self, text, minIndent) -> List[Card]:
         lines = text.split("\n")
         cards = []
@@ -229,18 +233,21 @@ def computeDependencies(cards: List[Card]):
     #print("\ncomputing dependencies...")
     # for each card's code, run through all other cards to see if their names occur
     for card in cards:
-        if card.name != "unknown" and card.kind != "property" and card.kind != "global" and card.kind != "class":
+        if card.name != "unknown" :  #and card.kind != "property" and card.kind != "global" and card.kind != "class"
             for c in cards:
                 if c != card and c.name != "unknown" and c.name != card.name:
                     search = c.name 
                     if c.kind == "method":
                         if c.name == "constructor": search = c.parent.name + "("    # this is language-specific! move this into a Language method
                         else: search = "." + c.name
+                    elif c.kind == "property":
+                        search = "." + c.name
                     iCharStart = findWordInString(search, card.code[0].text)
                     if iCharStart >= 0:
-                        iCharEnd = iCharStart + len(search)
-                        card.dependsOn.append(Dependency(iCharStart, iCharEnd, c))
-                        c.dependents.append(Dependency(iCharStart, iCharEnd, card))
+                        if not inComment(iCharStart, card.code[0]):
+                            iCharEnd = iCharStart + len(search)
+                            card.dependsOn.append(Dependency(iCharStart, iCharEnd, c))
+                            c.dependents.append(Dependency(iCharStart, iCharEnd, card))
             card.dependsOn = sorted(card.dependsOn, key=lambda d: d.iChar)
     sortedCards = sorted(cards, key=lambda x: x.fullName())
     for card in sortedCards:
@@ -251,6 +258,29 @@ def computeDependencies(cards: List[Card]):
         for d in card.dependents:
             report += d.target.fullName() + " "
         #print(report)
+
+def inComment(iChar: int, code: CodeBlock) -> bool:
+    return searchBackwards(code.text, code.language.comment(), iChar)
+
+def searchBackwards(s: str, target: str, iChar: int) -> bool:
+    # search backwards from iChar for comment, until we hit start of line or text
+    # Edge case: if iChar is outside the bounds of the string
+    if iChar < 0 or iChar > len(s):
+        return False
+    
+    # Start from iChar and go backwards
+    for i in range(iChar, -1, -1):
+        # Check for start of the string
+        if i == 0:
+            return False
+        # Check for start of a line
+        if s[i] == '\n':
+            return False
+        # Check if the substring ending at index i matches the target
+        if s[i-len(target)+1:i+1] == target:
+            return True
+    
+    return False
 
 def computeLevels(cards: List[Card]):
     global vb

@@ -53,7 +53,7 @@ export class GraphView {
             const prect = rect(parentDiv);
             const brect = rect(link);
             const crect = rect(div);
-            xTarget = prect.right + this.padding;
+            xTarget = prect.right + (this.padding * 2);
             yTarget = ((brect.top + brect.bottom)/2) - (crect.height()/2);
         } else {
             const crect = rect(div);
@@ -69,7 +69,7 @@ export class GraphView {
 
     // arranges all views : computes xTarget, yTarget for each view
     arrangeAll() {
-        let xPos = rect(this.columns[0][0].div).right + this.padding;
+        let xPos = rect(this.columns[0][0].div).right + (this.padding * 2);
         for(let i = 1; i < this.columns.length; i++) {
             let groups : Node[][] = this.splitColumnIntoGroups(i);
             for (let group of groups) {
@@ -79,7 +79,7 @@ export class GraphView {
         
             // now get xPos = max of all right-edges
             for(const node of this.columns[i]) {
-                xPos = Math.max(xPos, rect(node.div).right + this.padding);
+                xPos = Math.max(xPos, rect(node.div).right + (this.padding * 2));
             }
         }
         const widthInPixels = getBodyWidth();
@@ -194,10 +194,10 @@ class Node {
         if (parentDiv) { 
             this.column = this.graph.get(parentDiv)!.column + 1;
         }
-        this.shadow = element(`<div class="shadow"><div>`);
-        this.graph.container.appendChild(this.shadow);
-        this.updateShadow();
         this.graph.addToColumnArray(this);
+
+        this.shadow = element(`<div class="shadow"></div>`);
+        this.graph.container.appendChild(this.shadow);
     }
 
     remove() {
@@ -208,6 +208,7 @@ class Node {
     setPos(x: number, y: number) {
         this.div.style.left = `${x}px`;
         this.div.style.top = `${y}px`;
+        this.updateShadow();
     }
 
     yLink() {
@@ -217,12 +218,11 @@ class Node {
     updateShadow() {
         const sr = rect(this.div);
         const wh = window.innerHeight;
-        const sy = wh - ((sr.bottom / wh) * 200);
+        const sy = sr.bottom + this.graph.padding * 4;
         this.shadow.style.left = `${sr.left}px`;
-        this.shadow.style.top = `${sy - sr.top}px`;
+        this.shadow.style.top = `${Math.max(wh/2+20, sy)}px`;
+        this.shadow.style.width = `${sr.width()}px`;
+        this.shadow.style.height = `2px`;
+        this.shadow.style.zIndex = `-10`;
     }
 };
-
-// a Rectangle
-
-// utility -------------------------------------------------------------------
