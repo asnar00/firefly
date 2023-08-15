@@ -19,6 +19,7 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
 };
 import { GraphView } from "./graphview.js";
 import { element } from "./html.js";
+import { scrollToView } from "./html.js";
 window.onload = () => { main(); };
 const s_useLocalFiles = false; // change this to true to enable local file access
 let dirHandle = null;
@@ -74,10 +75,6 @@ function setupEvents() {
         const container = document.getElementById('container');
         s_view = new GraphView(container);
         yield loadCards();
-        const card = findCard("function_main");
-        if (card) {
-            openCard(card, null);
-        }
     });
 }
 function loadCards() {
@@ -90,6 +87,14 @@ function loadCards() {
         }
     });
 }
+function openMain() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const card = findCard("function_main");
+        if (card) {
+            openCard(card, null);
+        }
+    });
+}
 // to avoid the annoyance of having to give permissions every time, just get system to do it
 function autoImport() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -97,6 +102,7 @@ function autoImport() {
         openDirectoryButton.remove();
         yield importCode("miso2", ".ts");
         yield animateLogoToLeft();
+        yield openMain();
     });
 }
 function setupDirectoryButton() {
@@ -109,8 +115,10 @@ function setupDirectoryButton() {
                 return;
             }
             dirHandle = yield window.showDirectoryPicker();
+            openDirectoryButton.remove();
             yield importLocalFile();
             yield animateLogoToLeft();
+            yield openMain();
         }));
     });
 }
@@ -295,7 +303,9 @@ function importCode(fullText, ext) {
 }
 // finds the card with the given UID, or null if doesn't exist
 function findCard(uid) {
+    console.log("findCard");
     let index = s_allCards.findIndex((card) => card.uid === uid);
+    console.log("index", index);
     if (index < 0)
         return null;
     return s_allCards[index];
@@ -337,7 +347,9 @@ function cardToHTML(card) {
 }
 function expandOrContract(div) {
     div.classList.toggle("code-expanded");
+    s_view.emphasize(div, div.classList.contains("code-expanded"));
     s_view.arrangeAll();
+    scrollToView(div);
 }
 /*
         for(let i = card.dependsOn.length-1; i >= 0; i--) {

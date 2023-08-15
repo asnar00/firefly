@@ -51,7 +51,7 @@ export class GraphView {
         }
         else {
             const crect = rect(div);
-            xTarget = crect.left + 120;
+            xTarget = crect.left + 150;
             yTarget = (window.innerHeight / 2) - (crect.height() / 2);
         }
         let node = new Node(this, div, link, parentDiv);
@@ -59,6 +59,14 @@ export class GraphView {
         this.map.set(div, node);
         this.arrangeAll(); // todo: call this every frame
         scrollToView(div);
+    }
+    // emphasizes element (moves shadow forward in space)
+    emphasize(div, onOff) {
+        let node = this.get(div);
+        if (!node)
+            return;
+        node.emphasize = onOff;
+        node.updateShadow();
     }
     // arranges all views : computes xTarget, yTarget for each view
     arrangeAll() {
@@ -121,10 +129,13 @@ export class GraphView {
         const centerLine = (parentRect.top + parentRect.bottom) / 2;
         // now space group out vertically around the centerline
         let yPos = Math.max(this.padding, centerLine - (sumHeight / 2));
-        for (let node of group) {
-            node.xTarget = xPos;
+        let pivot = (group.length - 1) / 2;
+        for (let i = 0; i < group.length; i++) {
+            let node = group[i];
+            let xOffset = (i < pivot) ? i : (pivot - (i - pivot));
+            node.xTarget = xPos + (xOffset * this.padding);
             node.yTarget = yPos;
-            node.setPos(xPos, yPos);
+            node.setPos(node.xTarget, node.yTarget);
             yPos += rect(node.div).height() + this.padding;
         }
     }
@@ -162,6 +173,7 @@ class Node {
         this.column = 0; // column we're in (first one zero)
         this.xTarget = 0; // where we're trying to get to, to avoid others
         this.yTarget = 0; // ..
+        this.emphasize = false; // if set, comes forward in the stack
         this.graph = view;
         if (parentDiv === undefined) {
             console.log("WARNING: parentDiv undefined!");
@@ -191,11 +203,12 @@ class Node {
     updateShadow() {
         const sr = rect(this.div);
         const wh = window.innerHeight;
-        const sy = sr.bottom + this.graph.padding * 4;
+        let sy = (this.emphasize) ? (wh - 100) : (sr.bottom + 50);
+        sy = Math.max(wh / 2 + 20, sy);
         this.shadow.style.left = `${sr.left}px`;
-        this.shadow.style.top = `${Math.max(wh / 2 + 20, sy)}px`;
+        this.shadow.style.top = `${sy}px`;
         this.shadow.style.width = `${sr.width()}px`;
-        this.shadow.style.height = `2px`;
+        this.shadow.style.height = `1px`;
         this.shadow.style.zIndex = `-10`;
     }
 }

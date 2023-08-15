@@ -57,7 +57,7 @@ export class GraphView {
             yTarget = ((brect.top + brect.bottom)/2) - (crect.height()/2);
         } else {
             const crect = rect(div);
-            xTarget = crect.left + 120;
+            xTarget = crect.left + 150;
             yTarget = (window.innerHeight / 2) - (crect.height()/2);
         }
         let node = new Node(this, div, link, parentDiv);
@@ -65,6 +65,14 @@ export class GraphView {
         this.map.set(div, node);
         this.arrangeAll();          // todo: call this every frame
         scrollToView(div);
+    }
+
+    // emphasizes element (moves shadow forward in space)
+    emphasize(div: HTMLElement, onOff: boolean) {
+        let node = this.get(div);
+        if (!node) return;
+        node.emphasize = onOff; 
+        node.updateShadow();
     }
 
     // arranges all views : computes xTarget, yTarget for each view
@@ -133,14 +141,17 @@ export class GraphView {
         const centerLine = (parentRect.top + parentRect.bottom)/2;
         // now space group out vertically around the centerline
         let yPos = Math.max(this.padding, centerLine - (sumHeight/2));
-        for (let node of group) {
-            node.xTarget = xPos;
+        let pivot = (group.length-1)/2;
+        for (let i = 0; i < group.length; i++) {
+            let node = group[i];
+            let xOffset = (i < pivot) ? i : (pivot - (i - pivot));
+            node.xTarget = xPos + (xOffset * this.padding);
             node.yTarget = yPos;
-            node.setPos(xPos, yPos);
+            node.setPos(node.xTarget, node.yTarget);
             yPos += rect(node.div).height() + this.padding;
         }
     }
-
+    
     // space groups out vertically so they don't overlap
     spaceGroupsVertically(groups: Node[][]) {
         for(let i = 1; i < groups.length; i++) {
@@ -176,7 +187,7 @@ export class GraphView {
 
 // stores information about a div we're managing
 class Node {
-    graph: GraphView;                            // the view we're a part of
+    graph: GraphView;                       // the view we're a part of
     div: HTMLElement;                       // the div we're tracking
     linkDiv: HTMLElement | null;            // the link that triggered this
     parentDiv: HTMLElement | null;          // the parent div of the link div that opened this node
@@ -184,6 +195,7 @@ class Node {
     xTarget: number = 0;                    // where we're trying to get to, to avoid others
     yTarget: number = 0;                    // ..
     shadow: HTMLElement;                    // the shadow, all-important :-)
+    emphasize: boolean = false;             // if set, comes forward in the stack
 
     constructor(view: GraphView, div: HTMLElement, linkDiv: HTMLElement | null, parentDiv: HTMLElement | null) {
         this.graph = view;
@@ -218,11 +230,12 @@ class Node {
     updateShadow() {
         const sr = rect(this.div);
         const wh = window.innerHeight;
-        const sy = sr.bottom + this.graph.padding * 4;
+        let sy = (this.emphasize) ? (wh - 100) : (sr.bottom + 50);
+        sy = Math.max(wh/2+20, sy);
         this.shadow.style.left = `${sr.left}px`;
-        this.shadow.style.top = `${Math.max(wh/2+20, sy)}px`;
+        this.shadow.style.top = `${sy}px`;
         this.shadow.style.width = `${sr.width()}px`;
-        this.shadow.style.height = `2px`;
+        this.shadow.style.height = `1px`;
         this.shadow.style.zIndex = `-10`;
     }
 };

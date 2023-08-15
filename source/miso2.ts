@@ -4,6 +4,7 @@
 
 import {GraphView} from "./graphview.js";
 import {element} from "./html.js";
+import {scrollToView} from "./html.js";
 
 window.onload = () => { main(); };
 
@@ -58,10 +59,6 @@ async function setupEvents() {
     const container = document.getElementById('container') as HTMLElement;
     s_view = new GraphView(container);
     await loadCards();
-    const card = findCard("function_main");
-    if (card) {
-        openCard(card, null);
-    }
 }
 
 async function loadCards() {
@@ -72,12 +69,20 @@ async function loadCards() {
     }
 }
 
+async function openMain() {
+    const card = findCard("function_main");
+    if (card) {
+        openCard(card, null);
+    }
+}
+
 // to avoid the annoyance of having to give permissions every time, just get system to do it
 async function autoImport() {
     const openDirectoryButton: HTMLButtonElement = document.getElementById('openDirectory') as HTMLButtonElement;
     openDirectoryButton.remove();
     await importCode("miso2", ".ts");
     await animateLogoToLeft();
+    await openMain();
 }
 
 async function setupDirectoryButton() {
@@ -89,8 +94,10 @@ async function setupDirectoryButton() {
             return;
         }
         dirHandle = await (window as any).showDirectoryPicker!();
+        openDirectoryButton.remove();
         await importLocalFile();
         await animateLogoToLeft();
+        await openMain();
     });
 }
 
@@ -275,7 +282,9 @@ async function importCode(fullText: string, ext: string) {
 
 // finds the card with the given UID, or null if doesn't exist
 function findCard(uid: string) : Card | null {
+    console.log("findCard");
     let index = s_allCards.findIndex((card : any ) => card.uid === uid);
+    console.log("index", index);
     if (index < 0) return null;
     return s_allCards[index];
 }
@@ -317,7 +326,9 @@ function cardToHTML(card: Card) : HTMLElement {
 
 function expandOrContract(div : HTMLElement) {
     div.classList.toggle("code-expanded");
+    s_view.emphasize(div, div.classList.contains("code-expanded"));
     s_view.arrangeAll();
+    scrollToView(div);
 }
 
 /*
