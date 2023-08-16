@@ -3,8 +3,9 @@
 // author: asnaroo (with a little help from GPT4)
 
 import {GraphView} from "./graphview.js";
-import {element} from "./html.js";
-import {scrollToView} from "./html.js";
+import {element} from "./util.js";
+import {scrollToView} from "./util.js";
+import {debounce} from "./util.js";
 
 window.onload = () => { main(); };
 
@@ -62,8 +63,8 @@ class CardView {
     state: CardViewState = CardViewState.Compact;
     xScroll: number =0;
     yScroll: number =0;
-    constructor(card: Card, state: CardViewState) {
-        this.uid = card.uid; this.state = state;
+    constructor(uid: string, state: CardViewState) {
+        this.uid = uid; this.state = state;
     }
     card() : Card | null {
         return findCard(this.uid);
@@ -77,7 +78,7 @@ async function main() {
 
 async function setupEvents() {
     const container = document.getElementById('container') as HTMLElement;
-    s_graphView = new GraphView(container);
+    s_graphView = new GraphView(container, cardToHTML);
     await loadCards();
 }
 
@@ -90,9 +91,12 @@ async function loadCards() {
 }
 
 async function openMain() {
-    const card = findCard("function_main");
-    if (card) {
-        openCard(card, null);
+    let json = await loadObject("session/test.json");
+    if (json.error) {
+        console.log("failed to load session:", json.error);
+        openCard("function_main", null);
+    } else {
+        s_graphView.openJson(json);
     }
 }
 
@@ -208,7 +212,9 @@ function findCard(uid: string) : Card | null {
 }
 
 // generates HTML for card, but doesn't connect it yet
-function cardToHTML(card: Card, view: CardView) : HTMLElement {
+function cardToHTML(id: string, view: CardView) : HTMLElement {
+    let card : Card | null = findCard(id);
+    if (!card) { return element(`<div></div>`); }
     let elem : HTMLElement = element(`<div id="${card.uid}" class="code" spellcheck="false" contenteditable="false"></div>`);
     let text : string = card.code[0].text;
     if (card.dependsOn.length==0) {
@@ -223,9 +229,8 @@ function cardToHTML(card: Card, view: CardView) : HTMLElement {
             // add span containing the link
             const link = text.slice(dep.iChar, dep.jChar);
             const child = element(`<span class="tag" id="linkto_${dep.target}">${link}</span>`);
-            child.addEventListener('click', function(event) {
-                openOrCloseCard(child, child.id.slice("linkto_".length));
-                event.stopPropagation();
+            listen(child, 'click', async function(event: any) {
+                openOrCloseCard(child.id.slice("linkto_".length), child);
             });
             elem.appendChild(child);
             // step
@@ -236,25 +241,27 @@ function cardToHTML(card: Card, view: CardView) : HTMLElement {
             elem.appendChild(document.createTextNode(text.slice(iChar, text.length)));
         }
     }
-    elem.addEventListener('click', function() {
-        expandOrContract(elem);
-    });
-    elem.addEventListener('scroll', function(event) {
-        getScrollPos(elem);
-    });
+    listen(elem, 'click', function() { expandOrContract(elem); });
+    listen(elem, 'scroll', function(event: any) { getScrollPos(elem); });
     return elem;
 }
 
+function listen(elem: HTMLElement, type: string, func: Function) {
+    elem.addEventListener(type, async (event) => {
+        console.log(elem.id, type);
+        await func(event);  // Assuming func is synchronous. If it's async, use await func(event);
+        event.stopPropagation();
+        debouncedSaveAll();
+    });
+}
+
 function expandOrContract(div : HTMLElement) {
-    console.log("expandOrContract", div.id);
     let view = s_graphView.userObj(div);
     if (view.state == CardViewState.Compact) {
-        console.log(" expanding");
         div.classList.add("code-expanded");
         view.state = CardViewState.Fullsize;
 
     } else if (view.state == CardViewState.Fullsize) {
-        console.log(" contracting");
          div.classList.remove("code-expanded");
          view.state = CardViewState.Compact;
          div.scrollLeft = view.xScroll;
@@ -273,50 +280,48 @@ function getScrollPos(div: HTMLElement) {
     }
 }
 
-/*
-        for(let i = card.dependsOn.length-1; i >= 0; i--) {
-            const dep : Dependency = card.dependsOn[i];
-            const iChar = dep.iChar;
-            const jChar = dep.jChar;
-            const before = text.slice(0, iChar);
-            const link = text.slice(iChar, jChar);
-            const after = text.slice(jChar);
-            text = `${before}<span class="tag" id="linkto_${dep.target}">${link}</span>${after}`
-        }
-        elem.innerHTML = text;
-        Array.from(elem.childNodes).forEach(child => {
-            if (child.nodeType === Node.ELEMENT_NODE && child instanceof HTMLElement) {
-                if (child.tagName.toLowerCase() === 'span') {
-                    child.addEventListener('click', function() {
-                        openOrCloseCard(child, child.id.slice("linkto_".length));
-                    });
-                }
-            }
-        });
-*/
+const debouncedSaveAll = debounce(() => { saveAll() }, 300);
+
+async function saveAll() {
+    console.log("saveAll");
+    const json = s_graphView.json();
+    await saveObject(json, "sessions/test.json");
+}
+
+async function saveObject(json: any, path: string) {
+    await runOnServer({ command: "save", path: "sessions/test.json", json: json });
+}
+
+async function loadObject(path: string) : Promise<any> {
+    return await runOnServer({ command:"load", path: "sessions/test.json"});
+}
 
 // if a card view is closed, opens it; otherwise closes it
-function openOrCloseCard(button: HTMLElement, uid: string) {
+function openOrCloseCard(uid: string, button: HTMLElement) {
     const card : Card | null = findCard(uid);
     if (!card) return;
     let existing = s_graphView.find(uid);
     if (existing) {
         closeCard(existing);
     } else {
-        openCard(card, button);
+        openCard(uid, button);
     }
 }
 
 // opens a card, optionally connected to a button element
-function openCard(card: Card, button: HTMLElement | null) : HTMLElement {
-    console.log("openCard", card.uid);
-    let view = new CardView(card, CardViewState.Compact);
-    let cardDiv = cardToHTML(card, view);
-    s_graphView.add(cardDiv, button, view);
+function openCard(uid: string, button: HTMLElement | null){
+    console.log("openCard", uid);
+    let linkID = "";
+    let parentID = "";
+    if (button) {
+        linkID = button.id;
+        let parent = s_graphView.findDivContainingLink(button);
+        if (parent) parentID = parent.id;
+    }
+    s_graphView.open(uid, linkID, parentID, new CardView(uid, CardViewState.Compact));
     if (button) {
         button.className = "tag-highlight";
     }
-    return cardDiv;
 }
 
 // closes a card

@@ -86,14 +86,42 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
 def app_process(post_data):
     cmd = post_data['command']
-    if cmd=="import":
+    if cmd== "import":
         print("app_process: IMPORT")
         code = post_data["code"]
         if code == "miso2": # TEST: to avoid annoyance of having to grant user permission each run
             code = import_code.readFile("miso2.ts")
         jsonObj = import_code.import_code(code, post_data["ext"])
         return jsonObj
+    elif cmd== "save":
+        print("app_process: SAVE")
+        path = root + "/data/" + post_data["path"]
+        obj = post_data["json"]
+        writeJsonToFile(obj, path)
+        return { "saved" : True }
+    elif cmd== "load":
+        print("app_process: LOAD")
+        path = root + "/data/" + post_data["path"]
+        print("path:", path)
+        if os.path.exists(path):
+            json = readJsonFromFile(path)
+            print("found!", json)
+            return json
+        else:
+            print("notfound!")
+            return { "error" : f"{post_data['path']} not found" }
+
     return f"${app_name}: command not supported"
+
+def writeJsonToFile(obj, path: str):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, 'w') as file:
+        json.dump(obj, file, indent=4)
+
+def readJsonFromFile(filename):
+    with open(filename, 'r') as file:
+        data = json.load(file)
+    return data
 
 if __name__ == "__main__":
     print(f"starting webserver listening on port {listen_port}...")

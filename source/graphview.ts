@@ -5,11 +5,11 @@
 // nodes can be any HTMLElement
 // just make sure nodes have unique ids
 
-import {element} from "./html.js";
-import {getBodyWidth} from "./html.js";
-import {scrollToView} from "./html.js";
-import {rect} from "./html.js";
-import {Rect} from "./html.js";
+import {element} from "./util.js";
+import {getBodyWidth} from "./util.js";
+import {scrollToView} from "./util.js";
+import {rect} from "./util.js";
+import {Rect} from "./util.js";
 
 // manages all top-level DOM nodes inside a container
 export class GraphView {
@@ -19,16 +19,19 @@ export class GraphView {
     padding: number = 24;
     arrowsSVG: SVGSVGElement;
     arrowMap: Map<HTMLElement, Arrow> = new Map();
+    htmlFunction : Function;
 
     // setup: pass the div that's going to hold all nodes
-    constructor(container: HTMLElement) {
+    constructor(container: HTMLElement, htmlFunction: Function) {
         this.container = container;
+        this.htmlFunction = htmlFunction;
         this.arrowsSVG = this.initArrows();
     }
 
     // given an id, returns the first div with that ID (expected to be unique)
-    find(id: string) : HTMLElement | null {
-        const elementsArray = Array.from(this.container.querySelectorAll(`#${id}`));
+    find(id: string, parent?:HTMLElement) : HTMLElement | null {
+        if (!parent) parent = this.container;
+        const elementsArray = Array.from(parent.querySelectorAll(`#${id}`));
         if (elementsArray.length == 0) return null;
         return elementsArray[0] as HTMLElement;
     }
@@ -50,16 +53,18 @@ export class GraphView {
     close(div: HTMLElement) {
         const node = this.get(div)!;
         if (node) {
-            this.closeNodeRecursive(node);
+            let nodes = this.allChildren(node);
+            for(let node of nodes) { this.closeSingleNode(node); }
         }
         this.arrangeAll();
     }
 
-    closeNodeRecursive(node: Node) {
+    allChildren(node: Node) : Node[] {
+        let result : Node[] = [ node ];
         for(let n of this.nodeMap.values()) {
-            if (n.parentDiv == node.div) this.closeNodeRecursive(n);
+            if (n.parentDiv == node.div) result.push(...this.allChildren(n));
         }
-        this.closeSingleNode(node);
+        return result;
     }
 
     closeSingleNode(node: Node) {
@@ -69,6 +74,24 @@ export class GraphView {
         this.nodeMap.delete(node.div);
         node.div.remove();
         node.remove();
+    }
+
+    open(id: string, linkID: string, parentID: string, userObj: any) {
+        let div = this.htmlFunction(id, userObj);
+        this.container.appendChild(div);
+        let linkDiv = null;
+        if (linkID != "" && parentID != "") {
+            let parentDiv = this.find(parentID);
+            if (parentDiv) linkDiv = this.find(linkID, parentDiv); else linkDiv = null;
+        }
+        this.add(div, linkDiv, userObj);
+    }
+
+    openJson(obj: any) {
+        let nodesJson : any[] = obj.nodes;
+        for(let n of nodesJson) {
+            this.open(n.id, n.link, n.parent, n.userObj);
+        }
     }
 
     // adds a div to the manager, and to the container div
@@ -289,7 +312,12 @@ export class GraphView {
         }
     }
 
-};
+    json(node?: Node) {
+        if (!node) { node = this.columns[0][0]; }
+        let nodes: Node[] = this.allChildren(node);
+        return { nodes:  nodes.map(node => node.json()) };
+    }
+}
 
 
 // stores information about a div we're managing
@@ -346,6 +374,14 @@ class Node {
         this.shadow.style.width = `${sr.width()}px`;
         this.shadow.style.height = `1px`;
         this.shadow.style.zIndex = `-10`;
+    }
+
+    json() : any {
+        return { id: this.div.id,
+                 link: this.linkDiv?.id ?? "null",
+                 parent: this.parentDiv?.id ?? "null",
+                 emphasize: this.emphasize,
+                 userObj: this.userObj };
     }
 };
 

@@ -18,8 +18,9 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
     function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
 };
 import { GraphView } from "./graphview.js";
-import { element } from "./html.js";
-import { scrollToView } from "./html.js";
+import { element } from "./util.js";
+import { scrollToView } from "./util.js";
+import { debounce } from "./util.js";
 window.onload = () => { main(); };
 const s_useLocalFiles = false; // change this to true to enable local file access
 let dirHandle = null;
@@ -72,11 +73,11 @@ var CardViewState;
     CardViewState[CardViewState["Editing"] = 3] = "Editing";
 })(CardViewState || (CardViewState = {}));
 class CardView {
-    constructor(card, state) {
+    constructor(uid, state) {
         this.state = CardViewState.Compact;
         this.xScroll = 0;
         this.yScroll = 0;
-        this.uid = card.uid;
+        this.uid = uid;
         this.state = state;
     }
     card() {
@@ -92,7 +93,7 @@ function main() {
 function setupEvents() {
     return __awaiter(this, void 0, void 0, function* () {
         const container = document.getElementById('container');
-        s_graphView = new GraphView(container);
+        s_graphView = new GraphView(container, cardToHTML);
         yield loadCards();
     });
 }
@@ -108,9 +109,13 @@ function loadCards() {
 }
 function openMain() {
     return __awaiter(this, void 0, void 0, function* () {
-        const card = findCard("function_main");
-        if (card) {
-            openCard(card, null);
+        let json = yield loadObject("session/test.json");
+        if (json.error) {
+            console.log("failed to load session:", json.error);
+            openCard("function_main", null);
+        }
+        else {
+            s_graphView.openJson(json);
         }
     });
 }
@@ -237,7 +242,11 @@ function findCard(uid) {
     return s_allCards[index];
 }
 // generates HTML for card, but doesn't connect it yet
-function cardToHTML(card, view) {
+function cardToHTML(id, view) {
+    let card = findCard(id);
+    if (!card) {
+        return element(`<div></div>`);
+    }
     let elem = element(`<div id="${card.uid}" class="code" spellcheck="false" contenteditable="false"></div>`);
     let text = card.code[0].text;
     if (card.dependsOn.length == 0) {
@@ -253,9 +262,10 @@ function cardToHTML(card, view) {
             // add span containing the link
             const link = text.slice(dep.iChar, dep.jChar);
             const child = element(`<span class="tag" id="linkto_${dep.target}">${link}</span>`);
-            child.addEventListener('click', function (event) {
-                openOrCloseCard(child, child.id.slice("linkto_".length));
-                event.stopPropagation();
+            listen(child, 'click', function (event) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    openOrCloseCard(child.id.slice("linkto_".length), child);
+                });
             });
             elem.appendChild(child);
             // step
@@ -266,24 +276,25 @@ function cardToHTML(card, view) {
             elem.appendChild(document.createTextNode(text.slice(iChar, text.length)));
         }
     }
-    elem.addEventListener('click', function () {
-        expandOrContract(elem);
-    });
-    elem.addEventListener('scroll', function (event) {
-        getScrollPos(elem);
-    });
+    listen(elem, 'click', function () { expandOrContract(elem); });
+    listen(elem, 'scroll', function (event) { getScrollPos(elem); });
     return elem;
 }
+function listen(elem, type, func) {
+    elem.addEventListener(type, (event) => __awaiter(this, void 0, void 0, function* () {
+        console.log(elem.id, type);
+        yield func(event); // Assuming func is synchronous. If it's async, use await func(event);
+        event.stopPropagation();
+        debouncedSaveAll();
+    }));
+}
 function expandOrContract(div) {
-    console.log("expandOrContract", div.id);
     let view = s_graphView.userObj(div);
     if (view.state == CardViewState.Compact) {
-        console.log(" expanding");
         div.classList.add("code-expanded");
         view.state = CardViewState.Fullsize;
     }
     else if (view.state == CardViewState.Fullsize) {
-        console.log(" contracting");
         div.classList.remove("code-expanded");
         view.state = CardViewState.Compact;
         div.scrollLeft = view.xScroll;
@@ -300,29 +311,26 @@ function getScrollPos(div) {
         view.yScroll = div.scrollTop;
     }
 }
-/*
-        for(let i = card.dependsOn.length-1; i >= 0; i--) {
-            const dep : Dependency = card.dependsOn[i];
-            const iChar = dep.iChar;
-            const jChar = dep.jChar;
-            const before = text.slice(0, iChar);
-            const link = text.slice(iChar, jChar);
-            const after = text.slice(jChar);
-            text = `${before}<span class="tag" id="linkto_${dep.target}">${link}</span>${after}`
-        }
-        elem.innerHTML = text;
-        Array.from(elem.childNodes).forEach(child => {
-            if (child.nodeType === Node.ELEMENT_NODE && child instanceof HTMLElement) {
-                if (child.tagName.toLowerCase() === 'span') {
-                    child.addEventListener('click', function() {
-                        openOrCloseCard(child, child.id.slice("linkto_".length));
-                    });
-                }
-            }
-        });
-*/
+const debouncedSaveAll = debounce(() => { saveAll(); }, 300);
+function saveAll() {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log("saveAll");
+        const json = s_graphView.json();
+        yield saveObject(json, "sessions/test.json");
+    });
+}
+function saveObject(json, path) {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield runOnServer({ command: "save", path: "sessions/test.json", json: json });
+    });
+}
+function loadObject(path) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield runOnServer({ command: "load", path: "sessions/test.json" });
+    });
+}
 // if a card view is closed, opens it; otherwise closes it
-function openOrCloseCard(button, uid) {
+function openOrCloseCard(uid, button) {
     const card = findCard(uid);
     if (!card)
         return;
@@ -331,19 +339,24 @@ function openOrCloseCard(button, uid) {
         closeCard(existing);
     }
     else {
-        openCard(card, button);
+        openCard(uid, button);
     }
 }
 // opens a card, optionally connected to a button element
-function openCard(card, button) {
-    console.log("openCard", card.uid);
-    let view = new CardView(card, CardViewState.Compact);
-    let cardDiv = cardToHTML(card, view);
-    s_graphView.add(cardDiv, button, view);
+function openCard(uid, button) {
+    console.log("openCard", uid);
+    let linkID = "";
+    let parentID = "";
+    if (button) {
+        linkID = button.id;
+        let parent = s_graphView.findDivContainingLink(button);
+        if (parent)
+            parentID = parent.id;
+    }
+    s_graphView.open(uid, linkID, parentID, new CardView(uid, CardViewState.Compact));
     if (button) {
         button.className = "tag-highlight";
     }
-    return cardDiv;
 }
 // closes a card
 function closeCard(cardDiv) {

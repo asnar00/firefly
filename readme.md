@@ -3,50 +3,6 @@
 
 miso ("make it so") is an experimental GPT-assisted IDE that runs in the browser.
 
-## TODO
-
-### visual / UI
-- close/reopen child-trees
-- smooth motion
-- noob comes with you
-- open/close logic for multiple references
-- loopback/recursion
-- some way of viewing "boundaries" eg. client/server/python
-- open dependents
-- tree extends upwards
-- session persistence
-- multiple sessions
-
-- better inter-group position negotiation DONE
-- "focus in" on a node DONE: expand/contract
-- shadows DONE
-- arrows DONE, still buggy, needs collision
-- compact view DONE: expand/contract
-
-### search / GPT
-- symbolic search
-- semantic search
-- ask any question about current view
-
-### importing logic
-- multi-file imports
-- python classes / properties / methods
-- mixed codebase
-- tests
-
-### edit/build/debug
-- live coding
-- auto-generate instrumented code
-- variable assignment history
-- performance monitoring
-- doc/spec/etc (zerp functionality)
-
-### history/collaboration
-- live/nonlive collaboration
-- plug into github repo
-- history viewing
-
-
 ## Big Ideas
 
 - view code as a tree / graph, since that's what it is
@@ -91,3 +47,50 @@ Most likely, we can actually just use a comment or decoration, or something clev
 
 
 
+
+
+## TODO
+
+### visual / UI
+- reopen old trees
+- serialise session
+- smooth motion
+- noob comes with you
+- open/close logic for multiple references
+- loopback/recursion
+- some way of viewing "boundaries" eg. client/server/python
+- open dependents
+- tree extends upwards
+- session persistence
+- multiple sessions
+
+- restore scroll position on compact DONE
+- transitive close DONE
+- better inter-group position negotiation DONE
+- "focus in" on a node DONE
+- shadows DONE
+- arrows DONE
+- compact view DONE
+
+### search / GPT
+- symbolic search
+- semantic search
+- ask any question about current view
+
+### importing logic
+- multi-file imports
+- python classes / properties / methods
+- mixed codebase
+- tests
+
+### edit/build/debug
+- live coding
+- auto-generate instrumented code
+- variable assignment history
+- performance monitoring
+- doc/spec/etc (zerp functionality)
+
+### history/collaboration
+- live/nonlive collaboration
+- plug into github repo
+- history viewing

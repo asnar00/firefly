@@ -301,19 +301,7 @@ function openOrCloseCard(button: HTMLElement, uid: string) {
 // opens a card, optionally connected to a button element
 function openCard(card: any, button: HTMLElement | null) : HTMLElement {
     console.log("openCard", card.uid);
-    let elem= cardToHTML(card);
-    if (button) {
-        let parentCard = findCardContainingButton(button);
-        if (parentCard) {
-            const rect = getRect(parentCard);
-            const brect = getRect(button);
-            const left = rect.right + 32;
-            const top = (brect.top + brect.bottom)/2;
-            elem.style.left = `${left}px`;
-            elem.style.top = `${top}px`;
-        }
-    }
-    s_container.appendChild(elem);
+    s_graphView.open(card.uid, button.id);
     return elem;
 }
 

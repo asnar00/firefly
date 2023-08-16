@@ -1,0 +1,88 @@
+{
+    "nodes": [
+        {
+            "id": "function_main",
+            "link": "null",
+            "parent": "null",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0,
+                "uid": "function_main"
+            }
+        },
+        {
+            "id": "function_setupEvents",
+            "link": "linkto_function_setupEvents",
+            "parent": "function_main",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0,
+                "uid": "function_setupEvents"
+            }
+        },
+        {
+            "id": "function_loadCards",
+            "link": "linkto_function_loadCards",
+            "parent": "function_setupEvents",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0,
+                "uid": "function_loadCards"
+            }
+        },
+        {
+            "id": "function_autoImport",
+            "link": "linkto_function_autoImport",
+            "parent": "function_loadCards",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0,
+                "uid": "function_autoImport"
+            }
+        },
+        {
+            "id": "function_importCode",
+            "link": "linkto_function_importCode",
+            "parent": "function_autoImport",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0,
+                "uid": "function_importCode"
+            }
+        },
+        {
+            "id": "function_animateLogoToLeft",
+            "link": "linkto_function_animateLogoToLeft",
+            "parent": "function_autoImport",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0,
+                "uid": "function_animateLogoToLeft"
+            }
+        },
+        {
+            "id": "function_openMain",
+            "link": "linkto_function_openMain",
+            "parent": "function_autoImport",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0,
+                "uid": "function_openMain"
+            }
+        }
+    ]
+}

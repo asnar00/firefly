@@ -4,25 +4,28 @@
 // manages a graph of nodes
 // nodes can be any HTMLElement
 // just make sure nodes have unique ids
-import { element } from "./html.js";
-import { getBodyWidth } from "./html.js";
-import { scrollToView } from "./html.js";
-import { rect } from "./html.js";
-import { Rect } from "./html.js";
+import { element } from "./util.js";
+import { getBodyWidth } from "./util.js";
+import { scrollToView } from "./util.js";
+import { rect } from "./util.js";
+import { Rect } from "./util.js";
 // manages all top-level DOM nodes inside a container
 export class GraphView {
     // setup: pass the div that's going to hold all nodes
-    constructor(container) {
+    constructor(container, htmlFunction) {
         this.nodeMap = new Map();
         this.columns = [];
         this.padding = 24;
         this.arrowMap = new Map();
         this.container = container;
+        this.htmlFunction = htmlFunction;
         this.arrowsSVG = this.initArrows();
     }
     // given an id, returns the first div with that ID (expected to be unique)
-    find(id) {
-        const elementsArray = Array.from(this.container.querySelectorAll(`#${id}`));
+    find(id, parent) {
+        if (!parent)
+            parent = this.container;
+        const elementsArray = Array.from(parent.querySelectorAll(`#${id}`));
         if (elementsArray.length == 0)
             return null;
         return elementsArray[0];
@@ -43,16 +46,20 @@ export class GraphView {
     close(div) {
         const node = this.get(div);
         if (node) {
-            this.closeNodeRecursive(node);
+            let nodes = this.allChildren(node);
+            for (let node of nodes) {
+                this.closeSingleNode(node);
+            }
         }
         this.arrangeAll();
     }
-    closeNodeRecursive(node) {
+    allChildren(node) {
+        let result = [node];
         for (let n of this.nodeMap.values()) {
             if (n.parentDiv == node.div)
-                this.closeNodeRecursive(n);
+                result.push(...this.allChildren(n));
         }
-        this.closeSingleNode(node);
+        return result;
     }
     closeSingleNode(node) {
         if (node.linkDiv) {
@@ -61,6 +68,25 @@ export class GraphView {
         this.nodeMap.delete(node.div);
         node.div.remove();
         node.remove();
+    }
+    open(id, linkID, parentID, userObj) {
+        let div = this.htmlFunction(id, userObj);
+        this.container.appendChild(div);
+        let linkDiv = null;
+        if (linkID != "" && parentID != "") {
+            let parentDiv = this.find(parentID);
+            if (parentDiv)
+                linkDiv = this.find(linkID, parentDiv);
+            else
+                linkDiv = null;
+        }
+        this.add(div, linkDiv, userObj);
+    }
+    openJson(obj) {
+        let nodesJson = obj.nodes;
+        for (let n of nodesJson) {
+            this.open(n.id, n.link, n.parent, n.userObj);
+        }
     }
     // adds a div to the manager, and to the container div
     add(div, link, userObj = null) {
@@ -263,8 +289,14 @@ export class GraphView {
             }
         }
     }
+    json(node) {
+        if (!node) {
+            node = this.columns[0][0];
+        }
+        let nodes = this.allChildren(node);
+        return { nodes: nodes.map(node => node.json()) };
+    }
 }
-;
 // stores information about a div we're managing
 class Node {
     constructor(view, div, linkDiv, parentDiv, userObj = null) {
@@ -309,6 +341,14 @@ class Node {
         this.shadow.style.width = `${sr.width()}px`;
         this.shadow.style.height = `1px`;
         this.shadow.style.zIndex = `-10`;
+    }
+    json() {
+        var _a, _b, _c, _d;
+        return { id: this.div.id,
+            link: (_b = (_a = this.linkDiv) === null || _a === void 0 ? void 0 : _a.id) !== null && _b !== void 0 ? _b : "null",
+            parent: (_d = (_c = this.parentDiv) === null || _c === void 0 ? void 0 : _c.id) !== null && _d !== void 0 ? _d : "null",
+            emphasize: this.emphasize,
+            userObj: this.userObj };
     }
 }
 ;
