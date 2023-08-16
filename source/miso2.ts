@@ -60,6 +60,8 @@ enum CardViewState {
 class CardView {
     uid: string;
     state: CardViewState = CardViewState.Compact;
+    xScroll: number =0;
+    yScroll: number =0;
     constructor(card: Card, state: CardViewState) {
         this.uid = card.uid; this.state = state;
     }
@@ -237,6 +239,9 @@ function cardToHTML(card: Card, view: CardView) : HTMLElement {
     elem.addEventListener('click', function() {
         expandOrContract(elem);
     });
+    elem.addEventListener('scroll', function(event) {
+        getScrollPos(elem);
+    });
     return elem;
 }
 
@@ -247,14 +252,25 @@ function expandOrContract(div : HTMLElement) {
         console.log(" expanding");
         div.classList.add("code-expanded");
         view.state = CardViewState.Fullsize;
+
     } else if (view.state == CardViewState.Fullsize) {
         console.log(" contracting");
          div.classList.remove("code-expanded");
          view.state = CardViewState.Compact;
+         div.scrollLeft = view.xScroll;
+         div.scrollTop = view.yScroll;
     }
     s_graphView.emphasize(div, div.classList.contains("code-expanded"));
     s_graphView.arrangeAll();
     scrollToView(div);
+}
+
+function getScrollPos(div: HTMLElement) {
+    let view = s_graphView.userObj(div);
+    if (view.state == CardViewState.Compact) {
+        view.xScroll = div.scrollLeft;
+        view.yScroll = div.scrollTop;
+    }
 }
 
 /*

@@ -74,6 +74,8 @@ var CardViewState;
 class CardView {
     constructor(card, state) {
         this.state = CardViewState.Compact;
+        this.xScroll = 0;
+        this.yScroll = 0;
         this.uid = card.uid;
         this.state = state;
     }
@@ -267,6 +269,9 @@ function cardToHTML(card, view) {
     elem.addEventListener('click', function () {
         expandOrContract(elem);
     });
+    elem.addEventListener('scroll', function (event) {
+        getScrollPos(elem);
+    });
     return elem;
 }
 function expandOrContract(div) {
@@ -281,10 +286,19 @@ function expandOrContract(div) {
         console.log(" contracting");
         div.classList.remove("code-expanded");
         view.state = CardViewState.Compact;
+        div.scrollLeft = view.xScroll;
+        div.scrollTop = view.yScroll;
     }
     s_graphView.emphasize(div, div.classList.contains("code-expanded"));
     s_graphView.arrangeAll();
     scrollToView(div);
+}
+function getScrollPos(div) {
+    let view = s_graphView.userObj(div);
+    if (view.state == CardViewState.Compact) {
+        view.xScroll = div.scrollLeft;
+        view.yScroll = div.scrollTop;
+    }
 }
 /*
         for(let i = card.dependsOn.length-1; i >= 0; i--) {
