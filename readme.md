@@ -62,7 +62,6 @@ Most likely, we can actually just use a comment or decoration, or something clev
 - tree extends upwards
 - session persistence
 - multiple sessions
-
 - restore scroll position on compact DONE
 - transitive close DONE
 - better inter-group position negotiation DONE
