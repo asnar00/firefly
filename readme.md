@@ -21,10 +21,9 @@ firefly is an experimental GPT-assisted IDE that runs in the browser.
 ### polyglot
 
 - goal: to deliver a consistent, elegant workflow across multiple languages
-
 - each card can hold multiple code versions;
 - each version can be in a different language
-- "psuedocode" is also considered a language
+- "pseudocode" is also considered a language
 - use GPT to translate between different languages
 - thus allowing any code to run "anywhere" in the stack
 - boundaries between different languages are "abstracted away"
