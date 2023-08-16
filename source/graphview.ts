@@ -183,19 +183,45 @@ export class GraphView {
     
     // space groups out vertically so they don't overlap
     spaceGroupsVertically(groups: Node[][]) {
-        for(let i = 1; i < groups.length; i++) {
-            let prevGroup = groups[i-1];
-            let prevBottom = rect(prevGroup[prevGroup.length-1].div).bottom;
-            let group = groups[i];
-            let top = rect(group[0].div).top;
-            if (top <= (prevBottom + (this.padding*2))) {       // bigger gaps between groups
-                const newTop = prevBottom + (this.padding*2);  // where group[0] has to move to
-                const diff = newTop - top;  // therefore, how much to move by
-                for(let node of group) {
-                    node.yTarget += diff;
-                    node.setPos(node.xTarget, node.yTarget);
-                }
-            }
+        if (groups.length < 2) return;
+        const even = (groups.length % 2) == 0;
+        const iPivot = Math.floor((groups.length-1)/2);
+        if (even) {
+            this.checkGroups(groups[iPivot], groups[iPivot+1], 0.5);
+        }
+        for(let i=iPivot; i>0; i--) {
+            this.checkGroups(groups[i-1], groups[1], 0);
+        }
+        for(let i=iPivot; i < groups.length-1; i++) {
+            this.checkGroups(groups[i], groups[i+1], 1);
+        }
+    }
+
+    /*
+    pivot = (nGroups-1)/2
+
+    n=1:    nothing to do
+    n=2:    iPivot=(2-1)/2=>0.5=>0, check(0,1,0.5) correct.
+    n=3:    pivot = (3-1)/2 = 1; compare(1, 0); compare(1, 2)
+    n=4:    pivot = (4-1)/2 = 1.5; compare(1, 2); compare(1, 0); compare(2, 3)
+
+    */
+
+    checkGroups(groupA: Node[], groupB: Node[], mix: number) {
+        const bottomA = rect(groupA[groupA.length-1].div).bottom;
+        const topB = rect(groupB[0].div).top;
+        const overlap =  (bottomA + (this.padding*2)) - topB;
+        if (overlap < 0) return;
+        const moveA = -(overlap * (1 - mix));
+        const moveB = overlap * mix;
+        this.moveGroupVertically(groupA, moveA);
+        this.moveGroupVertically(groupB, moveB);
+    }
+
+    moveGroupVertically(group: Node[], yMove: number) {
+        for(let node of group) {
+            node.yTarget += yMove;
+            node.setPos(node.xTarget, node.yTarget);
         }
     }
 
