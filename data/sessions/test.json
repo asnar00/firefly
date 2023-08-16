@@ -85,27 +85,51 @@
             }
         },
         {
-            "id": "function_openCard",
-            "link": "linkto_function_openCard",
-            "parent": "function_openMain",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0,
-                "uid": "function_openCard"
-            }
-        },
-        {
             "id": "function_cardToHTML",
             "link": "linkto_function_cardToHTML",
             "parent": "function_setupEvents",
             "emphasize": false,
             "userObj": {
                 "state": 1,
-                "xScroll": 120,
-                "yScroll": 420.5,
+                "xScroll": 0,
+                "yScroll": 0,
                 "uid": "function_cardToHTML"
+            }
+        },
+        {
+            "id": "class_Card",
+            "link": "linkto_class_Card",
+            "parent": "function_cardToHTML",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 76,
+                "uid": "class_Card"
+            }
+        },
+        {
+            "id": "class_CodeBlock",
+            "link": "linkto_class_CodeBlock",
+            "parent": "class_Card",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0,
+                "uid": "class_CodeBlock"
+            }
+        },
+        {
+            "id": "class_Dependency",
+            "link": "linkto_class_Dependency",
+            "parent": "class_Card",
+            "emphasize": true,
+            "userObj": {
+                "state": 2,
+                "xScroll": 0,
+                "yScroll": 0,
+                "uid": "class_Dependency"
             }
         }
     ]

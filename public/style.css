@@ -56,7 +56,7 @@ h3 {
     overflow-y: auto; /* Enable vertical scrolling if the content overflows */
     box-sizing: border-box; /* Include padding and border in the element's total width and height */
     min-height: 2.2em;
-    max-width: 256px;
+    max-width: 320px;
     max-height: 128px;
     min-width: 0; /* The div will shrink to fit its content, but not smaller than its content */
     white-space: pre; /* This prevents the content from wrapping to the next line */

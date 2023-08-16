@@ -20,12 +20,14 @@ export class GraphView {
     arrowsSVG: SVGSVGElement;
     arrowMap: Map<HTMLElement, Arrow> = new Map();
     htmlFunction : Function;
+    attentionID: string;
 
     // setup: pass the div that's going to hold all nodes
     constructor(container: HTMLElement, htmlFunction: Function) {
         this.container = container;
         this.htmlFunction = htmlFunction;
         this.arrowsSVG = this.initArrows();
+        this.attentionID = "";
     }
 
     // given an id, returns the first div with that ID (expected to be unique)
@@ -76,7 +78,7 @@ export class GraphView {
         node.remove();
     }
 
-    open(id: string, linkID: string, parentID: string, userObj: any) {
+    open(id: string, linkID: string, parentID: string, userObj: any, emphasize: boolean=false) {
         let div = this.htmlFunction(id, userObj);
         this.container.appendChild(div);
         let linkDiv = null;
@@ -85,12 +87,20 @@ export class GraphView {
             if (parentDiv) linkDiv = this.find(linkID, parentDiv); else linkDiv = null;
         }
         this.add(div, linkDiv, userObj);
+        if (emphasize) {
+            this.get(div)!.emphasize = true;
+        }
     }
 
     openJson(obj: any) {
         let nodesJson : any[] = obj.nodes;
         for(let n of nodesJson) {
-            this.open(n.id, n.link, n.parent, n.userObj);
+            this.open(n.id, n.link, n.parent, n.userObj, n.emphasize);
+        }
+        this.attentionID = obj.attentionID;
+        if (this.attentionID != "") {
+            let attentionDiv = this.find(this.attentionID)!;
+            scrollToView(attentionDiv);
         }
     }
 
@@ -119,6 +129,7 @@ export class GraphView {
             this.addArrow(link, parentDiv, div);
         }
         this.arrangeAll();          // todo: call this every frame
+        this.attentionID = div.id;
         scrollToView(div);
         div.addEventListener('scroll', (event) => {
             this.updateArrowsFrom(div);
@@ -315,7 +326,8 @@ export class GraphView {
     json(node?: Node) {
         if (!node) { node = this.columns[0][0]; }
         let nodes: Node[] = this.allChildren(node);
-        return { nodes:  nodes.map(node => node.json()) };
+        return { attentionID: this.attentionID,
+                 nodes:  nodes.map(node => node.json()) };
     }
 }
 

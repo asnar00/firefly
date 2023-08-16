@@ -20,6 +20,7 @@ export class GraphView {
         this.container = container;
         this.htmlFunction = htmlFunction;
         this.arrowsSVG = this.initArrows();
+        this.attentionID = "";
     }
     // given an id, returns the first div with that ID (expected to be unique)
     find(id, parent) {
@@ -69,7 +70,7 @@ export class GraphView {
         node.div.remove();
         node.remove();
     }
-    open(id, linkID, parentID, userObj) {
+    open(id, linkID, parentID, userObj, emphasize = false) {
         let div = this.htmlFunction(id, userObj);
         this.container.appendChild(div);
         let linkDiv = null;
@@ -81,11 +82,19 @@ export class GraphView {
                 linkDiv = null;
         }
         this.add(div, linkDiv, userObj);
+        if (emphasize) {
+            this.get(div).emphasize = true;
+        }
     }
     openJson(obj) {
         let nodesJson = obj.nodes;
         for (let n of nodesJson) {
-            this.open(n.id, n.link, n.parent, n.userObj);
+            this.open(n.id, n.link, n.parent, n.userObj, n.emphasize);
+        }
+        this.attentionID = obj.attentionID;
+        if (this.attentionID != "") {
+            let attentionDiv = this.find(this.attentionID);
+            scrollToView(attentionDiv);
         }
     }
     // adds a div to the manager, and to the container div
@@ -113,6 +122,7 @@ export class GraphView {
             this.addArrow(link, parentDiv, div);
         }
         this.arrangeAll(); // todo: call this every frame
+        this.attentionID = div.id;
         scrollToView(div);
         div.addEventListener('scroll', (event) => {
             this.updateArrowsFrom(div);
@@ -294,7 +304,8 @@ export class GraphView {
             node = this.columns[0][0];
         }
         let nodes = this.allChildren(node);
-        return { nodes: nodes.map(node => node.json()) };
+        return { attentionID: this.attentionID,
+            nodes: nodes.map(node => node.json()) };
     }
 }
 // stores information about a div we're managing
