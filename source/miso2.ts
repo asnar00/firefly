@@ -215,7 +215,8 @@ function findCard(uid: string) : Card | null {
 function cardToHTML(id: string, view: CardView) : HTMLElement {
     let card : Card | null = findCard(id);
     if (!card) { return element(`<div></div>`); }
-    let elem : HTMLElement = element(`<div id="${card.uid}" class="code" spellcheck="false" contenteditable="false"></div>`);
+    let style = "code"; if (view.state == CardViewState.Fullsize) { style += " code-expanded"; }
+    let elem : HTMLElement = element(`<div id="${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
     let text : string = card.code[0].text;
     if (card.dependsOn.length==0) {
         elem.innerText = text;
@@ -241,6 +242,8 @@ function cardToHTML(id: string, view: CardView) : HTMLElement {
             elem.appendChild(document.createTextNode(text.slice(iChar, text.length)));
         }
     }
+    elem.scrollLeft = view.xScroll;
+    elem.scrollTop = view.yScroll;
     listen(elem, 'click', function() { expandOrContract(elem); });
     listen(elem, 'scroll', function(event: any) { getScrollPos(elem); });
     return elem;

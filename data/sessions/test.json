@@ -19,7 +19,7 @@
             "emphasize": false,
             "userObj": {
                 "state": 1,
-                "xScroll": 0,
+                "xScroll": 180,
                 "yScroll": 0,
                 "uid": "function_setupEvents"
             }
@@ -82,6 +82,30 @@
                 "xScroll": 0,
                 "yScroll": 0,
                 "uid": "function_openMain"
+            }
+        },
+        {
+            "id": "function_openCard",
+            "link": "linkto_function_openCard",
+            "parent": "function_openMain",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0,
+                "uid": "function_openCard"
+            }
+        },
+        {
+            "id": "function_cardToHTML",
+            "link": "linkto_function_cardToHTML",
+            "parent": "function_setupEvents",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 120,
+                "yScroll": 420.5,
+                "uid": "function_cardToHTML"
             }
         }
     ]
