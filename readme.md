@@ -15,6 +15,7 @@ firefly is an experimental GPT-assisted IDE that runs in the browser.
 - clicking a hyperlink in a caller opens the card to the right of the caller
 - this can also work backwards; i.e. can open all cards that depend on this one, to the left
 - edit code in-card, automatically updates the correct lines of the source file
+- text and semantic search across all versions of code
 
 ## Really big ideas
 
@@ -52,6 +53,7 @@ Most likely, we can actually just use a comment or decoration, or something clev
 
 ### visual / UI
 - reopen old trees
+- make sure buttons get highlighted properly
 - serialise session
 - smooth motion
 - noob comes with you

@@ -78,7 +78,7 @@ async function main() {
 
 async function setupEvents() {
     const container = document.getElementById('container') as HTMLElement;
-    s_graphView = new GraphView(container, cardToHTML);
+    s_graphView = new GraphView(container, cardToHTML, highlightLink);
     await loadCards();
     await animateLogoToLeft();
     await openMain();
@@ -247,6 +247,10 @@ function cardToHTML(id: string, view: CardView) : HTMLElement {
     return elem;
 }
 
+function highlightLink(linkDiv: HTMLElement, highlight: boolean) {
+    if (highlight) linkDiv.className = "tag-highlight"; else linkDiv.className = "tag";
+}
+
 function listen(elem: HTMLElement, type: string, func: Function) {
     elem.addEventListener(type, async (event) => {
         console.log(elem.id, type);
@@ -321,7 +325,7 @@ function openCard(uid: string, button: HTMLElement | null){
     }
     s_graphView.open(uid, linkID, parentID, new CardView(uid, CardViewState.Compact));
     if (button) {
-        button.className = "tag-highlight";
+        highlightLink(button, true);
     }
 }
 
@@ -329,7 +333,7 @@ function openCard(uid: string, button: HTMLElement | null){
 function closeCard(cardDiv: HTMLElement) {
     let button = s_graphView.findLink(cardDiv);
     if (button) {
-        button.className = "tag";
+        highlightLink(button, false);
     }
     s_graphView.close(cardDiv);
 }

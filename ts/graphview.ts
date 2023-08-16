@@ -20,12 +20,14 @@ export class GraphView {
     arrowsSVG: SVGSVGElement;
     arrowMap: Map<HTMLElement, Arrow> = new Map();
     htmlFunction : Function;
+    highlightFunction : Function;
     attentionID: string;
 
     // setup: pass the div that's going to hold all nodes
-    constructor(container: HTMLElement, htmlFunction: Function) {
+    constructor(container: HTMLElement, htmlFunction: Function, highlightFunction: Function) {
         this.container = container;
         this.htmlFunction = htmlFunction;
+        this.highlightFunction = highlightFunction;
         this.arrowsSVG = this.initArrows();
         this.attentionID = "";
     }
@@ -85,6 +87,9 @@ export class GraphView {
         if (linkID != "" && parentID != "") {
             let parentDiv = this.find(parentID);
             if (parentDiv) linkDiv = this.find(linkID, parentDiv); else linkDiv = null;
+        }
+        if (linkDiv) {
+            this.highlightFunction(linkDiv, true);
         }
         this.add(div, linkDiv, userObj);
         if (emphasize) {

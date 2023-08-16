@@ -12,13 +12,14 @@ import { Rect } from "./util.js";
 // manages all top-level DOM nodes inside a container
 export class GraphView {
     // setup: pass the div that's going to hold all nodes
-    constructor(container, htmlFunction) {
+    constructor(container, htmlFunction, highlightFunction) {
         this.nodeMap = new Map();
         this.columns = [];
         this.padding = 24;
         this.arrowMap = new Map();
         this.container = container;
         this.htmlFunction = htmlFunction;
+        this.highlightFunction = highlightFunction;
         this.arrowsSVG = this.initArrows();
         this.attentionID = "";
     }
@@ -80,6 +81,9 @@ export class GraphView {
                 linkDiv = this.find(linkID, parentDiv);
             else
                 linkDiv = null;
+        }
+        if (linkDiv) {
+            this.highlightFunction(linkDiv, true);
         }
         this.add(div, linkDiv, userObj);
         if (emphasize) {
