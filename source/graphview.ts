@@ -53,6 +53,7 @@ export class GraphView {
     // adds a div to the manager, and to the container div
     add(div: HTMLElement, link: HTMLElement | null) {
         this.container.appendChild(div);
+        
         let parentDiv = (link)? this.findDivContainingLink(link) : null;
         let xTarget = 0;
         let yTarget = 0;
@@ -75,6 +76,9 @@ export class GraphView {
         }
         this.arrangeAll();          // todo: call this every frame
         scrollToView(div);
+        div.addEventListener('scroll', (event) => {
+            this.updateArrowsFrom(div);
+        });
     }
 
     // emphasizes element (moves shadow forward in space)
@@ -228,6 +232,16 @@ export class GraphView {
         }
     }
 
+    updateArrowsFrom(parentDiv: HTMLElement) {
+        for (let arrow of this.arrowMap.values()) {
+            if (arrow.parentDiv === parentDiv) {
+                arrow.initDrawRect();
+                // todo: collision detection here
+                arrow.update();
+            }
+        }
+    }
+
 };
 
 
@@ -301,7 +315,6 @@ class Arrow {
         this.path.setAttribute('fill', 'transparent');
     }
     addToSVG(svg: SVGSVGElement) {
-        console.log("Arrow.addToSVG");
         svg.appendChild(this.path);
     }
     removeFromSVG() {
@@ -312,9 +325,13 @@ class Arrow {
         const linkRect = rect(this.linkDiv);
         const targetRect = rect(this.div);
         const xFrom = parentRect.right;
-        const yFrom = (linkRect.top + linkRect.bottom) / 2;
+        let yFrom = (linkRect.top + linkRect.bottom) / 2;
+        yFrom = Math.max(yFrom, parentRect.top + 12);
+        yFrom = Math.min(yFrom, parentRect.bottom - 12);
         const xTo = targetRect.left;
-        const yTo = (targetRect.top + targetRect.bottom) / 2;
+        let yTo = yFrom;
+        yTo = Math.max(yTo, targetRect.top + 12);
+        yTo = Math.min(yTo, targetRect.bottom - 12);
         this.drawRect = new Rect(xFrom, yFrom, xTo, yTo);
         this.xVertical = (xFrom + xTo) / 2;
     }
@@ -337,6 +354,5 @@ class Arrow {
         ].join(' ');
 
         this.path.setAttribute('d', d);
-        console.log("Arrow.update:", startX, startY, endX, endY);
     }
 };

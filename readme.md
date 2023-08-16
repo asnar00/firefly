@@ -6,17 +6,19 @@ miso ("make it so") is an experimental GPT-assisted IDE that runs in the browser
 ## TODO
 
 ### visual / UI
-- shadows
-- arrows
+- shadows DONE
+- arrows DONE, still buggy, needs collision
+- close/reopen child-trees
 - smooth motion
 - noob comes with you
 - open/close logic for multiple references
 - loopback/recursion
 - some way of viewing "boundaries" eg. client/server/python
-- "focus in" on a node
+- "focus in" on a node DONE: expand/contract
 - open dependents
-- compact view
+- compact view DONE: expand/contract
 - tree extends upwards
+- better inter-group position negotiation
 
 ### search / GPT
 - symbolic search
