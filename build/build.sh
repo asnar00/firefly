@@ -1,6 +1,6 @@
 #! /bin/bash
 tput -Txterm reset
-echo "miso-build"
+echo "firefly-build"
 
 #echo " compiling typescript"
-tsc -p "/Users/asnaroo/desktop/experiments/miso2/source"
+tsc -p "/Users/asnaroo/desktop/experiments/firefly/ts"

@@ -1,5 +1,5 @@
 // ᕦ(ツ)ᕤ
-// miso2
+// firefly.ts
 // author: asnaroo (with a little help from GPT4)
 
 import {GraphView} from "./graphview.js";
@@ -12,7 +12,7 @@ window.onload = () => { main(); };
 const s_useLocalFiles = false;              // change this to true to enable local file access
 let dirHandle: any | null = null;
 let s_port = 8000;
-let s_endPoint = "miso2";
+let s_endPoint = "firefly";
 var s_allCards: Card[];
 var s_graphView : GraphView;
 
@@ -72,7 +72,7 @@ class CardView {
 }
 
 async function main() {
-    console.log("ᕦ(ツ)ᕤ miso2.");
+    console.log("firefly ᕦ(ツ)ᕤ");
     await setupEvents();
 }
 
@@ -80,6 +80,8 @@ async function setupEvents() {
     const container = document.getElementById('container') as HTMLElement;
     s_graphView = new GraphView(container, cardToHTML);
     await loadCards();
+    await animateLogoToLeft();
+    await openMain();
 }
 
 async function loadCards() {
@@ -102,9 +104,7 @@ async function openMain() {
 
 // to avoid the annoyance of having to give permissions every time, just get system to do it
 async function autoImport() {
-    await importCode("miso2", ".ts");
-    await animateLogoToLeft();
-    await openMain();
+    await importCode("firefly", ".ts");
 }
 
 async function importLocalFolder() {
@@ -121,8 +121,6 @@ async function importLocalFolder() {
         dirHandle = await (window as any).showDirectoryPicker!();
         button.remove();
         await importLocalFile();
-        await animateLogoToLeft();
-        await openMain();
     });
 }
 

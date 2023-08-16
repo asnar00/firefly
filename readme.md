@@ -1,7 +1,7 @@
 ᕦ(ツ)ᕤ
-# miso2
+# firefly
 
-miso ("make it so") is an experimental GPT-assisted IDE that runs in the browser.
+firefly is an experimental GPT-assisted IDE that runs in the browser.
 
 ## Big Ideas
 

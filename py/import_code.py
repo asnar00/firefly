@@ -391,8 +391,8 @@ def newUid() -> str:
     return uid
 
 if __name__ == "__main__":
-    cards = importCardsFromFile("miso2.ts")
+    cards = importCardsFromFile("firefly.ts")
     jsonObj = cardsToJsonDict(cards)
     json = json.dumps(jsonObj, indent=4)
-    writeTextToFile(json, "miso2.json")
+    writeTextToFile(json, "firefly.json")
     #importCardsFromFile("import.py")

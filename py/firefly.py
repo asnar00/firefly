@@ -1,6 +1,6 @@
 # ᕦ(ツ)ᕤ
 # author: asnaroo and gpt4. copyright © nøøb, all rights reserved.
-# webservery.py serves public files, runs commands, returns results
+# firefly.py serves public files, runs commands, returns results
 
 import http.server
 import socketserver
@@ -18,7 +18,7 @@ import subprocess
 import import_code
 
 listen_port = 8003
-app_name = "miso2"
+app_name = "firefly"
 
 public = f"/Users/asnaroo/desktop/experiments/{app_name}/public"
 root = f"/Users/asnaroo/desktop/experiments/{app_name}"
@@ -89,8 +89,8 @@ def app_process(post_data):
     if cmd== "import":
         print("app_process: IMPORT")
         code = post_data["code"]
-        if code == "miso2": # TEST: to avoid annoyance of having to grant user permission each run
-            code = import_code.readFile("miso2.ts")
+        if code == "firefly": # TEST: to avoid annoyance of having to grant user permission each run
+            code = import_code.readFile("../ts/firefly.ts")
         jsonObj = import_code.import_code(code, post_data["ext"])
         return jsonObj
     elif cmd== "save":

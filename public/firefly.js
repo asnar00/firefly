@@ -1,5 +1,5 @@
 // ᕦ(ツ)ᕤ
-// miso2
+// firefly.ts
 // author: asnaroo (with a little help from GPT4)
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -25,7 +25,7 @@ window.onload = () => { main(); };
 const s_useLocalFiles = false; // change this to true to enable local file access
 let dirHandle = null;
 let s_port = 8000;
-let s_endPoint = "miso2";
+let s_endPoint = "firefly";
 var s_allCards;
 var s_graphView;
 class CodeBlock {
@@ -86,7 +86,7 @@ class CardView {
 }
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("ᕦ(ツ)ᕤ miso2.");
+        console.log("firefly ᕦ(ツ)ᕤ");
         yield setupEvents();
     });
 }
@@ -95,6 +95,8 @@ function setupEvents() {
         const container = document.getElementById('container');
         s_graphView = new GraphView(container, cardToHTML);
         yield loadCards();
+        yield animateLogoToLeft();
+        yield openMain();
     });
 }
 function loadCards() {
@@ -122,9 +124,7 @@ function openMain() {
 // to avoid the annoyance of having to give permissions every time, just get system to do it
 function autoImport() {
     return __awaiter(this, void 0, void 0, function* () {
-        yield importCode("miso2", ".ts");
-        yield animateLogoToLeft();
-        yield openMain();
+        yield importCode("firefly", ".ts");
     });
 }
 function importLocalFolder() {
@@ -142,8 +142,6 @@ function importLocalFolder() {
             dirHandle = yield window.showDirectoryPicker();
             button.remove();
             yield importLocalFile();
-            yield animateLogoToLeft();
-            yield openMain();
         }));
     });
 }
