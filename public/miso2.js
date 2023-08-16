@@ -303,9 +303,7 @@ function importCode(fullText, ext) {
 }
 // finds the card with the given UID, or null if doesn't exist
 function findCard(uid) {
-    console.log("findCard");
     let index = s_allCards.findIndex((card) => card.uid === uid);
-    console.log("index", index);
     if (index < 0)
         return null;
     return s_allCards[index];

@@ -8,14 +8,17 @@ import { element } from "./html.js";
 import { getBodyWidth } from "./html.js";
 import { scrollToView } from "./html.js";
 import { rect } from "./html.js";
+import { Rect } from "./html.js";
 // manages all top-level DOM nodes inside a container
 export class GraphView {
     // setup: pass the div that's going to hold all nodes
     constructor(container) {
-        this.map = new WeakMap();
+        this.nodeMap = new WeakMap();
         this.columns = [];
         this.padding = 24;
+        this.arrowMap = new Map();
         this.container = container;
+        this.arrowsSVG = this.initArrows();
     }
     // given an id, returns the first div with that ID (expected to be unique)
     find(id) {
@@ -32,6 +35,9 @@ export class GraphView {
     // closes a div that's open, and all children as well (todo)
     close(div) {
         const node = this.get(div);
+        if (node.linkDiv) {
+            this.removeArrow(node.linkDiv);
+        }
         div.remove();
         node.remove();
         this.arrangeAll(); // todo: call this every frame
@@ -56,7 +62,10 @@ export class GraphView {
         }
         let node = new Node(this, div, link, parentDiv);
         node.setPos(xTarget, yTarget);
-        this.map.set(div, node);
+        this.nodeMap.set(div, node);
+        if (link && parentDiv) {
+            this.addArrow(link, parentDiv, div);
+        }
         this.arrangeAll(); // todo: call this every frame
         scrollToView(div);
     }
@@ -85,11 +94,12 @@ export class GraphView {
         const widthInPixels = getBodyWidth();
         const newWidth = Math.max(window.innerWidth, xPos);
         document.body.style.width = `${newWidth}px`;
+        this.updateArrows();
     }
     // ------------------ private ----------------------------
     // returns the Node associated with a top-level div
     get(div) {
-        let node = this.map.get(div);
+        let node = this.nodeMap.get(div);
         return node ? node : null;
     }
     // find the top-level div that contains a link elemeent
@@ -165,6 +175,37 @@ export class GraphView {
         this.columns[node.column].push(node);
         this.columns[node.column].sort((a, b) => (a.yLink() - b.yLink()));
     }
+    //----------------------------- arrows ---------------------------------
+    // set up the SVG arrow renderer
+    initArrows() {
+        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.style.position = 'relative';
+        svg.style.width = '100%';
+        svg.style.height = '100%';
+        svg.style.pointerEvents = 'none';
+        svg.style.zIndex = '1000';
+        this.container.parentElement.appendChild(svg);
+        return svg;
+    }
+    addArrow(linkDiv, parentDiv, div) {
+        let arrow = new Arrow(linkDiv, parentDiv, div);
+        this.arrowMap.set(linkDiv, arrow);
+        arrow.addToSVG(this.arrowsSVG);
+    }
+    removeArrow(linkDiv) {
+        let arrow = this.arrowMap.get(linkDiv);
+        if (arrow) {
+            arrow.removeFromSVG();
+            this.arrowMap.delete(linkDiv);
+        }
+    }
+    updateArrows() {
+        for (let arrow of this.arrowMap.values()) {
+            arrow.initDrawRect();
+            // todo: collision detection here
+            arrow.update();
+        }
+    }
 }
 ;
 // stores information about a div we're managing
@@ -210,6 +251,57 @@ class Node {
         this.shadow.style.width = `${sr.width()}px`;
         this.shadow.style.height = `1px`;
         this.shadow.style.zIndex = `-10`;
+    }
+}
+;
+class Arrow {
+    constructor(linkDiv, parentDiv, div) {
+        this.drawRect = new Rect(0, 0, 0, 0);
+        this.xVertical = 0;
+        this.linkDiv = linkDiv;
+        this.parentDiv = parentDiv;
+        this.div = div;
+        this.path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        this.path.setAttribute('stroke', '#87bdb5');
+        this.path.setAttribute('stroke-width', '3');
+        this.path.setAttribute('fill', 'transparent');
+    }
+    addToSVG(svg) {
+        console.log("Arrow.addToSVG");
+        svg.appendChild(this.path);
+    }
+    removeFromSVG() {
+        this.path.remove();
+    }
+    initDrawRect() {
+        const parentRect = rect(this.parentDiv);
+        const linkRect = rect(this.linkDiv);
+        const targetRect = rect(this.div);
+        const xFrom = parentRect.right;
+        const yFrom = (linkRect.top + linkRect.bottom) / 2;
+        const xTo = targetRect.left;
+        const yTo = (targetRect.top + targetRect.bottom) / 2;
+        this.drawRect = new Rect(xFrom, yFrom, xTo, yTo);
+        this.xVertical = (xFrom + xTo) / 2;
+    }
+    update() {
+        const startX = this.drawRect.left;
+        const startY = this.drawRect.top;
+        const endX = this.drawRect.right;
+        const endY = this.drawRect.bottom;
+        const cornerRadius = Math.min(Math.abs(endY - startY) / 2, 10);
+        const midX = this.xVertical;
+        const vs = (endY < startY) ? -1 : +1;
+        const d = [
+            `M ${startX} ${startY}`,
+            `H ${midX - cornerRadius}`,
+            `Q ${midX} ${startY} ${midX} ${startY + vs * cornerRadius}`,
+            `V ${endY - vs * cornerRadius}`,
+            `Q ${midX} ${endY} ${midX + cornerRadius} ${endY}`,
+            `H ${endX}`,
+        ].join(' ');
+        this.path.setAttribute('d', d);
+        console.log("Arrow.update:", startX, startY, endX, endY);
     }
 }
 ;

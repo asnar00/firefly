@@ -282,9 +282,7 @@ async function importCode(fullText: string, ext: string) {
 
 // finds the card with the given UID, or null if doesn't exist
 function findCard(uid: string) : Card | null {
-    console.log("findCard");
     let index = s_allCards.findIndex((card : any ) => card.uid === uid);
-    console.log("index", index);
     if (index < 0) return null;
     return s_allCards[index];
 }
