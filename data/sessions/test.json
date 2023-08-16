@@ -1,5 +1,5 @@
 {
-    "attentionID": "function_setupEvents",
+    "attentionID": "function_openMain",
     "nodes": [
         {
             "id": "function_main",
@@ -23,6 +23,42 @@
                 "xScroll": 0,
                 "yScroll": 0,
                 "uid": "function_setupEvents"
+            }
+        },
+        {
+            "id": "function_loadCards",
+            "link": "linkto_function_loadCards",
+            "parent": "function_setupEvents",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0,
+                "uid": "function_loadCards"
+            }
+        },
+        {
+            "id": "function_animateLogoToLeft",
+            "link": "linkto_function_animateLogoToLeft",
+            "parent": "function_setupEvents",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0,
+                "uid": "function_animateLogoToLeft"
+            }
+        },
+        {
+            "id": "function_openMain",
+            "link": "linkto_function_openMain",
+            "parent": "function_setupEvents",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0,
+                "uid": "function_openMain"
             }
         }
     ]

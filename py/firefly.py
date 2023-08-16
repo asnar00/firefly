@@ -123,9 +123,12 @@ def readJsonFromFile(filename):
         data = json.load(file)
     return data
 
-if __name__ == "__main__":
+def firefly_server():
     print(f"starting webserver listening on port {listen_port}...")
     Handler = CustomHTTPRequestHandler
     with socketserver.TCPServer(("", listen_port), Handler) as httpd:
         print(f"Serving on port {listen_port}")
         httpd.serve_forever()
+
+if __name__ == "__main__":
+    firefly_server()
