@@ -100,14 +100,3 @@ background-color: #AED2CB; /* light gray */
     margin: 0 0px;
     vertical-align: text-top;
 }
-
-/* Style the scrollbar thumb */
-::webkit-scrollbar-thumb {
-    background-color: #b51d1d;
-    border-radius: 6px;
-}
-
-/* Style the scrollbar thumb on hover */
-::webkit-scrollbar-thumb:hover {
-    background-color: #888; /* keep the same color */
-}
