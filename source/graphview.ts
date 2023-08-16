@@ -14,7 +14,7 @@ import {Rect} from "./html.js";
 // manages all top-level DOM nodes inside a container
 export class GraphView {
     container: HTMLElement;
-    nodeMap: WeakMap<HTMLElement, Node> = new WeakMap();
+    nodeMap: Map<HTMLElement, Node> = new Map();
     columns: Node[][] = [];
     padding: number = 24;
     arrowsSVG: SVGSVGElement;
@@ -39,15 +39,29 @@ export class GraphView {
         return node ? node.linkDiv : null;
     }
 
-    // closes a div that's open, and all children as well (todo)
+    // closes a div that's open, and all children as well
     close(div: HTMLElement) {
         const node = this.get(div)!;
+        if (node) {
+            this.closeNodeRecursive(node);
+        }
+        this.arrangeAll();
+    }
+
+    closeNodeRecursive(node: Node) {
+        for(let n of this.nodeMap.values()) {
+            if (n.parentDiv == node.div) this.closeNodeRecursive(n);
+        }
+        this.closeSingleNode(node);
+    }
+
+    closeSingleNode(node: Node) {
         if (node.linkDiv) {
             this.removeArrow(node.linkDiv);
         }
-        div.remove();
+        this.nodeMap.delete(node.div);
+        node.div.remove();
         node.remove();
-        this.arrangeAll();          // todo: call this every frame
     }
 
     // adds a div to the manager, and to the container div

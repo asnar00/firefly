@@ -13,7 +13,7 @@ import { Rect } from "./html.js";
 export class GraphView {
     // setup: pass the div that's going to hold all nodes
     constructor(container) {
-        this.nodeMap = new WeakMap();
+        this.nodeMap = new Map();
         this.columns = [];
         this.padding = 24;
         this.arrowMap = new Map();
@@ -32,15 +32,28 @@ export class GraphView {
         const node = this.get(div);
         return node ? node.linkDiv : null;
     }
-    // closes a div that's open, and all children as well (todo)
+    // closes a div that's open, and all children as well
     close(div) {
         const node = this.get(div);
+        if (node) {
+            this.closeNodeRecursive(node);
+        }
+        this.arrangeAll();
+    }
+    closeNodeRecursive(node) {
+        for (let n of this.nodeMap.values()) {
+            if (n.parentDiv == node.div)
+                this.closeNodeRecursive(n);
+        }
+        this.closeSingleNode(node);
+    }
+    closeSingleNode(node) {
         if (node.linkDiv) {
             this.removeArrow(node.linkDiv);
         }
-        div.remove();
+        this.nodeMap.delete(node.div);
+        node.div.remove();
         node.remove();
-        this.arrangeAll(); // todo: call this every frame
     }
     // adds a div to the manager, and to the container div
     add(div, link) {
