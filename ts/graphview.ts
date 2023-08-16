@@ -105,7 +105,7 @@ export class GraphView {
         this.attentionID = obj.attentionID;
         if (this.attentionID != "") {
             let attentionDiv = this.find(this.attentionID)!;
-            scrollToView(attentionDiv);
+            if (attentionDiv) { scrollToView(attentionDiv); }
         }
     }
 

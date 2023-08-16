@@ -98,7 +98,9 @@ export class GraphView {
         this.attentionID = obj.attentionID;
         if (this.attentionID != "") {
             let attentionDiv = this.find(this.attentionID);
-            scrollToView(attentionDiv);
+            if (attentionDiv) {
+                scrollToView(attentionDiv);
+            }
         }
     }
     // adds a div to the manager, and to the container div
