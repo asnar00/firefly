@@ -13,7 +13,7 @@ let dirHandle: any | null = null;
 let s_port = 8000;
 let s_endPoint = "miso2";
 var s_allCards: Card[];
-var s_view : GraphView;
+var s_graphView : GraphView;
 
 class CodeBlock {
     text: string = "";                  // actual code text
@@ -50,6 +50,24 @@ class Card {
     rankFromTop: number = 0;            // 1 means nothing calls this; x means called by things with rank < x
 }
 
+enum CardViewState {
+    SuperCompact,
+    Compact,
+    Fullsize,
+    Editing
+}
+
+class CardView {
+    uid: string;
+    state: CardViewState = CardViewState.Compact;
+    constructor(card: Card, state: CardViewState) {
+        this.uid = card.uid; this.state = state;
+    }
+    card() : Card | null {
+        return findCard(this.uid);
+    }
+}
+
 async function main() {
     console.log("ᕦ(ツ)ᕤ miso2.");
     await setupEvents();
@@ -57,13 +75,13 @@ async function main() {
 
 async function setupEvents() {
     const container = document.getElementById('container') as HTMLElement;
-    s_view = new GraphView(container);
+    s_graphView = new GraphView(container);
     await loadCards();
 }
 
 async function loadCards() {
     if (s_useLocalFiles) {
-        await setupDirectoryButton();
+        await importLocalFolder();
     } else {
         await autoImport();
     }
@@ -78,23 +96,24 @@ async function openMain() {
 
 // to avoid the annoyance of having to give permissions every time, just get system to do it
 async function autoImport() {
-    const openDirectoryButton: HTMLButtonElement = document.getElementById('openDirectory') as HTMLButtonElement;
-    openDirectoryButton.remove();
     await importCode("miso2", ".ts");
     await animateLogoToLeft();
     await openMain();
 }
 
-async function setupDirectoryButton() {
-    const openDirectoryButton: HTMLButtonElement = document.getElementById('openDirectory') as HTMLButtonElement;
-    openDirectoryButton.addEventListener('click', async () => {
+async function importLocalFolder() {
+    let logo: HTMLButtonElement = document.getElementById('logo_and_shadow') as HTMLButtonElement;
+    let button = element(`<button id="openDirectory" class="transparent-button" style="display: inline-block;">
+                            <h3 style="display: inline-block;">▶︎</h3></button>`);
+    logo.insertBefore(button, logo.children[1]);
+    button.addEventListener('click', async () => {
         console.log("button pressed!");
         if (!(window as any).showDirectoryPicker) {
             console.log("showDirectoryPicker is null");
             return;
         }
         dirHandle = await (window as any).showDirectoryPicker!();
-        openDirectoryButton.remove();
+        button.remove();
         await importLocalFile();
         await animateLogoToLeft();
         await openMain();
@@ -103,7 +122,7 @@ async function setupDirectoryButton() {
 
 // test-reads the first file and sets text in browser
 async function importLocalFile() {
-    console.log("testImportLocalFile");
+    console.log("importLocalFile");
     // Assuming we are just reading the first file we find.
     console.log("values...");
     for await (const entry of dirHandle.values()) {
@@ -139,107 +158,6 @@ function readFileAsText(file: File): Promise<string> {
         reader.onload = event => resolve(event.target!.result as string);
         reader.onerror = error => reject(error);
         reader.readAsText(file);
-    });
-}
-
-// Store Directory Handle in IndexedDB
-async function storeHandle(): Promise<void> {
-    return new Promise((resolve, reject) => {
-        const openRequest = indexedDB.open('myDatabase', 1);
-
-        openRequest.onupgradeneeded = (event: any) => {
-            const db = event.target.result;
-            if (!db.objectStoreNames.contains('fileHandles')) {
-                db.createObjectStore('fileHandles');
-            }
-        };
-
-        openRequest.onsuccess = () => {
-            const db = openRequest.result;
-            const transaction = db.transaction('fileHandles', 'readwrite');
-            const objectStore = transaction.objectStore('fileHandles');
-            const request = objectStore.put(dirHandle, 'dirHandle');
-
-            request.onsuccess = () => {
-                resolve();
-            };
-
-            request.onerror = () => {
-                reject(new Error('Error storing dirHandle to IndexedDB'));
-            };
-        };
-
-        openRequest.onerror = () => {
-            reject(new Error('Error opening database'));
-        };
-    });
-}
-
-// Retrieve Directory Handle from IndexedDB
-async function getStoredHandle() : Promise<any> {
-    console.log("getStoredHandle");
-    return new Promise((resolve, reject) => {
-        const openRequest = indexedDB.open('myDatabase', 1);
-
-        openRequest.onsuccess = () => {
-            const db = openRequest.result;
-            const transaction = db.transaction('fileHandles', 'readonly');
-            const objectStore = transaction.objectStore('fileHandles');
-            const request = objectStore.get('dirHandle');
-
-            request.onsuccess = () => {
-                if (request.result) {
-                    resolve(request.result);
-                } else {
-                    resolve(null);  // or resolve(undefined);
-                }
-            };
-
-            request.onerror = () => {
-                //reject(new Error('Error retrieving dirHandle from IndexedDB'));
-                resolve(null);
-            };
-        };
-
-        openRequest.onerror = () => {
-            reject(new Error('Error opening database'));
-        };
-    });
-}
-
-let dbInstance : any;
-async function openDB() {
-    console.log("openDB");
-    if (dbInstance) {
-        console.log("already have a db instance");
-        return dbInstance;
-    }
-    console.log("creating db instance");
-    return new Promise((resolve, reject) => {
-        const request = indexedDB.open('myDatabase', 1);  // 'myDatabase' is the name of your database.
-
-        // This event is only triggered once when the database is first created or when 
-        // the version number is changed (like from 1 to 2).
-        request.onupgradeneeded = function(event: any) {
-            console.log("onupgradeneeded");
-            const db = event.target.result;
-            
-            // Create an object store named 'fileHandles' if it doesn't exist.
-            if (!db.objectStoreNames.contains('fileHandles')) {
-                db.createObjectStore('fileHandles');
-            }
-        };
-
-        request.onsuccess = function(event: any) {
-            console.log("onsuccess");
-            dbInstance = event.target.result;
-            resolve(dbInstance);
-        };
-
-        request.onerror = function(event: any) {
-            console.error("Error opening database:", event.target.errorCode);
-            reject(event.target.errorCode);
-        };
     });
 }
 
@@ -288,7 +206,7 @@ function findCard(uid: string) : Card | null {
 }
 
 // generates HTML for card, but doesn't connect it yet
-function cardToHTML(card: Card) : HTMLElement {
+function cardToHTML(card: Card, view: CardView) : HTMLElement {
     let elem : HTMLElement = element(`<div id="${card.uid}" class="code" spellcheck="false" contenteditable="false"></div>`);
     let text : string = card.code[0].text;
     if (card.dependsOn.length==0) {
@@ -323,9 +241,19 @@ function cardToHTML(card: Card) : HTMLElement {
 }
 
 function expandOrContract(div : HTMLElement) {
-    div.classList.toggle("code-expanded");
-    s_view.emphasize(div, div.classList.contains("code-expanded"));
-    s_view.arrangeAll();
+    console.log("expandOrContract", div.id);
+    let view = s_graphView.userObj(div);
+    if (view.state == CardViewState.Compact) {
+        console.log(" expanding");
+        div.classList.add("code-expanded");
+        view.state = CardViewState.Fullsize;
+    } else if (view.state == CardViewState.Fullsize) {
+        console.log(" contracting");
+         div.classList.remove("code-expanded");
+         view.state = CardViewState.Compact;
+    }
+    s_graphView.emphasize(div, div.classList.contains("code-expanded"));
+    s_graphView.arrangeAll();
     scrollToView(div);
 }
 
@@ -355,7 +283,7 @@ function expandOrContract(div : HTMLElement) {
 function openOrCloseCard(button: HTMLElement, uid: string) {
     const card : Card | null = findCard(uid);
     if (!card) return;
-    let existing = s_view.find(uid);
+    let existing = s_graphView.find(uid);
     if (existing) {
         closeCard(existing);
     } else {
@@ -366,8 +294,9 @@ function openOrCloseCard(button: HTMLElement, uid: string) {
 // opens a card, optionally connected to a button element
 function openCard(card: Card, button: HTMLElement | null) : HTMLElement {
     console.log("openCard", card.uid);
-    let cardDiv = cardToHTML(card);
-    s_view.add(cardDiv, button);
+    let view = new CardView(card, CardViewState.Compact);
+    let cardDiv = cardToHTML(card, view);
+    s_graphView.add(cardDiv, button, view);
     if (button) {
         button.className = "tag-highlight";
     }
@@ -376,11 +305,11 @@ function openCard(card: Card, button: HTMLElement | null) : HTMLElement {
 
 // closes a card
 function closeCard(cardDiv: HTMLElement) {
-    let button = s_view.findLink(cardDiv);
+    let button = s_graphView.findLink(cardDiv);
     if (button) {
         button.className = "tag";
     }
-    s_view.close(cardDiv);
+    s_graphView.close(cardDiv);
 }
 
 // sends a command request to the server, waits on the reply, returns dictionary object

@@ -26,7 +26,7 @@ let dirHandle = null;
 let s_port = 8000;
 let s_endPoint = "miso2";
 var s_allCards;
-var s_view;
+var s_graphView;
 class CodeBlock {
     constructor(code, language, iLine) {
         this.text = ""; // actual code text
@@ -64,6 +64,23 @@ class Card {
         this.rankFromTop = 0; // 1 means nothing calls this; x means called by things with rank < x
     }
 }
+var CardViewState;
+(function (CardViewState) {
+    CardViewState[CardViewState["SuperCompact"] = 0] = "SuperCompact";
+    CardViewState[CardViewState["Compact"] = 1] = "Compact";
+    CardViewState[CardViewState["Fullsize"] = 2] = "Fullsize";
+    CardViewState[CardViewState["Editing"] = 3] = "Editing";
+})(CardViewState || (CardViewState = {}));
+class CardView {
+    constructor(card, state) {
+        this.state = CardViewState.Compact;
+        this.uid = card.uid;
+        this.state = state;
+    }
+    card() {
+        return findCard(this.uid);
+    }
+}
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("ᕦ(ツ)ᕤ miso2.");
@@ -73,14 +90,14 @@ function main() {
 function setupEvents() {
     return __awaiter(this, void 0, void 0, function* () {
         const container = document.getElementById('container');
-        s_view = new GraphView(container);
+        s_graphView = new GraphView(container);
         yield loadCards();
     });
 }
 function loadCards() {
     return __awaiter(this, void 0, void 0, function* () {
         if (s_useLocalFiles) {
-            yield setupDirectoryButton();
+            yield importLocalFolder();
         }
         else {
             yield autoImport();
@@ -98,24 +115,25 @@ function openMain() {
 // to avoid the annoyance of having to give permissions every time, just get system to do it
 function autoImport() {
     return __awaiter(this, void 0, void 0, function* () {
-        const openDirectoryButton = document.getElementById('openDirectory');
-        openDirectoryButton.remove();
         yield importCode("miso2", ".ts");
         yield animateLogoToLeft();
         yield openMain();
     });
 }
-function setupDirectoryButton() {
+function importLocalFolder() {
     return __awaiter(this, void 0, void 0, function* () {
-        const openDirectoryButton = document.getElementById('openDirectory');
-        openDirectoryButton.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
+        let logo = document.getElementById('logo_and_shadow');
+        let button = element(`<button id="openDirectory" class="transparent-button" style="display: inline-block;">
+                            <h3 style="display: inline-block;">▶︎</h3></button>`);
+        logo.insertBefore(button, logo.children[1]);
+        button.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
             console.log("button pressed!");
             if (!window.showDirectoryPicker) {
                 console.log("showDirectoryPicker is null");
                 return;
             }
             dirHandle = yield window.showDirectoryPicker();
-            openDirectoryButton.remove();
+            button.remove();
             yield importLocalFile();
             yield animateLogoToLeft();
             yield openMain();
@@ -126,7 +144,7 @@ function setupDirectoryButton() {
 function importLocalFile() {
     var e_1, _a;
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("testImportLocalFile");
+        console.log("importLocalFile");
         // Assuming we are just reading the first file we find.
         console.log("values...");
         try {
@@ -174,98 +192,6 @@ function readFileAsText(file) {
         reader.readAsText(file);
     });
 }
-// Store Directory Handle in IndexedDB
-function storeHandle() {
-    return __awaiter(this, void 0, void 0, function* () {
-        return new Promise((resolve, reject) => {
-            const openRequest = indexedDB.open('myDatabase', 1);
-            openRequest.onupgradeneeded = (event) => {
-                const db = event.target.result;
-                if (!db.objectStoreNames.contains('fileHandles')) {
-                    db.createObjectStore('fileHandles');
-                }
-            };
-            openRequest.onsuccess = () => {
-                const db = openRequest.result;
-                const transaction = db.transaction('fileHandles', 'readwrite');
-                const objectStore = transaction.objectStore('fileHandles');
-                const request = objectStore.put(dirHandle, 'dirHandle');
-                request.onsuccess = () => {
-                    resolve();
-                };
-                request.onerror = () => {
-                    reject(new Error('Error storing dirHandle to IndexedDB'));
-                };
-            };
-            openRequest.onerror = () => {
-                reject(new Error('Error opening database'));
-            };
-        });
-    });
-}
-// Retrieve Directory Handle from IndexedDB
-function getStoredHandle() {
-    return __awaiter(this, void 0, void 0, function* () {
-        console.log("getStoredHandle");
-        return new Promise((resolve, reject) => {
-            const openRequest = indexedDB.open('myDatabase', 1);
-            openRequest.onsuccess = () => {
-                const db = openRequest.result;
-                const transaction = db.transaction('fileHandles', 'readonly');
-                const objectStore = transaction.objectStore('fileHandles');
-                const request = objectStore.get('dirHandle');
-                request.onsuccess = () => {
-                    if (request.result) {
-                        resolve(request.result);
-                    }
-                    else {
-                        resolve(null); // or resolve(undefined);
-                    }
-                };
-                request.onerror = () => {
-                    //reject(new Error('Error retrieving dirHandle from IndexedDB'));
-                    resolve(null);
-                };
-            };
-            openRequest.onerror = () => {
-                reject(new Error('Error opening database'));
-            };
-        });
-    });
-}
-let dbInstance;
-function openDB() {
-    return __awaiter(this, void 0, void 0, function* () {
-        console.log("openDB");
-        if (dbInstance) {
-            console.log("already have a db instance");
-            return dbInstance;
-        }
-        console.log("creating db instance");
-        return new Promise((resolve, reject) => {
-            const request = indexedDB.open('myDatabase', 1); // 'myDatabase' is the name of your database.
-            // This event is only triggered once when the database is first created or when 
-            // the version number is changed (like from 1 to 2).
-            request.onupgradeneeded = function (event) {
-                console.log("onupgradeneeded");
-                const db = event.target.result;
-                // Create an object store named 'fileHandles' if it doesn't exist.
-                if (!db.objectStoreNames.contains('fileHandles')) {
-                    db.createObjectStore('fileHandles');
-                }
-            };
-            request.onsuccess = function (event) {
-                console.log("onsuccess");
-                dbInstance = event.target.result;
-                resolve(dbInstance);
-            };
-            request.onerror = function (event) {
-                console.error("Error opening database:", event.target.errorCode);
-                reject(event.target.errorCode);
-            };
-        });
-    });
-}
 // move the logo and shadow to the left of the window
 function animateLogoToLeft() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -309,7 +235,7 @@ function findCard(uid) {
     return s_allCards[index];
 }
 // generates HTML for card, but doesn't connect it yet
-function cardToHTML(card) {
+function cardToHTML(card, view) {
     let elem = element(`<div id="${card.uid}" class="code" spellcheck="false" contenteditable="false"></div>`);
     let text = card.code[0].text;
     if (card.dependsOn.length == 0) {
@@ -344,9 +270,20 @@ function cardToHTML(card) {
     return elem;
 }
 function expandOrContract(div) {
-    div.classList.toggle("code-expanded");
-    s_view.emphasize(div, div.classList.contains("code-expanded"));
-    s_view.arrangeAll();
+    console.log("expandOrContract", div.id);
+    let view = s_graphView.userObj(div);
+    if (view.state == CardViewState.Compact) {
+        console.log(" expanding");
+        div.classList.add("code-expanded");
+        view.state = CardViewState.Fullsize;
+    }
+    else if (view.state == CardViewState.Fullsize) {
+        console.log(" contracting");
+        div.classList.remove("code-expanded");
+        view.state = CardViewState.Compact;
+    }
+    s_graphView.emphasize(div, div.classList.contains("code-expanded"));
+    s_graphView.arrangeAll();
     scrollToView(div);
 }
 /*
@@ -375,7 +312,7 @@ function openOrCloseCard(button, uid) {
     const card = findCard(uid);
     if (!card)
         return;
-    let existing = s_view.find(uid);
+    let existing = s_graphView.find(uid);
     if (existing) {
         closeCard(existing);
     }
@@ -386,8 +323,9 @@ function openOrCloseCard(button, uid) {
 // opens a card, optionally connected to a button element
 function openCard(card, button) {
     console.log("openCard", card.uid);
-    let cardDiv = cardToHTML(card);
-    s_view.add(cardDiv, button);
+    let view = new CardView(card, CardViewState.Compact);
+    let cardDiv = cardToHTML(card, view);
+    s_graphView.add(cardDiv, button, view);
     if (button) {
         button.className = "tag-highlight";
     }
@@ -395,11 +333,11 @@ function openCard(card, button) {
 }
 // closes a card
 function closeCard(cardDiv) {
-    let button = s_view.findLink(cardDiv);
+    let button = s_graphView.findLink(cardDiv);
     if (button) {
         button.className = "tag";
     }
-    s_view.close(cardDiv);
+    s_graphView.close(cardDiv);
 }
 // sends a command request to the server, waits on the reply, returns dictionary object
 function runOnServer(command) {

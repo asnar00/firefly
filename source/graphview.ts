@@ -33,6 +33,13 @@ export class GraphView {
         return elementsArray[0] as HTMLElement;
     }
 
+    // given a div, returns the userObj of the first node that matches
+    userObj(div: HTMLElement) : any {
+        const node = this.get(div);
+        if (!node) return null;
+        return node.userObj;
+    }
+
     // given a div, returns the linkDiv that opened it (todo: more than one? IDK)
     findLink(div: HTMLElement) : HTMLElement | null {
         const node = this.get(div);
@@ -65,7 +72,7 @@ export class GraphView {
     }
 
     // adds a div to the manager, and to the container div
-    add(div: HTMLElement, link: HTMLElement | null) {
+    add(div: HTMLElement, link: HTMLElement | null, userObj: any = null) {
         this.container.appendChild(div);
         
         let parentDiv = (link)? this.findDivContainingLink(link) : null;
@@ -82,7 +89,7 @@ export class GraphView {
             xTarget = crect.left + 150;
             yTarget = (window.innerHeight / 2) - (crect.height()/2);
         }
-        let node = new Node(this, div, link, parentDiv);
+        let node = new Node(this, div, link, parentDiv, userObj);
         node.setPos(xTarget, yTarget);
         this.nodeMap.set(div, node);
         if (link && parentDiv) {
@@ -288,6 +295,7 @@ export class GraphView {
 // stores information about a div we're managing
 class Node {
     graph: GraphView;                       // the view we're a part of
+    userObj: any;                           // per-node user info
     div: HTMLElement;                       // the div we're tracking
     linkDiv: HTMLElement | null;            // the link that triggered this
     parentDiv: HTMLElement | null;          // the parent div of the link div that opened this node
@@ -297,8 +305,9 @@ class Node {
     shadow: HTMLElement;                    // the shadow, all-important :-)
     emphasize: boolean = false;             // if set, comes forward in the stack
 
-    constructor(view: GraphView, div: HTMLElement, linkDiv: HTMLElement | null, parentDiv: HTMLElement | null) {
+    constructor(view: GraphView, div: HTMLElement, linkDiv: HTMLElement | null, parentDiv: HTMLElement | null, userObj: any =null) {
         this.graph = view;
+        this.userObj = userObj;
         if (parentDiv === undefined) {
             console.log("WARNING: parentDiv undefined!");
         }

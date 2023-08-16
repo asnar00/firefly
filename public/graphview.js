@@ -27,6 +27,13 @@ export class GraphView {
             return null;
         return elementsArray[0];
     }
+    // given a div, returns the userObj of the first node that matches
+    userObj(div) {
+        const node = this.get(div);
+        if (!node)
+            return null;
+        return node.userObj;
+    }
     // given a div, returns the linkDiv that opened it (todo: more than one? IDK)
     findLink(div) {
         const node = this.get(div);
@@ -56,7 +63,7 @@ export class GraphView {
         node.remove();
     }
     // adds a div to the manager, and to the container div
-    add(div, link) {
+    add(div, link, userObj = null) {
         this.container.appendChild(div);
         let parentDiv = (link) ? this.findDivContainingLink(link) : null;
         let xTarget = 0;
@@ -73,7 +80,7 @@ export class GraphView {
             xTarget = crect.left + 150;
             yTarget = (window.innerHeight / 2) - (crect.height() / 2);
         }
-        let node = new Node(this, div, link, parentDiv);
+        let node = new Node(this, div, link, parentDiv, userObj);
         node.setPos(xTarget, yTarget);
         this.nodeMap.set(div, node);
         if (link && parentDiv) {
@@ -260,12 +267,13 @@ export class GraphView {
 ;
 // stores information about a div we're managing
 class Node {
-    constructor(view, div, linkDiv, parentDiv) {
+    constructor(view, div, linkDiv, parentDiv, userObj = null) {
         this.column = 0; // column we're in (first one zero)
         this.xTarget = 0; // where we're trying to get to, to avoid others
         this.yTarget = 0; // ..
         this.emphasize = false; // if set, comes forward in the stack
         this.graph = view;
+        this.userObj = userObj;
         if (parentDiv === undefined) {
             console.log("WARNING: parentDiv undefined!");
         }
