@@ -376,7 +376,7 @@ class Arrow {
         this.parentDiv = parentDiv;
         this.div = div;
         this.path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        this.path.setAttribute('stroke', '#87bdb5');
+        this.path.setAttribute('stroke', '#a7e9dc');
         this.path.setAttribute('stroke-width', '3');
         this.path.setAttribute('fill', 'transparent');
     }

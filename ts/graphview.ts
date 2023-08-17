@@ -412,7 +412,7 @@ class Arrow {
     constructor(linkDiv: HTMLElement, parentDiv: HTMLElement, div: HTMLElement) {
         this.linkDiv = linkDiv; this.parentDiv = parentDiv; this.div = div;
         this.path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        this.path.setAttribute('stroke', '#87bdb5');
+        this.path.setAttribute('stroke', '#a7e9dc');
         this.path.setAttribute('stroke-width', '3');
         this.path.setAttribute('fill', 'transparent');
     }
@@ -427,7 +427,7 @@ class Arrow {
         const linkRect = rect(this.linkDiv);
         const targetRect = rect(this.div);
         const xFrom = parentRect.right;
-        let yFrom = (linkRect.top + linkRect.bottom) / 2;
+        let yFrom = (linkRect.top + linkRect.bottom)/2;
         yFrom = Math.max(yFrom, parentRect.top + 12);
         yFrom = Math.min(yFrom, parentRect.bottom - 12);
         const xTo = targetRect.left;
@@ -435,7 +435,7 @@ class Arrow {
         yTo = Math.max(yTo, targetRect.top + 12);
         yTo = Math.min(yTo, targetRect.bottom - 12);
         this.drawRect = new Rect(xFrom, yFrom, xTo, yTo);
-        this.xVertical = (xFrom + xTo) / 2;
+        this.xVertical = (xFrom + xTo)/2;
     }
     update() {
         const startX = this.drawRect.left;
