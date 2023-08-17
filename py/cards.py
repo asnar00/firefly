@@ -10,16 +10,13 @@ from typing import List
 import random
 import json
 
-global vb
-vb = True
-
-def importAllCards(folders) -> dict:
+def importAllCards(project, folders) -> dict:
     cards = []
     for folder in folders:
         files = findAllFiles(folder, ".ts") + findAllFiles(folder, ".py")
         print("files:", files)
         for file in files:
-            cards.extend(importCardsFromFile(file))
+            cards.extend(importCardsFromFile(project, file))
     computeDependencies(cards)
     for c in cards:
         print(c.uid())
@@ -33,7 +30,7 @@ class Language:
         return ""
     def comment(self) -> str:
         return ""
-    def importCards(self,module,  text):
+    def importCards(self, project, module,  text):
         return []
     def findTypeAndName(self, card, minIndent) -> (str, str):
         return ("", "")
@@ -46,7 +43,8 @@ class CodeBlock:
         self.jLine = iLine # inclusive: eurgh
         
 class Card:
-    def __init__(self, module: str, code: str, language: Language, iLine: int) :
+    def __init__(self, project: str, module: str, code: str, language: Language, iLine: int) :
+        self.project = project  # global
         self.module = module    # root-relative path of the file, for disambiguation
         self.language = language.shortName()    
         self.kind = ''          # "class" or "function" or "other"
@@ -66,7 +64,7 @@ class Card:
         if self.parent: return self.parent.name + "." + self.name
         else: return self.name
     def uid(self):
-        u = self.language + "_" + self.module + "_" + self.kind + "_"
+        u = self.language + "_" + self.project + "_" + self.module + "_" + self.kind + "_"
         if self.parent: u += self.parent.name + "_"
         u += self.name
         return u
@@ -101,7 +99,7 @@ class Python(Language):
     def name(self): return "python"
     def shortName(self): return "py"
     def comment(self): return "#"
-    def importCards(self, module, text, minIndent) -> List[Card]:
+    def importCards(self, project, module, text, minIndent) -> List[Card]:
         lines = text.split("\n")
         card = None
         cards = []
@@ -114,7 +112,7 @@ class Python(Language):
                 indent = nTabsAtStart(line)
                 if indent >= minIndent:
                     if card == None or (oldIndent > minIndent and indent == minIndent) or (indent==minIndent and oldIndent==indent and (not(prevLine.strip().startswith("#")))):
-                        card = Card(module, line, self, i+1)
+                        card = Card(project, module, line, self, i+1)
                         cards.append(card)
                     else:
                         card.code[0].text += "\n" + line
@@ -136,7 +134,7 @@ class Typescript(Language):
     def name(self): return "typescript"
     def shortName(self): return "ts"
     def comment(self): return "//"
-    def importCards(self, module, text, minIndent) -> List[Card]:
+    def importCards(self, project, module, text, minIndent) -> List[Card]:
         lines = text.split("\n")
         cards = []
         card = None
@@ -152,7 +150,7 @@ class Typescript(Language):
                     singleClose = (indent <= minIndent) and (line.strip() == "}")
                     if not singleClose:
                         if indent == minIndent and not prevLine.strip().startswith("//"):
-                            card = Card(module, line, self, iLine+1)
+                            card = Card(project, module, line, self, iLine+1)
                             cards.append(card)
                         else:
                             card.code[0].text += "\n" + line
@@ -201,25 +199,21 @@ def findLanguage(ext: str) -> Language:
     else:
         raise Exception("Unrecognised file extension")
     
-def importCardsFromFile(filename) -> List[Card]:
-    global vb
+def importCardsFromFile(project, filename) -> List[Card]:
     #print("importing cards from", filename)
     root, ext = os.path.splitext(filename)
     module = root.split('/')[-1]        # eg. firefly or cards
     text = readFile(filename)
-    return importCards(module, text, ext)
+    return importCards(project, module, text, ext)
 
-def importCards(module: str, text: str, ext: str) -> List[Card]:
-    global vb
-    #print("importing cards")
+def importCards(project: str, module: str, text: str, ext: str) -> List[Card]:
     language = findLanguage(ext)
-    #print("language:", language.name())
-    cards = importCardsFromText(module, language, text, None, 0)
+    cards = importCardsFromText(project, module, language, text, None, 0)
     allChildren = []
     for c in cards:
         if c.kind == "class":
             #print("importing methods for class", c.name)
-            c.children = importCardsFromText(module, language, c.code[0].text, c, 1)
+            c.children = importCardsFromText(project, module, language, c.code[0].text, c, 1)
             for child in c.children:
                 child.code[0].iLine += c.code[0].iLine +1       # not sure why but hey
                 child.code[0].jLine += c.code[0].iLine +1
@@ -236,7 +230,6 @@ def cardsToJsonDict(cards: List[Card]) -> dict:
     return jsonObj
 
 def computeDependencies(cards: List[Card]):
-    global vb
     #print("\ncomputing dependencies...")
     # for each card's code, run through all other cards to see if their names occur
     for card in cards:
@@ -245,9 +238,8 @@ def computeDependencies(cards: List[Card]):
                 iCharStart = -1
                 search = ""
                 if c != card and c.language != card.language and c.name == card.name and c.kind == "function":     # cross-language dependency
-                    search = f"@{c.module}.{c.name}"
+                    search = f"@{c.project}.{c.name}"
                     iCharStart = card.code[0].text.find(search)
-                    print("BINGO!", card.uid(), "==>", c.uid())
                 elif c != card and c.name != "unknown" and c.name != card.name and c.language == card.language:
                     search = c.name 
                     if c.kind == "method":
@@ -296,7 +288,6 @@ def searchBackwards(s: str, target: str, iChar: int) -> bool:
     return False
 
 def computeLevels(cards: List[Card]):
-    global vb
     #print("computeLevels...")
     # now compute the levels of all callable things (not classes or properties)
     callables = [c for c in cards if c.kind == "method" or c.kind == "function"]
@@ -358,9 +349,8 @@ def writeTextToFile(text: str, path: str):
     with open(path, 'w') as file:
         file.write(text)
 
-def importCardsFromText(module: str, language: Language, text: str, parent: Card, minIndent: int)-> List[Card]:
-    global vb
-    cards = language.importCards(module, text, minIndent)
+def importCardsFromText(project: str, module: str, language: Language, text: str, parent: Card, minIndent: int)-> List[Card]:
+    cards = language.importCards(project, module, text, minIndent)
     for c in cards:
         c.parent = parent
         (c.kind, c.name) = language.findTypeAndName(c)
@@ -370,7 +360,6 @@ def importCardsFromText(module: str, language: Language, text: str, parent: Card
     return cards
     
 def findWordInString(word: str, string: str) -> int:    # not part of another word
-    global vb
     punc = " !@#$%^&*()+-={}[]:\";\',.<>/?\`~"
     index = 0
     while index != -1:

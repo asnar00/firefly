@@ -88,9 +88,11 @@ TODAY:
 - ask any question about current view
 
 ### importing logic
+- cross-project dependencies
 - python classes / properties / methods NEXT
 - multi-file imports DONE
 - mixed codebase DONE
+- language server
 - tests
 
 ### edit/build/debug

@@ -90,7 +90,7 @@ async function loadCards() {
     if (s_useLocalFiles) {
         await importLocalFolder();
     } 
-    const jsonObj = await importFolders(["ts", "py"]);
+    const jsonObj = await importFolders("firefly", ["ts", "py"]);
     s_allCards = jsonObj.cards as Card[];
     console.log("nCards:", s_allCards.length);
     let uids: string[] = [];
@@ -104,7 +104,7 @@ async function openMain() {
     let json = await load("session/test.json");
     if (json.error) {
         console.log("failed to load session:", json.error);
-        openCard("ts_firefly_function_main", null);
+        openCard("ts_firefly_firefly_function_main", null);
     } else {
         s_graphView.openJson(json);
     }
@@ -192,8 +192,8 @@ async function animateLogoToLeft(): Promise<void> {
 }
 
 // returns fresh JSON for all cards in the codebase
-async function importFolders(folders: string[]) {
-    return await remote("@firefly.importFolders", { folders: folders });
+async function importFolders(project: string, folders: string[]) {
+    return await remote("@firefly.importFolders", { project: project, folders: folders });
 }
 
 // finds the card with the given UID, or null if doesn't exist

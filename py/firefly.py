@@ -87,7 +87,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 def firefly(func, args):
     if func == "importFolders":
         print("importFolders", args)
-        return importFolders(args['folders'])
+        return importFolders(args['project'], args['folders'])
     elif func == "save":
         print("save", args)
         return save(args["path"], args["json"])
@@ -96,10 +96,10 @@ def firefly(func, args):
         return load(args["path"])
     return f"${app_name}: command not supported"
 
-def importFolders(folders):
+def importFolders(project, folders):
     fullPaths = []
     for f in folders: fullPaths.append(root + "/" + f)
-    return importAllCards( fullPaths )
+    return importAllCards(project, fullPaths)
 
 def save(path, obj):
     path = root + "/data/" + path
