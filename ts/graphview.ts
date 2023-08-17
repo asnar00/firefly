@@ -22,7 +22,6 @@ export class GraphView {
     htmlFunction : Function;
     highlightFunction : Function;
     attentionID: string;
-
     // setup: pass the div that's going to hold all nodes
     constructor(container: HTMLElement, htmlFunction: Function, highlightFunction: Function) {
         this.container = container;
@@ -78,6 +77,7 @@ export class GraphView {
         this.nodeMap.delete(node.div);
         node.div.remove();
         node.remove();
+
     }
 
     open(id: string, linkID: string, parentID: string, userObj: any, emphasize: boolean=false) {
@@ -91,10 +91,11 @@ export class GraphView {
         if (linkDiv) {
             this.highlightFunction(linkDiv, true);
         }
-        this.add(div, linkDiv, userObj);
+        let node: Node = this.add(div, linkDiv, userObj);
         if (emphasize) {
-            this.get(div)!.emphasize = true;
+            node!.emphasize = true;
         }
+        scrollToView(div);
     }
 
     openJson(obj: any) {
@@ -110,9 +111,8 @@ export class GraphView {
     }
 
     // adds a div to the manager, and to the container div
-    add(div: HTMLElement, link: HTMLElement | null, userObj: any = null) {
+    add(div: HTMLElement, link: HTMLElement | null, userObj: any = null) : Node {
         this.container.appendChild(div);
-        
         let parentDiv = (link)? this.findDivContainingLink(link) : null;
         let xTarget = 0;
         let yTarget = 0;
@@ -128,6 +128,7 @@ export class GraphView {
             yTarget = (window.innerHeight / 2) - (crect.height()/2);
         }
         let node = new Node(this, div, link, parentDiv, userObj);
+        node.setTargetPos(xTarget, yTarget);
         node.setPos(xTarget, yTarget);
         this.nodeMap.set(div, node);
         if (link && parentDiv) {
@@ -136,9 +137,7 @@ export class GraphView {
         this.arrangeAll();          // todo: call this every frame
         this.attentionID = div.id;
         scrollToView(div);
-        div.addEventListener('scroll', (event) => {
-            this.updateArrowsFrom(div);
-        });
+        return node;
     }
 
     // emphasizes element (moves shadow forward in space)
@@ -158,15 +157,21 @@ export class GraphView {
                 this.spaceNodesInGroup(group, xPos);
             }
             this.spaceGroupsVertically(groups);
-        
             // now get xPos = max of all right-edges
             for(const node of this.columns[i]) {
-                xPos = Math.max(xPos, rect(node.div).right + (this.padding * 2));
+                xPos = Math.max(xPos, node.targetRect().right + (this.padding * 2));
             }
         }
         const widthInPixels = getBodyWidth();
         const newWidth = Math.max(window.innerWidth, xPos);
         document.body.style.width = `${newWidth}px`;
+    }
+
+    // update
+    update() {
+        for(let node of this.nodeMap.values()) {
+            node.update();
+        }
         this.updateArrows();
     }
 
@@ -209,10 +214,12 @@ export class GraphView {
         // first find the total height of the group, plus padding
         let sumHeight = (group.length-1) * this.padding;
         for(const node of group) {
-            sumHeight += rect(node.div).height();
+            sumHeight += node.targetRect().height();
         }
         // then find the centerline of the group's parent
-        const parentRect = rect(group[0].parentDiv!);
+        const parentDiv = group[0].parentDiv!;
+        const parentNode = this.get(parentDiv)!;
+        const parentRect = parentNode.targetRect();
         const centerLine = (parentRect.top + parentRect.bottom)/2;
         // now space group out vertically around the centerline
         let yPos = Math.max(this.padding, centerLine - (sumHeight/2));
@@ -220,10 +227,8 @@ export class GraphView {
         for (let i = 0; i < group.length; i++) {
             let node = group[i];
             let xOffset = (i < pivot) ? i : (pivot - (i - pivot));
-            node.xTarget = xPos + (xOffset * this.padding);
-            node.yTarget = yPos;
-            node.setPos(node.xTarget, node.yTarget);
-            yPos += rect(node.div).height() + this.padding;
+            node.setTargetPos(xPos + (xOffset * this.padding), yPos);
+            yPos += node.targetRect().height() + this.padding;
         }
     }
     
@@ -243,19 +248,9 @@ export class GraphView {
         }
     }
 
-    /*
-    pivot = (nGroups-1)/2
-
-    n=1:    nothing to do
-    n=2:    iPivot=(2-1)/2=>0.5=>0, check(0,1,0.5) correct.
-    n=3:    pivot = (3-1)/2 = 1; compare(1, 0); compare(1, 2)
-    n=4:    pivot = (4-1)/2 = 1.5; compare(1, 2); compare(1, 0); compare(2, 3)
-
-    */
-
     checkGroups(groupA: Node[], groupB: Node[], mix: number) {
-        const bottomA = rect(groupA[groupA.length-1].div).bottom;
-        const topB = rect(groupB[0].div).top;
+        const bottomA = groupA[groupA.length-1].targetRect().bottom;
+        const topB = groupB[0].targetRect().top;
         const overlap =  (bottomA + (this.padding*2)) - topB;
         if (overlap < 0) return;
         const moveA = -(overlap * (1 - mix));
@@ -267,7 +262,6 @@ export class GraphView {
     moveGroupVertically(group: Node[], yMove: number) {
         for(let node of group) {
             node.yTarget += yMove;
-            node.setPos(node.xTarget, node.yTarget);
         }
     }
 
@@ -312,19 +306,7 @@ export class GraphView {
 
     updateArrows() {
         for (let arrow of this.arrowMap.values()) {
-            arrow.initDrawRect();
-            // todo: collision detection here
             arrow.update();
-        }
-    }
-
-    updateArrowsFrom(parentDiv: HTMLElement) {
-        for (let arrow of this.arrowMap.values()) {
-            if (arrow.parentDiv === parentDiv) {
-                arrow.initDrawRect();
-                // todo: collision detection here
-                arrow.update();
-            }
         }
     }
 
@@ -345,6 +327,8 @@ class Node {
     linkDiv: HTMLElement | null;            // the link that triggered this
     parentDiv: HTMLElement | null;          // the parent div of the link div that opened this node
     column: number = 0;                     // column we're in (first one zero)
+    x: number = 0;                          // position right now
+    y: number = 0;                          // ..
     xTarget: number = 0;                    // where we're trying to get to, to avoid others
     yTarget: number = 0;                    // ..
     shadow: HTMLElement;                    // the shadow, all-important :-)
@@ -371,9 +355,30 @@ class Node {
         this.shadow.remove();
     }
 
+    setTargetPos(x: number, y: number) {
+        const str : string[] = this.div.id.split("_");
+        console.log(str[str.length-1], y);
+        this.xTarget = x;
+        this.yTarget = y;
+    }
+
     setPos(x: number, y: number) {
+        this.x = x; this.y = y;
         this.div.style.left = `${x}px`;
         this.div.style.top = `${y}px`;
+    }
+
+    targetRect() : Rect {
+        const r = rect(this.div);
+        return new Rect(this.xTarget, this.yTarget, this.xTarget + r.width(), this.yTarget + r.height());
+    }
+
+    update() {
+        const dx = this.xTarget - this.x;
+        const dy = this.yTarget - this.y;
+        const x = (Math.abs(dx)<=1) ? this.xTarget : (this.x + dx*0.1);
+        const y = (Math.abs(dy)<=1) ? this.yTarget : (this.y + dy*0.1);
+        this.setPos(x, y);
         this.updateShadow();
     }
 
@@ -412,8 +417,9 @@ class Arrow {
     constructor(linkDiv: HTMLElement, parentDiv: HTMLElement, div: HTMLElement) {
         this.linkDiv = linkDiv; this.parentDiv = parentDiv; this.div = div;
         this.path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        this.path.setAttribute('stroke', '#a7e9dc');
+        this.path.setAttribute('stroke', '#87bdb5');
         this.path.setAttribute('stroke-width', '3');
+        this.path.setAttribute('stroke-opacity', '1');
         this.path.setAttribute('fill', 'transparent');
     }
     addToSVG(svg: SVGSVGElement) {
@@ -422,22 +428,26 @@ class Arrow {
     removeFromSVG() {
         this.path.remove();
     }
+    update() {
+        this.initDrawRect();
+        this.updatePath();
+    }
     initDrawRect() {
         const parentRect = rect(this.parentDiv);
         const linkRect = rect(this.linkDiv);
         const targetRect = rect(this.div);
-        const xFrom = parentRect.right;
+        const xFrom = parentRect.right + 2;
         let yFrom = (linkRect.top + linkRect.bottom)/2;
         yFrom = Math.max(yFrom, parentRect.top + 12);
         yFrom = Math.min(yFrom, parentRect.bottom - 12);
-        const xTo = targetRect.left;
+        const xTo = targetRect.left - 2;
         let yTo = yFrom;
         yTo = Math.max(yTo, targetRect.top + 12);
         yTo = Math.min(yTo, targetRect.bottom - 12);
         this.drawRect = new Rect(xFrom, yFrom, xTo, yTo);
         this.xVertical = (xFrom + xTo)/2;
     }
-    update() {
+    updatePath() {
         const startX = this.drawRect.left;
         const startY = this.drawRect.top;
         const endX = this.drawRect.right;

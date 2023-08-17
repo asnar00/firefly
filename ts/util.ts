@@ -23,8 +23,8 @@ export function element(html: string) : HTMLElement {
 
 // given an element, returns the rectangle relative to document origin
 export function rect(el: HTMLElement) : Rect {
-    const r = el.getBoundingClientRect();
-    return new Rect(r.left + window.scrollX, r.top + window.scrollY,
+            const r = el.getBoundingClientRect();
+        return new Rect(r.left + window.scrollX, r.top + window.scrollY,
                     r.right + window.scrollX, r.bottom + window.scrollY);
 }
 
@@ -38,11 +38,9 @@ export function scrollToView(div: HTMLElement, padding: number = 10) {
     const rect = div.getBoundingClientRect();
     const windowHeight = window.innerHeight;
     const windowWidth = window.innerWidth;
-    
     let scrollOptions: ScrollToOptions = {
         behavior: 'smooth'
     };
-
     // Check vertical visibility
     if (rect.top - padding < 0) {
         // The div is above the viewport
@@ -51,7 +49,6 @@ export function scrollToView(div: HTMLElement, padding: number = 10) {
         // The div is below the viewport
         scrollOptions.top = window.scrollY + rect.bottom + padding - windowHeight;
     }
-
     // Check horizontal visibility
     if (rect.left - padding < 0) {
         // The div is to the left of the viewport
@@ -60,7 +57,6 @@ export function scrollToView(div: HTMLElement, padding: number = 10) {
         // The div is to the right of the viewport
         scrollOptions.left = window.scrollX + rect.right + padding - windowWidth;
     }
-
     // Perform the scroll if needed
     if (scrollOptions.top || scrollOptions.left) {
         window.scrollTo(scrollOptions);

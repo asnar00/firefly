@@ -16,7 +16,7 @@ h3 {
 
 .shadow {
     position: absolute;
-    background-color: rgba(0, 0, 0.0, 0.05);
+    background-color: rgba(0, 0, 0.0, 0.1);
     height: 1px;
     border-radius: 6px;
     box-shadow: 0px 0px 7px 0px rgba(0,0,0,0.75);
@@ -64,11 +64,12 @@ h3 {
     height: fit-content; /* This makes the div size to its content up to its maximum height */
     position: absolute; /* or relative, depending on your layout needs */
     cursor: pointer;
+    line-height: 125%;
 }
 
 .code-expanded {
-    max-width: none;
-    max-height: none;
+    max-width: 768px;
+    max-height: 768px;
     background-color: #a8c9c4;
 }
 
@@ -80,7 +81,7 @@ background-color: #AED2CB; /* light gray */
 .tag {
     display: inline-block;
     color: #000000;
-    background-color: #8bd3ca;
+    background-color: #7aaaa5;
     text-decoration: none;
     cursor: pointer;
     padding: 0px 0px;

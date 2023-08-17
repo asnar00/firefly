@@ -56,7 +56,7 @@ TODAY:
 ## TODO
 
 ### visual / UI
-- conflicting dependencies (constructor vs classname)
+- conflicting dependencies (constructor vs classname) DONE
 - supercompact view: want to see all the code !!! 
 - class view: don't want to see all the code, just headers
 - want to see class.property etc not just property

@@ -124,9 +124,20 @@ class Python(Language):
             l = line.strip()
             if not l.startswith("#"):
                 if l.startswith("def"):
-                    return ("function", l.split(" ")[1].split("(")[0])
+                    parts = l.split(f"(")   # "def funcName"  "params) -> result:"
+                    funcName = parts[0].split(" ")[1].strip()
+                    if parts[1].startswith("self"):
+                        return ("method", funcName)
+                    else:
+                        return ("function", funcName)
                 elif l.startswith("class"):
                     return ("class", l.split(" ")[1].split(":")[0].split("(")[0])
+                else: # could be property (self.blah = ) or global (blah = ..)
+                    parts = l.split("=")
+                    if "self." in parts[0]:
+                        return ("method", parts[0].strip())
+                    else:
+                        return ("global", parts[0].strip())
         return ("unknown", "unknown")
 
 # typescript

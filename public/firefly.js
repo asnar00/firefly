@@ -74,15 +74,11 @@ var CardViewState;
     CardViewState[CardViewState["Editing"] = 3] = "Editing";
 })(CardViewState || (CardViewState = {}));
 class CardView {
-    constructor(uid, state) {
+    constructor(state) {
         this.state = CardViewState.Compact;
         this.xScroll = 0;
         this.yScroll = 0;
-        this.uid = uid;
         this.state = state;
-    }
-    card() {
-        return findCard(this.uid);
     }
 }
 function main() {
@@ -98,7 +94,12 @@ function setupEvents() {
         yield loadCards();
         yield animateLogoToLeft();
         yield openMain();
+        eventLoop();
     });
+}
+function eventLoop() {
+    s_graphView.update();
+    requestAnimationFrame(eventLoop);
 }
 function loadCards() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -113,7 +114,7 @@ function loadCards() {
         for (const card of s_allCards) {
             uids.push(card.uid);
         }
-        console.log(uids);
+        //console.log(uids);
     });
 }
 function openMain() {
@@ -263,8 +264,7 @@ function cardToHTML(id, view) {
             elem.appendChild(document.createTextNode(text.slice(iChar, text.length)));
         }
     }
-    elem.scrollLeft = view.xScroll;
-    elem.scrollTop = view.yScroll;
+    setTimeout(() => { elem.scrollLeft = view.xScroll; elem.scrollTop = view.yScroll; }, 0);
     listen(elem, 'click', function () { expandOrContract(elem); });
     listen(elem, 'scroll', function (event) { getScrollPos(elem); });
     return elem;
@@ -284,6 +284,7 @@ function listen(elem, type, func) {
     }));
 }
 function expandOrContract(div) {
+    console.log("expandOrContract", div.id);
     let view = s_graphView.userObj(div);
     if (view.state == CardViewState.Compact) {
         div.classList.add("code-expanded");
@@ -348,7 +349,7 @@ function openCard(uid, button) {
         if (parent)
             parentID = parent.id;
     }
-    s_graphView.open(uid, linkID, parentID, new CardView(uid, CardViewState.Compact));
+    s_graphView.open(uid, linkID, parentID, new CardView(CardViewState.Compact));
     if (button) {
         highlightLink(button, true);
     }

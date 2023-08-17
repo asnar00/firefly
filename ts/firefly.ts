@@ -60,15 +60,11 @@ enum CardViewState {
 }
 
 class CardView {
-    uid: string;
     state: CardViewState = CardViewState.Compact;
     xScroll: number =0;
     yScroll: number =0;
-    constructor(uid: string, state: CardViewState) {
-        this.uid = uid; this.state = state;
-    }
-    card() : Card | null {
-        return findCard(this.uid);
+    constructor(state: CardViewState) {
+        this.state = state;
     }
 }
 
@@ -83,6 +79,12 @@ async function setupEvents() {
     await loadCards();
     await animateLogoToLeft();
     await openMain();
+    eventLoop();
+}
+
+function eventLoop() {
+    s_graphView.update();
+    requestAnimationFrame(eventLoop);
 }
 
 async function loadCards() {
@@ -97,7 +99,7 @@ async function loadCards() {
     for(const card of s_allCards) {
         uids.push(card.uid);
     }
-    console.log(uids);
+    //console.log(uids);
 }
 
 async function openMain() {
@@ -225,8 +227,7 @@ function cardToHTML(id: string, view: CardView) : HTMLElement {
             elem.appendChild(document.createTextNode(text.slice(iChar, text.length)));
         }
     }
-    elem.scrollLeft = view.xScroll;
-    elem.scrollTop = view.yScroll;
+    setTimeout(() => { elem.scrollLeft = view.xScroll; elem.scrollTop = view.yScroll;}, 0);
     listen(elem, 'click', function() { expandOrContract(elem); });
     listen(elem, 'scroll', function(event: any) { getScrollPos(elem); });
     return elem;
@@ -246,6 +247,7 @@ function listen(elem: HTMLElement, type: string, func: Function) {
 }
 
 function expandOrContract(div : HTMLElement) {
+    console.log("expandOrContract", div.id);
     let view = s_graphView.userObj(div);
     if (view.state == CardViewState.Compact) {
         div.classList.add("code-expanded");
@@ -308,7 +310,7 @@ function openCard(uid: string, button: HTMLElement | null){
         let parent = s_graphView.findDivContainingLink(button);
         if (parent) parentID = parent.id;
     }
-    s_graphView.open(uid, linkID, parentID, new CardView(uid, CardViewState.Compact));
+    s_graphView.open(uid, linkID, parentID, new CardView(CardViewState.Compact));
     if (button) {
         highlightLink(button, true);
     }
