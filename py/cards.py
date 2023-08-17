@@ -237,7 +237,7 @@ def computeDependencies(cards: List[Card]):
             for c in cards:
                 iCharStart = -1
                 search = ""
-                if c != card and c.language != card.language and c.name == card.name and c.kind == "function":     # cross-language dependency
+                if c != card and c.name == card.name and c.kind == "function":     # cross-project dependency
                     search = f"@{c.project}.{c.name}"
                     iCharStart = card.code[0].text.find(search)
                 elif c != card and c.name != "unknown" and c.name != card.name and c.language == card.language:
@@ -254,6 +254,21 @@ def computeDependencies(cards: List[Card]):
                         card.dependsOn.append(Dependency(iCharStart, iCharEnd, c))
                         c.dependents.append(Dependency(iCharStart, iCharEnd, card))
             card.dependsOn = sorted(card.dependsOn, key=lambda d: d.iChar)
+            # deal with overlapping dependencies (until we switch to using
+            i = 0
+            while i < len(card.dependsOn)-1:
+                d0 = card.dependsOn[i]
+                d1 = card.dependsOn[i+1]
+                if d0.jChar > d1.iChar and d1.iChar < d0.jChar: # overlaps
+                    if (d0.jChar-d0.iChar) >= (d1.jChar-d1.iChar):   # d0 wins if it's longer
+                        card.dependsOn.remove(d1)                    # we don't step forward, comparing d0 with next one
+                    else:
+                        card.dependsOn.remove(d0)
+                        i += 1
+                else:
+                    i +=1
+
+
     sortedCards = sorted(cards, key=lambda x: x.fullName())
     for card in sortedCards:
         report = card.fullName() + " ==> "

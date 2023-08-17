@@ -1,5 +1,5 @@
 {
-    "attentionID": "ts_firefly_firefly_function_loadCards",
+    "attentionID": "ts_firefly_graphview_method_GraphView_constructor",
     "nodes": [
         {
             "id": "ts_firefly_firefly_function_main",
@@ -29,12 +29,36 @@
             "id": "ts_firefly_firefly_function_loadCards",
             "link": "linkto_ts_firefly_firefly_function_loadCards",
             "parent": "ts_firefly_firefly_function_setupEvents",
+            "emphasize": true,
+            "userObj": {
+                "state": 2,
+                "xScroll": 0,
+                "yScroll": 0,
+                "uid": "ts_firefly_firefly_function_loadCards"
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_importFolders",
+            "link": "linkto_ts_firefly_firefly_function_importFolders",
+            "parent": "ts_firefly_firefly_function_loadCards",
             "emphasize": false,
             "userObj": {
                 "state": 1,
                 "xScroll": 0,
                 "yScroll": 0,
-                "uid": "ts_firefly_firefly_function_loadCards"
+                "uid": "ts_firefly_firefly_function_importFolders"
+            }
+        },
+        {
+            "id": "py_firefly_firefly_function_importFolders",
+            "link": "linkto_py_firefly_firefly_function_importFolders",
+            "parent": "ts_firefly_firefly_function_importFolders",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0,
+                "uid": "py_firefly_firefly_function_importFolders"
             }
         }
     ]

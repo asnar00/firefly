@@ -181,14 +181,6 @@ function importLocalFile() {
         }
     });
 }
-function escapeHTML(unsafeText) {
-    return unsafeText
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-}
 // Read file on client machine in folder
 function readFileAsText(file) {
     return new Promise((resolve, reject) => {

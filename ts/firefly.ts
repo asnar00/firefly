@@ -149,15 +149,6 @@ async function importLocalFile() {
     }
 }
 
-function escapeHTML(unsafeText: string) {
-    return unsafeText
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-}
-
 // Read file on client machine in folder
 function readFileAsText(file: File): Promise<string> {
     return new Promise((resolve, reject) => {
