@@ -400,7 +400,7 @@ class Node {
                  emphasize: this.emphasize,
                  userObj: this.userObj };
     }
-};
+}
 
 class Arrow {
     linkDiv: HTMLElement;
@@ -457,4 +457,4 @@ class Arrow {
 
         this.path.setAttribute('d', d);
     }
-};
+}

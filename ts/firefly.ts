@@ -6,13 +6,12 @@ import {GraphView} from "./graphview.js";
 import {element} from "./util.js";
 import {scrollToView} from "./util.js";
 import {debounce} from "./util.js";
+import {remote} from "./util.js";
 
 window.onload = () => { main(); };
 
 const s_useLocalFiles = false;              // change this to true to enable local file access
 let dirHandle: any | null = null;
-let s_port = 8000;
-let s_endPoint = "firefly";
 var s_allCards: Card[];
 var s_graphView : GraphView;
 
@@ -35,7 +34,9 @@ class Dependency {
 };
 
 class Card {
-    uid: string = "";                   // uid; something like kind_name, but maybe other decorators too
+    uid: string = "";                   // uid; something like lang_module_kind_name, but maybe other decorators too
+    language: string = "";              // language shortname of original code
+    module: string = "";                // module: eg. firefly or graphview
     kind: string = "";                  // "class" or "function" or "other"
     name: string = "";                  // name of function or class being defined
     purpose: string = "";               // purpose
@@ -85,26 +86,28 @@ async function setupEvents() {
 }
 
 async function loadCards() {
+    console.log("loadCards");
     if (s_useLocalFiles) {
         await importLocalFolder();
-    } else {
-        await autoImport();
+    } 
+    const jsonObj = await importFolders(["ts", "py"]);
+    s_allCards = jsonObj.cards as Card[];
+    console.log("nCards:", s_allCards.length);
+    let uids: string[] = [];
+    for(const card of s_allCards) {
+        uids.push(card.uid);
     }
+    console.log(uids);
 }
 
 async function openMain() {
-    let json = await loadObject("session/test.json");
+    let json = await load("session/test.json");
     if (json.error) {
         console.log("failed to load session:", json.error);
-        openCard("function_main", null);
+        openCard("ts_firefly_function_main", null);
     } else {
         s_graphView.openJson(json);
     }
-}
-
-// to avoid the annoyance of having to give permissions every time, just get system to do it
-async function autoImport() {
-    await importCode("firefly", ".ts");
 }
 
 async function importLocalFolder() {
@@ -140,7 +143,7 @@ async function importLocalFile() {
             console.log("readFileAsText...");
             console.log(`ext = '${ext}'`);
             const fullText = await readFileAsText(file);
-            await importCode(fullText, ext);
+            console.log("NOT IMPLEMENTED YET"); // todo: implement by reading files, horking them over to the server, then following the normal channels
             break;
         }
     }
@@ -188,18 +191,9 @@ async function animateLogoToLeft(): Promise<void> {
     });
 }
 
-
-// just a test: send the string back to the ranch, receive a full JSON analysis in the post
-async function importCode(fullText: string, ext: string) {
-    console.log("importing code");
-    const obj = await runOnServer({"command": "import", "code" : fullText, "ext" : ext});
-    s_allCards = obj.cards as Card[];
-    console.log("nCards:", s_allCards.length);
-    let uids: string[] = [];
-    for(const card of s_allCards) {
-        uids.push(card.uid);
-    }
-    console.log(uids);
+// returns fresh JSON for all cards in the codebase
+async function importFolders(folders: string[]) {
+    return await remote("@firefly.importFolders", { folders: folders });
 }
 
 // finds the card with the given UID, or null if doesn't exist
@@ -253,7 +247,7 @@ function highlightLink(linkDiv: HTMLElement, highlight: boolean) {
 
 function listen(elem: HTMLElement, type: string, func: Function) {
     elem.addEventListener(type, async (event) => {
-        console.log(elem.id, type);
+        //console.log(`${type}: ${elem.id}`);
         await func(event);  // Assuming func is synchronous. If it's async, use await func(event);
         event.stopPropagation();
         debouncedSaveAll();
@@ -288,17 +282,17 @@ function getScrollPos(div: HTMLElement) {
 const debouncedSaveAll = debounce(() => { saveAll() }, 300);
 
 async function saveAll() {
-    console.log("saveAll");
+    //console.log("saveAll");
     const json = s_graphView.json();
-    await saveObject(json, "sessions/test.json");
+    await save(json, "sessions/test.json");
 }
 
-async function saveObject(json: any, path: string) {
-    await runOnServer({ command: "save", path: "sessions/test.json", json: json });
+async function save(json: any, path: string) {
+    await remote("@firefly.save", { path: "sessions/test.json", json: json });
 }
 
-async function loadObject(path: string) : Promise<any> {
-    return await runOnServer({ command:"load", path: "sessions/test.json"});
+async function load(path: string) : Promise<any> {
+    return await remote("@firefly.load", { path: "sessions/test.json"});
 }
 
 // if a card view is closed, opens it; otherwise closes it
@@ -336,23 +330,4 @@ function closeCard(cardDiv: HTMLElement) {
         highlightLink(button, false);
     }
     s_graphView.close(cardDiv);
-}
-
-// sends a command request to the server, waits on the reply, returns dictionary object
-async function runOnServer(command: any) : Promise<any> {
-    try {
-        const response = await fetch(`http://localhost:${s_port}/${s_endPoint}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(command)
-        });
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        const obj= await response.json();
-        return obj;
-    } catch (error) {
-        console.error('Error:', error);
-    }
-    return [];
 }

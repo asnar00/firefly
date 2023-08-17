@@ -15,7 +15,7 @@ from typing import Tuple
 import re
 import select
 import subprocess
-import import_code
+from cards import importAllCards
 
 listen_port = 8003
 app_name = "firefly"
@@ -46,7 +46,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         raw_data = self.rfile.read(content_length).decode("utf-8")
         post_data = json.loads(raw_data)
         if self.path == f"/{app_name}":
-            response = app_process(post_data)
+            response = firefly(post_data['func'], post_data['args'])
             self.respond(response)
         else:
             self.send_error(404, "Endpoint not found")
@@ -83,36 +83,40 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         # Serve files from the specified folder
         return path
     
-
-def app_process(post_data):
-    cmd = post_data['command']
-    if cmd== "import":
-        print("app_process: IMPORT")
-        code = post_data["code"]
-        if code == "firefly": # TEST: to avoid annoyance of having to grant user permission each run
-            code = import_code.readFile("../ts/firefly.ts")
-        jsonObj = import_code.import_code(code, post_data["ext"])
-        return jsonObj
-    elif cmd== "save":
-        print("app_process: SAVE")
-        path = root + "/data/" + post_data["path"]
-        obj = post_data["json"]
-        writeJsonToFile(obj, path)
-        return { "saved" : True }
-    elif cmd== "load":
-        print("app_process: LOAD")
-        path = root + "/data/" + post_data["path"]
-        print("path:", path)
-        if os.path.exists(path):
-            json = readJsonFromFile(path)
-            print("found!", json)
-            return json
-        else:
-            print("notfound!")
-            return { "error" : f"{post_data['path']} not found" }
-
+# dispatch commands to actual functions
+def firefly(func, args):
+    if func == "importFolders":
+        print("importFolders", args)
+        return importFolders(args['folders'])
+    elif func == "save":
+        print("save", args)
+        return save(args["path"], args["json"])
+    elif func == "load":
+        print("load", args)
+        return load(args["path"])
     return f"${app_name}: command not supported"
 
+def importFolders(folders):
+    fullPaths = []
+    for f in folders: fullPaths.append(root + "/" + f)
+    return importAllCards( fullPaths )
+
+def save(path, obj):
+    path = root + "/data/" + path
+    writeJsonToFile(obj, path)
+    return { "saved" : True }
+
+def load(path):
+    path = root + "/data/" + path
+    print("path:", path)
+    if os.path.exists(path):
+        json = readJsonFromFile(path)
+        print("found!", json)
+        return json
+    else:
+        print("notfound!")
+        return { "error" : f"{path} not found" }
+    
 def writeJsonToFile(obj, path: str):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w') as file:
@@ -123,7 +127,7 @@ def readJsonFromFile(filename):
         data = json.load(file)
     return data
 
-def firefly_server():
+def firefly_start():
     print(f"starting webserver listening on port {listen_port}...")
     Handler = CustomHTTPRequestHandler
     with socketserver.TCPServer(("", listen_port), Handler) as httpd:
@@ -131,4 +135,4 @@ def firefly_server():
         httpd.serve_forever()
 
 if __name__ == "__main__":
-    firefly_server()
+    firefly_start()

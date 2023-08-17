@@ -78,3 +78,28 @@ export function debounce<T extends (...args: any[]) => void>(func: T, wait: numb
         }, wait) as unknown as number;
     };
 }
+
+// sends a command request to the server, waits on the reply, returns dictionary object
+export async function remote(endpointAndFunc: string, args: any) : Promise<any> {
+    if (!endpointAndFunc.startsWith("@")) {
+        console.error(`endpoint '${endpointAndFunc}' must start with '@'`);
+    }
+    const parts = endpointAndFunc.split(".");
+    const endpoint = parts[0].slice(1);
+    const func = parts[1];
+    try {
+        const response = await fetch(`http://localhost:8000/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ func: func, args: args })
+        });
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const obj= await response.json();
+        return obj;
+    } catch (error) {
+        console.error('Error:', error);
+    }
+    return [];
+}

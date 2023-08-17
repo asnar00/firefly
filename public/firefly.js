@@ -21,11 +21,10 @@ import { GraphView } from "./graphview.js";
 import { element } from "./util.js";
 import { scrollToView } from "./util.js";
 import { debounce } from "./util.js";
+import { remote } from "./util.js";
 window.onload = () => { main(); };
 const s_useLocalFiles = false; // change this to true to enable local file access
 let dirHandle = null;
-let s_port = 8000;
-let s_endPoint = "firefly";
 var s_allCards;
 var s_graphView;
 class CodeBlock {
@@ -49,7 +48,9 @@ class Dependency {
 ;
 class Card {
     constructor() {
-        this.uid = ""; // uid; something like kind_name, but maybe other decorators too
+        this.uid = ""; // uid; something like lang_module_kind_name, but maybe other decorators too
+        this.language = ""; // language shortname of original code
+        this.module = ""; // module: eg. firefly or graphview
         this.kind = ""; // "class" or "function" or "other"
         this.name = ""; // name of function or class being defined
         this.purpose = ""; // purpose
@@ -101,30 +102,30 @@ function setupEvents() {
 }
 function loadCards() {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log("loadCards");
         if (s_useLocalFiles) {
             yield importLocalFolder();
         }
-        else {
-            yield autoImport();
+        const jsonObj = yield importFolders(["ts", "py"]);
+        s_allCards = jsonObj.cards;
+        console.log("nCards:", s_allCards.length);
+        let uids = [];
+        for (const card of s_allCards) {
+            uids.push(card.uid);
         }
+        console.log(uids);
     });
 }
 function openMain() {
     return __awaiter(this, void 0, void 0, function* () {
-        let json = yield loadObject("session/test.json");
+        let json = yield load("session/test.json");
         if (json.error) {
             console.log("failed to load session:", json.error);
-            openCard("function_main", null);
+            openCard("ts_firefly_function_main", null);
         }
         else {
             s_graphView.openJson(json);
         }
-    });
-}
-// to avoid the annoyance of having to give permissions every time, just get system to do it
-function autoImport() {
-    return __awaiter(this, void 0, void 0, function* () {
-        yield importCode("firefly", ".ts");
     });
 }
 function importLocalFolder() {
@@ -166,7 +167,7 @@ function importLocalFile() {
                     console.log("readFileAsText...");
                     console.log(`ext = '${ext}'`);
                     const fullText = yield readFileAsText(file);
-                    yield importCode(fullText, ext);
+                    console.log("NOT IMPLEMENTED YET"); // todo: implement by reading files, horking them over to the server, then following the normal channels
                     break;
                 }
             }
@@ -218,18 +219,10 @@ function animateLogoToLeft() {
         });
     });
 }
-// just a test: send the string back to the ranch, receive a full JSON analysis in the post
-function importCode(fullText, ext) {
+// returns fresh JSON for all cards in the codebase
+function importFolders(folders) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("importing code");
-        const obj = yield runOnServer({ "command": "import", "code": fullText, "ext": ext });
-        s_allCards = obj.cards;
-        console.log("nCards:", s_allCards.length);
-        let uids = [];
-        for (const card of s_allCards) {
-            uids.push(card.uid);
-        }
-        console.log(uids);
+        return yield remote("@firefly.importFolders", { folders: folders });
     });
 }
 // finds the card with the given UID, or null if doesn't exist
@@ -292,7 +285,7 @@ function highlightLink(linkDiv, highlight) {
 }
 function listen(elem, type, func) {
     elem.addEventListener(type, (event) => __awaiter(this, void 0, void 0, function* () {
-        console.log(elem.id, type);
+        //console.log(`${type}: ${elem.id}`);
         yield func(event); // Assuming func is synchronous. If it's async, use await func(event);
         event.stopPropagation();
         debouncedSaveAll();
@@ -324,19 +317,19 @@ function getScrollPos(div) {
 const debouncedSaveAll = debounce(() => { saveAll(); }, 300);
 function saveAll() {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("saveAll");
+        //console.log("saveAll");
         const json = s_graphView.json();
-        yield saveObject(json, "sessions/test.json");
+        yield save(json, "sessions/test.json");
     });
 }
-function saveObject(json, path) {
+function save(json, path) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield runOnServer({ command: "save", path: "sessions/test.json", json: json });
+        yield remote("@firefly.save", { path: "sessions/test.json", json: json });
     });
 }
-function loadObject(path) {
+function load(path) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield runOnServer({ command: "load", path: "sessions/test.json" });
+        return yield remote("@firefly.load", { path: "sessions/test.json" });
     });
 }
 // if a card view is closed, opens it; otherwise closes it
@@ -375,25 +368,4 @@ function closeCard(cardDiv) {
         highlightLink(button, false);
     }
     s_graphView.close(cardDiv);
-}
-// sends a command request to the server, waits on the reply, returns dictionary object
-function runOnServer(command) {
-    return __awaiter(this, void 0, void 0, function* () {
-        try {
-            const response = yield fetch(`http://localhost:${s_port}/${s_endPoint}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(command)
-            });
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            const obj = yield response.json();
-            return obj;
-        }
-        catch (error) {
-            console.error('Error:', error);
-        }
-        return [];
-    });
 }

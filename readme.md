@@ -47,11 +47,21 @@ Most likely, we can actually just use a comment or decoration, or something clev
 
 
 
-
+TODAY:
+- python classes and methods
+- deal with overlapping Dependency ranges
+- do the full supercompact tree view. It'll rock.
+- embedding service! infrastructure ahoy! needs a super overhaul.
 
 ## TODO
 
 ### visual / UI
+- conflicting dependencies (constructor vs classname)
+- supercompact view: want to see all the code !!! 
+- class view: don't want to see all the code, just headers
+- want to see class.property etc not just property
+- restrict size of expanded
+- animate size to make it less jarring
 - reopen old trees
 - make sure buttons get highlighted properly
 - serialise session
@@ -78,9 +88,9 @@ Most likely, we can actually just use a comment or decoration, or something clev
 - ask any question about current view
 
 ### importing logic
-- multi-file imports
-- python classes / properties / methods
-- mixed codebase
+- python classes / properties / methods NEXT
+- multi-file imports DONE
+- mixed codebase DONE
 - tests
 
 ### edit/build/debug
@@ -94,3 +104,77 @@ Most likely, we can actually just use a comment or decoration, or something clev
 - live/nonlive collaboration
 - plug into github repo
 - history viewing
+
+
+____________________
+Lets think about multiple languages here in this example.
+
+1. We want to be able to define the same name in ts and py, and they shouldn't clash.
+   We can do this in two ways:
+   a- by having the same ID, but not allowing dependencies to go cross-language
+   b- by decorating the ID so they're actually different bits of code.
+
+so let's say we have 
+
+    // blah.ts
+    function myFunc(a: number) {}
+
+    # blah.py
+    def myFunc(a: int): ...
+
+Scenario 1: these are the same cards because they have the same name.
+we have
+
+    id: function_myFunc
+        code[0](ts): // blah.ts function ...
+        code[1](py): # blah.py def ...
+
+And we can only make a connection between code blocks in the same language.
+
+Scenario 2 : these are different functions because they could be totally different 
+and do totally different things, eg. be part of separate libraries written by unrelated people.
+So the name clash is just a coincidence, and they should be in different namespaces.
+
+So we have two cards:
+
+    id: ts_function_myFunc
+        code[0](ts): // blah.ts etc
+
+    id: py_function_myFunc
+        code[0](py): # blah.py etc
+
+Now here scenario 2 is obviously the correct one.
+
+So now let's think about the situation where we want to "call" a python function from ts.
+
+    // client.ts
+
+    function main() {
+        myFunc(2);
+    }
+
+    function myFunc(a: int) {
+        remote("@firefly_server", "myFunc", { a: 2 });          // endpoint, function, args
+    }
+
+    ---------------------
+
+    // firefly.py
+
+    def firefly_server(request) -> response:
+        func = request['func']
+        args = request['args']
+        if func == 'myFunc': return myFunc(args['a'])
+        elif etcetc.
+
+    def myFunc(a: int) ->
+        etcetc.
+
+So we could just modify the dependency a *little bit* to allow cross-language connection, by searching for "@firefly_server".
+
+    ts_main => ts_myFunc => py_firefly_server => py_myFunc
+
+This would actually be a pretty good place to get to, I think. 
+
+
+

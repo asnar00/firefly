@@ -368,7 +368,6 @@ class Node {
             userObj: this.userObj };
     }
 }
-;
 class Arrow {
     constructor(linkDiv, parentDiv, div) {
         this.drawRect = new Rect(0, 0, 0, 0);
@@ -421,4 +420,3 @@ class Arrow {
         this.path.setAttribute('d', d);
     }
 }
-;

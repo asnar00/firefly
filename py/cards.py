@@ -1,5 +1,5 @@
 # ᕦ(ツ)ᕤ
-# import.py
+# cards.py
 # author: asnaroo, with help from gpt4
 # purpose: to analyse a piece of (typescript or python) code [eventually C++ maybe]
 # and create a set of "cards", each of which is a single class, function, or method
@@ -13,13 +13,18 @@ import json
 global vb
 vb = True
 
-def import_code(code: str, ext: str) -> dict:
-    print("------ import_code ---------")
-    global vb
-    vb = False
-    cards = importCards(code, ext)
-    jsonObj = cardsToJsonDict(cards)
-    return jsonObj
+def importAllCards(folders) -> dict:
+    cards = []
+    for folder in folders:
+        files = findAllFiles(folder, ".ts") + findAllFiles(folder, ".py")
+        print("files:", files)
+        for file in files:
+            cards.extend(importCardsFromFile(file))
+    computeDependencies(cards)
+    for c in cards:
+        print(c.uid())
+    #computeLevels(cards)
+    return cardsToJsonDict(cards)
 
 class Language:
     def name(self) -> str:
@@ -28,7 +33,7 @@ class Language:
         return ""
     def comment(self) -> str:
         return ""
-    def importCards(self, text):
+    def importCards(self,module,  text):
         return []
     def findTypeAndName(self, card, minIndent) -> (str, str):
         return ("", "")
@@ -41,7 +46,9 @@ class CodeBlock:
         self.jLine = iLine # inclusive: eurgh
         
 class Card:
-    def __init__(self, code: str, language: Language, iLine: int) :
+    def __init__(self, module: str, code: str, language: Language, iLine: int) :
+        self.module = module    # root-relative path of the file, for disambiguation
+        self.language = language.shortName()    
         self.kind = ''          # "class" or "function" or "other"
         self.name = ''          # name of function or class being defined
         self.purpose = ''       # purpose
@@ -59,7 +66,7 @@ class Card:
         if self.parent: return self.parent.name + "." + self.name
         else: return self.name
     def uid(self):
-        u = self.kind + "_"
+        u = self.language + "_" + self.module + "_" + self.kind + "_"
         if self.parent: u += self.parent.name + "_"
         u += self.name
         return u
@@ -68,13 +75,15 @@ def card_serialiser(obj):
     if isinstance(obj, Card):
         return {
             "uid" : obj.uid(),
+            "language" : obj.language,
+            "module" : obj.module,
             "kind" : obj.kind,
             "name" : obj.name,
             "purpose" : obj.purpose,
             "examples" : obj.examples,
             "inputs" : obj.inputs,
             "outputs" : obj.outputs,
-            "code" : [{ "text" : c.text, "language" : c.language.name(), "iLine" : c.iLine, "jLine" : c.jLine } for c in obj.code],
+            "code" : [{ "text" : c.text, "language" : c.language.shortName(), "iLine" : c.iLine, "jLine" : c.jLine } for c in obj.code],
             "dependsOn" : [ { "target" : d.target.uid(), "iChar": d.iChar, "jChar": d.jChar } for d in obj.dependsOn],
             "dependents" : [ { "target" : d.target.uid(), "iChar": d.iChar, "jChar": d.jChar } for d in obj.dependents],
             "children" : [ c.uid() for c in obj.children],
@@ -92,7 +101,7 @@ class Python(Language):
     def name(self): return "python"
     def shortName(self): return "py"
     def comment(self): return "#"
-    def importCards(self, text, minIndent) -> List[Card]:
+    def importCards(self, module, text, minIndent) -> List[Card]:
         lines = text.split("\n")
         card = None
         cards = []
@@ -105,7 +114,7 @@ class Python(Language):
                 indent = nTabsAtStart(line)
                 if indent >= minIndent:
                     if card == None or (oldIndent > minIndent and indent == minIndent) or (indent==minIndent and oldIndent==indent and (not(prevLine.strip().startswith("#")))):
-                        card = Card(line, self, i+1)
+                        card = Card(module, line, self, i+1)
                         cards.append(card)
                     else:
                         card.code[0].text += "\n" + line
@@ -127,7 +136,7 @@ class Typescript(Language):
     def name(self): return "typescript"
     def shortName(self): return "ts"
     def comment(self): return "//"
-    def importCards(self, text, minIndent) -> List[Card]:
+    def importCards(self, module, text, minIndent) -> List[Card]:
         lines = text.split("\n")
         cards = []
         card = None
@@ -143,7 +152,7 @@ class Typescript(Language):
                     singleClose = (indent <= minIndent) and (line.strip() == "}")
                     if not singleClose:
                         if indent == minIndent and not prevLine.strip().startswith("//"):
-                            card = Card(line, self, iLine+1)
+                            card = Card(module, line, self, iLine+1)
                             cards.append(card)
                         else:
                             card.code[0].text += "\n" + line
@@ -189,7 +198,6 @@ def readFile(filename: str) -> str:
 def findLanguage(ext: str) -> Language:
     if ext == ".py": return Python()
     elif ext == ".ts" or ext == ".js": return Typescript()
-    elif ext == ".cpp" or ext == ".hpp" or ext == ".cc" or ext == ".hh": return Cplusplus()
     else:
         raise Exception("Unrecognised file extension")
     
@@ -197,34 +205,33 @@ def importCardsFromFile(filename) -> List[Card]:
     global vb
     #print("importing cards from", filename)
     root, ext = os.path.splitext(filename)
+    module = root.split('/')[-1]        # eg. firefly or cards
     text = readFile(filename)
-    return importCards(text, ext)
+    return importCards(module, text, ext)
 
-def importCards(text: str, ext: str) -> List[Card]:
+def importCards(module: str, text: str, ext: str) -> List[Card]:
     global vb
     #print("importing cards")
     language = findLanguage(ext)
     #print("language:", language.name())
-    cards = importCardsFromText(language, text, None, 0)
+    cards = importCardsFromText(module, language, text, None, 0)
     allChildren = []
     for c in cards:
         if c.kind == "class":
             #print("importing methods for class", c.name)
-            c.children = importCardsFromText(language, c.code[0].text, c, 1)
+            c.children = importCardsFromText(module, language, c.code[0].text, c, 1)
             for child in c.children:
                 child.code[0].iLine += c.code[0].iLine +1       # not sure why but hey
                 child.code[0].jLine += c.code[0].iLine +1
             allChildren += c.children
     cards += allChildren
     cards = [card for card in cards if card.name != "unknown"] # remove unknown name cards
-    computeDependencies(cards)
-    computeLevels(cards)
+
     return cards
 
 def cardsToJsonDict(cards: List[Card]) -> dict:
     print("cardsToJsonDict:", len(cards), "cards")
     jsonObj = { "cards" : [card_serialiser(c) for c in cards] }
-    print(jsonObj)
     print("type(jsonObj)=", type(jsonObj))
     return jsonObj
 
@@ -235,7 +242,13 @@ def computeDependencies(cards: List[Card]):
     for card in cards:
         if card.name != "unknown" :  #and card.kind != "property" and card.kind != "global" and card.kind != "class"
             for c in cards:
-                if c != card and c.name != "unknown" and c.name != card.name:
+                iCharStart = -1
+                search = ""
+                if c != card and c.language != card.language and c.name == card.name and c.kind == "function":     # cross-language dependency
+                    search = f"@{c.module}.{c.name}"
+                    iCharStart = card.code[0].text.find(search)
+                    print("BINGO!", card.uid(), "==>", c.uid())
+                elif c != card and c.name != "unknown" and c.name != card.name and c.language == card.language:
                     search = c.name 
                     if c.kind == "method":
                         if c.name == "constructor": search = c.parent.name + "("    # this is language-specific! move this into a Language method
@@ -243,11 +256,11 @@ def computeDependencies(cards: List[Card]):
                     elif c.kind == "property":
                         search = "." + c.name
                     iCharStart = findWordInString(search, card.code[0].text)
-                    if iCharStart >= 0:
-                        if not inComment(iCharStart, card.code[0]):
-                            iCharEnd = iCharStart + len(search)
-                            card.dependsOn.append(Dependency(iCharStart, iCharEnd, c))
-                            c.dependents.append(Dependency(iCharStart, iCharEnd, card))
+                if iCharStart >= 0:
+                    if not inComment(iCharStart, card.code[0]):
+                        iCharEnd = iCharStart + len(search)
+                        card.dependsOn.append(Dependency(iCharStart, iCharEnd, c))
+                        c.dependents.append(Dependency(iCharStart, iCharEnd, card))
             card.dependsOn = sorted(card.dependsOn, key=lambda d: d.iChar)
     sortedCards = sorted(cards, key=lambda x: x.fullName())
     for card in sortedCards:
@@ -345,9 +358,9 @@ def writeTextToFile(text: str, path: str):
     with open(path, 'w') as file:
         file.write(text)
 
-def importCardsFromText(language: Language, text: str, parent: Card, minIndent: int)-> List[Card]:
+def importCardsFromText(module: str, language: Language, text: str, parent: Card, minIndent: int)-> List[Card]:
     global vb
-    cards = language.importCards(text, minIndent)
+    cards = language.importCards(module, text, minIndent)
     for c in cards:
         c.parent = parent
         (c.kind, c.name) = language.findTypeAndName(c)
@@ -378,6 +391,25 @@ def findString(strings: list, target: str) -> int:
         return strings.index(target)
     except ValueError:
         return -1
+    
+def findAllFiles(directory, extension):
+    """
+    Returns a list of files in the given directory (and its subdirectories) that end with the given extension.
+    """
+    matched_files = []
+
+    # Ensure the extension starts with a dot
+    if not extension.startswith("."):
+        extension = "." + extension
+
+    # Recursively walk the directory
+    for dirpath, dirnames, filenames in os.walk(directory):
+        for filename in filenames:
+            if filename.endswith(extension):
+                full_path = os.path.join(dirpath, filename)
+                matched_files.append(full_path)
+
+    return matched_files
 
 # not used, but let's keep it anyways
 def newUid() -> str:
