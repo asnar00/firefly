@@ -1,7 +1,7 @@
 body {
     height: 100vh; /* Set the height to fill the entire viewport */
     margin: 0;
-    background: linear-gradient(to bottom, #4CA091 50%, #53A796 50%);
+    background: linear-gradient(to bottom, #3a7b6f, #54a998);
 }
 
 h3 {

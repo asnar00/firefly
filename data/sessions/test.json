@@ -1,14 +1,14 @@
 {
-    "xScroll": 796,
+    "xScroll": 0,
     "yScroll": 0,
     "nodes": [
         {
             "id": "ts_firefly_firefly_function_main",
             "link": "null",
             "parent": "null",
-            "emphasize": true,
+            "emphasize": false,
             "userObj": {
-                "state": 2,
+                "state": 1,
                 "xScroll": 0,
                 "yScroll": 0
             }
@@ -17,39 +17,6 @@
             "id": "ts_firefly_firefly_function_setupEvents",
             "link": "linkto_ts_firefly_firefly_function_setupEvents",
             "parent": "ts_firefly_firefly_function_main",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_firefly_function_openMain",
-            "link": "linkto_ts_firefly_firefly_function_openMain",
-            "parent": "ts_firefly_firefly_function_setupEvents",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_firefly_function_eventLoop",
-            "link": "linkto_ts_firefly_firefly_function_eventLoop",
-            "parent": "ts_firefly_firefly_function_setupEvents",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_firefly_function_animateLogoToLeft",
-            "link": "linkto_ts_firefly_firefly_function_animateLogoToLeft",
-            "parent": "ts_firefly_firefly_function_setupEvents",
             "emphasize": false,
             "userObj": {
                 "state": 1,
@@ -83,6 +50,50 @@
             "id": "py_firefly_firefly_function_importFolders",
             "link": "linkto_py_firefly_firefly_function_importFolders",
             "parent": "ts_firefly_firefly_function_importFolders",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_cards_function_importAllCards",
+            "link": "linkto_py_firefly_cards_function_importAllCards",
+            "parent": "py_firefly_firefly_function_importFolders",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_cards_function_computeDependencies",
+            "link": "linkto_py_firefly_cards_function_computeDependencies",
+            "parent": "py_firefly_cards_function_importAllCards",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_util_function_remote",
+            "link": "linkto_ts_firefly_util_function_remote",
+            "parent": "ts_firefly_firefly_function_importFolders",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_openMain",
+            "link": "linkto_ts_firefly_firefly_function_openMain",
+            "parent": "ts_firefly_firefly_function_setupEvents",
             "emphasize": false,
             "userObj": {
                 "state": 1,
