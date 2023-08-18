@@ -182,7 +182,7 @@ export class GraphView {
             const prect = rect(parentDiv);
             const brect = rect(link);
             const crect = rect(div);
-            xTarget = prect.right + (this.padding * 2);
+            xTarget = brect.left;
             yTarget = ((brect.top + brect.bottom) / 2) - (crect.height() / 2);
         }
         else {
