@@ -47,9 +47,10 @@ class Card {
     dependsOn: Dependency[] = [];       // cards we depend on
     dependents: Dependency[] =[];       // cards that depend on us
     children: Card[] =[];               // if we're a class, cards for methods
-    parent: Card | null = null;         // if we're a method or property, points to parent
+    parent: string = "";                // if we're a method or property, points to parent
     rankFromBottom: number = 0;         // 1 means depends on nothing; x means depends on things with rank < x
     rankFromTop: number = 0;            // 1 means nothing calls this; x means called by things with rank < x
+
 }
 
 enum CardViewState {
@@ -230,7 +231,21 @@ function cardToHTML(id: string, view: CardView) : HTMLElement {
     setTimeout(() => { elem.scrollLeft = view.xScroll; elem.scrollTop = view.yScroll;}, 0);
     listen(elem, 'click', function() { expandOrContract(elem); });
     listen(elem, 'scroll', function(event: any) { getScrollPos(elem); });
+    let container : HTMLElement = element(`<div id="${card.uid}" class="code-container" spellcheck="false" contenteditable="false"><b>${shortName(card)}</b><div>`);
+    container.appendChild(elem);
     return elem;
+}
+
+
+function shortName(card: Card) : string {
+    let result: string = "";
+    console.log("shortName",card.uid);
+    console.log(card.parent);
+    console.log(typeof(card.parent));
+    if (card.parent != "null") { result += findCard(card.parent)!.name + "."; }
+    result += card.name;
+    if (card.kind=="method" || card.kind=="function") result += "()";
+    return result;
 }
 
 function highlightLink(linkDiv: HTMLElement, highlight: boolean) {

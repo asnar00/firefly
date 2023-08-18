@@ -55,6 +55,13 @@ TODAY:
 
 ## TODO
 
+### infrastructure
+
+- tidy up the server code to use the same library of functions
+- auto-restart of the subsidiary servers (and indeed the main server)
+- proper logging
+
+
 ### visual / UI
 - conflicting dependencies (constructor vs classname) DONE
 - supercompact view: want to see all the code !!! 

@@ -85,7 +85,7 @@ def card_serialiser(obj):
             "dependsOn" : [ { "target" : d.target.uid(), "iChar": d.iChar, "jChar": d.jChar } for d in obj.dependsOn],
             "dependents" : [ { "target" : d.target.uid(), "iChar": d.iChar, "jChar": d.jChar } for d in obj.dependents],
             "children" : [ c.uid() for c in obj.children],
-            "parent" : obj.parent.uid() if obj.parent else "None"
+            "parent" : obj.parent.uid() if obj.parent else "null"
         }
     raise TypeError(f"Type {type(obj)} unfortunately is not serializable")
 

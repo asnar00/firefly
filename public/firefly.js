@@ -60,7 +60,7 @@ class Card {
         this.dependsOn = []; // cards we depend on
         this.dependents = []; // cards that depend on us
         this.children = []; // if we're a class, cards for methods
-        this.parent = null; // if we're a method or property, points to parent
+        this.parent = ""; // if we're a method or property, points to parent
         this.rankFromBottom = 0; // 1 means depends on nothing; x means depends on things with rank < x
         this.rankFromTop = 0; // 1 means nothing calls this; x means called by things with rank < x
     }
@@ -266,7 +266,22 @@ function cardToHTML(id, view) {
     setTimeout(() => { elem.scrollLeft = view.xScroll; elem.scrollTop = view.yScroll; }, 0);
     listen(elem, 'click', function () { expandOrContract(elem); });
     listen(elem, 'scroll', function (event) { getScrollPos(elem); });
+    let container = element(`<div id="${card.uid}" class="code-container" spellcheck="false" contenteditable="false"><b>${shortName(card)}</b><div>`);
+    container.appendChild(elem);
     return elem;
+}
+function shortName(card) {
+    let result = "";
+    console.log("shortName", card.uid);
+    console.log(card.parent);
+    console.log(typeof (card.parent));
+    if (card.parent != "null") {
+        result += findCard(card.parent).name + ".";
+    }
+    result += card.name;
+    if (card.kind == "method" || card.kind == "function")
+        result += "()";
+    return result;
 }
 function highlightLink(linkDiv, highlight) {
     if (highlight)

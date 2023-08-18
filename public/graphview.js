@@ -537,6 +537,10 @@ class Arrow {
         this.xVertical = (xFrom + xTo) / 2;
     }
     updatePath() {
+        if (!document.body.contains(this.linkDiv) || !document.body.contains(this.div)) {
+            this.removeFromSVG();
+            return;
+        }
         const startX = this.drawRect.left;
         const startY = this.drawRect.top;
         const endX = this.drawRect.right;
