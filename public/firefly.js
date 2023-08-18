@@ -19,7 +19,6 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
 };
 import { GraphView } from "./graphview.js";
 import { element } from "./util.js";
-import { scrollToView } from "./util.js";
 import { debounce } from "./util.js";
 import { remote } from "./util.js";
 window.onload = () => { main(); };
@@ -296,7 +295,7 @@ function expandOrContract(div) {
         div.scrollTop = view.yScroll;
     }
     s_graphView.emphasize(div, div.classList.contains("code-expanded"));
-    scrollToView(div);
+    s_graphView.attention(div);
 }
 function getScrollPos(div) {
     let view = s_graphView.userObj(div);

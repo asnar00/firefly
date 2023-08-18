@@ -259,7 +259,7 @@ function expandOrContract(div : HTMLElement) {
          div.scrollTop = view.yScroll;
     }
     s_graphView.emphasize(div, div.classList.contains("code-expanded"));
-    scrollToView(div);
+    s_graphView.attention(div);
 }
 
 function getScrollPos(div: HTMLElement) {

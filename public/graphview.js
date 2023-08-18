@@ -9,6 +9,7 @@ import { getBodyWidth } from "./util.js";
 import { scrollToView } from "./util.js";
 import { rect } from "./util.js";
 import { Rect } from "./util.js";
+import { getChildNodeIndex } from "./util.js";
 // manages all top-level DOM nodes inside a container
 export class GraphView {
     // setup: pass the div that's going to hold all nodes
@@ -21,7 +22,8 @@ export class GraphView {
         this.htmlFunction = htmlFunction;
         this.highlightFunction = highlightFunction;
         this.arrowsSVG = this.initArrows();
-        this.attentionID = "";
+        this.attentionNode = null;
+        window.addEventListener('scroll', this.onWindowScroll.bind(this));
     }
     // given an id, returns the first div with that ID (expected to be unique)
     find(id, parent) {
@@ -50,10 +52,27 @@ export class GraphView {
         if (node) {
             let nodes = this.allChildren(node);
             for (let node of nodes) {
-                this.closeSingleNode(node);
+                this.disappear(node);
             }
         }
         this.arrangeAll();
+    }
+    // pay attention to (div)
+    attention(div) {
+        this.attentionNode = this.get(div);
+    }
+    // when the user scrolls the window, stop paying attention
+    onWindowScroll() {
+        this.attentionNode = null;
+    }
+    // animates to nothing over (time) seconds, then closes
+    disappear(node, time = 0.25) {
+        let div = node.div;
+        // Set the transition property for the div
+        div.style.transition = `max-width ${time}s, max-height ${time}s`;
+        // Begin the transition by setting width and height to 0
+        setTimeout(() => { div.style.maxWidth = '0'; div.style.maxHeight = '0'; }, 0);
+        setTimeout(() => { this.closeSingleNode(node); }, (time - 0.1) * 1000);
     }
     allChildren(node) {
         let result = [node];
@@ -90,20 +109,14 @@ export class GraphView {
         if (emphasize) {
             node.emphasize = true;
         }
-        scrollToView(div);
+        this.attentionNode = node;
     }
     openJson(obj) {
         let nodesJson = obj.nodes;
         for (let n of nodesJson) {
             this.open(n.id, n.link, n.parent, n.userObj, n.emphasize);
         }
-        this.attentionID = obj.attentionID;
-        if (this.attentionID != "") {
-            let attentionDiv = this.find(this.attentionID);
-            if (attentionDiv) {
-                scrollToView(attentionDiv);
-            }
-        }
+        this.attentionNode = this.get(this.find(obj.attentionID));
     }
     // adds a div to the manager, and to the container div
     add(div, link, userObj = null) {
@@ -131,8 +144,6 @@ export class GraphView {
             this.addArrow(link, parentDiv, div);
         }
         this.arrangeAll(); // todo: call this every frame
-        this.attentionID = div.id;
-        scrollToView(div);
         return node;
     }
     // emphasizes element (moves shadow forward in space)
@@ -166,6 +177,11 @@ export class GraphView {
         if (this.anyNodeSizeChanged()) {
             this.arrangeAll();
         }
+        if (this.attentionNode &&
+            (this.attentionNode.sizeChanged() ||
+                this.attentionNode.moving())) {
+            scrollToView(this.attentionNode.div);
+        }
         for (let node of this.nodeMap.values()) {
             node.update();
         }
@@ -189,10 +205,8 @@ export class GraphView {
     }
     anyNodeSizeChanged() {
         for (let node of this.nodeMap.values()) {
-            if (node.width != node.div.clientWidth ||
-                node.height != node.div.clientHeight)
-                console.log("size changed");
-            return true;
+            if (node.sizeChanged())
+                return true;
         }
         return false;
     }
@@ -304,11 +318,12 @@ export class GraphView {
         }
     }
     json(node) {
+        var _a, _b;
         if (!node) {
             node = this.columns[0][0];
         }
         let nodes = this.allChildren(node);
-        return { attentionID: this.attentionID,
+        return { attentionID: (_b = (_a = this.attentionNode) === null || _a === void 0 ? void 0 : _a.div.id) !== null && _b !== void 0 ? _b : "",
             nodes: nodes.map(node => node.json()) };
     }
 }
@@ -358,6 +373,13 @@ class Node {
         const r = rect(this.div);
         return new Rect(this.xTarget, this.yTarget, this.xTarget + r.width(), this.yTarget + r.height());
     }
+    sizeChanged() {
+        return (this.width != this.div.clientWidth ||
+            this.height != this.div.clientHeight);
+    }
+    moving() {
+        return (this.x != this.xTarget || this.y != this.yTarget);
+    }
     update() {
         const dx = this.xTarget - this.x;
         const dy = this.yTarget - this.y;
@@ -369,7 +391,7 @@ class Node {
         this.height = this.div.clientHeight;
     }
     yLink() {
-        return rect(this.linkDiv).top;
+        return getChildNodeIndex(this.linkDiv);
     }
     updateShadow() {
         const sr = rect(this.div);

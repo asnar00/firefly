@@ -76,6 +76,9 @@ export function debounce(func, wait) {
         }, wait);
     };
 }
+export function getChildNodeIndex(element) {
+    return Array.from(element.parentElement.children).indexOf(element);
+}
 // sends a command request to the server, waits on the reply, returns dictionary object
 export function remote(endpointAndFunc, args) {
     return __awaiter(this, void 0, void 0, function* () {

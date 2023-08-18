@@ -75,6 +75,10 @@ export function debounce<T extends (...args: any[]) => void>(func: T, wait: numb
     };
 }
 
+export function getChildNodeIndex(element: Element): number {
+    return Array.from(element.parentElement!.children).indexOf(element);
+}
+
 // sends a command request to the server, waits on the reply, returns dictionary object
 export async function remote(endpointAndFunc: string, args: any) : Promise<any> {
     if (!endpointAndFunc.startsWith("@")) {
