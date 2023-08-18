@@ -34,7 +34,7 @@ export function getBodyWidth() : number {
     return parseInt(bodyWidth, 10);
 }
 
-export function scrollToView(div: HTMLElement, padding: number = 10) {
+export function scrollToView(div: HTMLElement, padding: number = 10) : [number, number]{
     const rect = div.getBoundingClientRect();
     const windowHeight = window.innerHeight;
     const windowWidth = window.innerWidth;
@@ -60,6 +60,7 @@ export function scrollToView(div: HTMLElement, padding: number = 10) {
     if (x != window.scrollX || y != window.scrollY) {
         window.scrollTo(x, y);
     }
+    return [x, y];
 }
 
 export function scrollTo(x: number | undefined, y: number | undefined) {
@@ -69,6 +70,21 @@ export function scrollTo(x: number | undefined, y: number | undefined) {
     scrollOptions.left = x;
     scrollOptions.top = y;
     window.scrollTo(scrollOptions);
+}
+
+export function splitArray<T>(arr: T[], cond: (item: T) => boolean): [T[], T[]] {
+    const trueArray: T[] = [];
+    const falseArray: T[] = [];
+
+    arr.forEach(item => {
+        if (cond(item)) {
+            trueArray.push(item);
+        } else {
+            falseArray.push(item);
+        }
+    });
+
+    return [trueArray, falseArray];
 }
 
 // Debounce function

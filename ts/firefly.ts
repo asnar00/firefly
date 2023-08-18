@@ -308,7 +308,7 @@ function openCard(uid: string, button: HTMLElement | null){
         let parent = s_graphView.findDivContainingLink(button);
         if (parent) parentID = parent.id;
     }
-    s_graphView.open(uid, linkID, parentID, new CardView(CardViewState.Compact));
+    s_graphView.reopen(uid, linkID, parentID, new CardView(CardViewState.Compact));
     if (button) {
         highlightLink(button, true);
     }

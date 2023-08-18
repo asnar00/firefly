@@ -10,6 +10,10 @@ import { scrollToView } from "./util.js";
 import { rect } from "./util.js";
 import { Rect } from "./util.js";
 import { getChildNodeIndex } from "./util.js";
+function user(id) {
+    const parts = id.split("_");
+    return parts[parts.length - 1];
+}
 // manages all top-level DOM nodes inside a container
 export class GraphView {
     // setup: pass the div that's going to hold all nodes
@@ -18,14 +22,18 @@ export class GraphView {
         this.columns = [];
         this.padding = 24;
         this.arrowMap = new Map();
+        this.scrolling = false;
         this.xScroll = 0;
         this.yScroll = 0;
+        this.xScrollTarget = 0;
+        this.yScrollTarget = 0;
+        this.autoScroll = false;
+        this.closedNodes = []; // nodes we've closed but might reopen, stored as json
         this.container = container;
         this.htmlFunction = htmlFunction;
         this.highlightFunction = highlightFunction;
         this.arrowsSVG = this.initArrows();
         this.attentionNode = null;
-        window.addEventListener('scroll', this.onWindowScroll.bind(this));
     }
     // given an id, returns the first div with that ID (expected to be unique)
     find(id, parent) {
@@ -53,6 +61,11 @@ export class GraphView {
         const node = this.get(div);
         if (node) {
             let nodes = this.allChildren(node);
+            for (let i = 1; i < nodes.length; i++) {
+                this.closedNodes.push(nodes[i].json());
+            }
+            //console.log("closed nodes:");
+            //for(const c of this.closedNodes) { console.log("  ", user(c.id)) };
             for (let node of nodes) {
                 this.disappear(node);
             }
@@ -62,12 +75,7 @@ export class GraphView {
     // pay attention to (div)
     attention(div) {
         this.attentionNode = this.get(div);
-    }
-    // when the user scrolls the window, stop paying attention
-    onWindowScroll() {
-        this.attentionNode = null;
-        this.xScroll = window.scrollX;
-        this.yScroll = window.scrollY;
+        //console.log("attention:", user(this.attentionNode!.div.id));
     }
     // animates to nothing over (time) seconds, then closes
     disappear(node, time = 0.25) {
@@ -94,9 +102,46 @@ export class GraphView {
         node.div.remove();
         node.remove();
     }
+    reopen(id, linkID, parentID, userObj, emphasize = false) {
+        let toOpen = [];
+        let i = this.closedNodes.findIndex(n => n.id == id); // is new node in closedNodes?
+        if (i == -1) {
+            toOpen = [{ id: id, link: linkID !== null && linkID !== void 0 ? linkID : "null",
+                    parent: parentID !== null && parentID !== void 0 ? parentID : "null",
+                    emphasize: emphasize,
+                    userObj: userObj }];
+        }
+        else {
+            toOpen = this.closedNodes.splice(i, 1); // otherwise get it from closedNodes
+        }
+        // grab all nodes from closedNodes whose parents are in (tOpen)
+        let iCheck = 0;
+        while (iCheck < toOpen.length) {
+            const p = toOpen[iCheck++];
+            let remaining = [];
+            for (let c of this.closedNodes) {
+                if (c.parent == p.id) {
+                    toOpen.push(c);
+                }
+                else {
+                    remaining.push(c);
+                }
+            }
+            this.closedNodes = remaining;
+        }
+        //console.log("reopen", user(id));
+        for (const c of toOpen) {
+            //console.log("   ", user(c.id));
+        }
+        // and open them
+        this.openJsonNodeList(toOpen);
+        this.attentionNode = this.get(this.find(id));
+        //console.log("attention:", user(this.attentionNode!.div.id));
+    }
+    // opens a new node, generates the HTML
     open(id, linkID, parentID, userObj, emphasize = false) {
         let div = this.htmlFunction(id, userObj);
-        div.style.transition = 'max-width 0.3s, max-height 0.3s, background-color 0.3s';
+        div.style.transition = 'max-width 0.5s, max-height 0.5s, background-color 0.5s';
         this.container.appendChild(div);
         let linkDiv = null;
         if (linkID != "" && parentID != "") {
@@ -113,16 +158,19 @@ export class GraphView {
         if (emphasize) {
             node.emphasize = true;
         }
-        this.attentionNode = node;
     }
     openJson(obj) {
-        let nodesJson = obj.nodes;
-        for (let n of nodesJson) {
-            this.open(n.id, n.link, n.parent, n.userObj, n.emphasize);
-        }
+        this.openJsonNodeList(obj.nodes);
+        this.closedNodes = obj.closed;
+        //console.log("closed nodelist:", this.closedNodes);
         this.xScroll = obj.xScroll;
         this.yScroll = obj.yScroll;
         scrollTo(this.xScroll, this.yScroll);
+    }
+    openJsonNodeList(nodesJson) {
+        for (let n of nodesJson) {
+            this.open(n.id, n.link, n.parent, n.userObj, n.emphasize);
+        }
     }
     // adds a div to the manager, and to the container div
     add(div, link, userObj = null) {
@@ -183,15 +231,31 @@ export class GraphView {
         if (this.anyNodeSizeChanged()) {
             this.arrangeAll();
         }
-        if (this.attentionNode &&
-            (this.attentionNode.sizeChanged() ||
-                this.attentionNode.moving())) {
-            scrollToView(this.attentionNode.div);
-        }
+        this.updateScroll();
         for (let node of this.nodeMap.values()) {
             node.update();
         }
         this.updateArrows();
+    }
+    updateScroll() {
+        if (this.attentionNode &&
+            (this.attentionNode.sizeChanged() ||
+                this.attentionNode.moving())) {
+            [this.xScrollTarget, this.yScrollTarget] = scrollToView(this.attentionNode.div);
+        }
+        if (window.scrollX == this.xScroll &&
+            window.scrollY == this.yScroll) {
+            if (this.scrolling && this.attentionNode) {
+                //console.log("cleared attention node");
+                this.attentionNode = null;
+            }
+            this.scrolling = false;
+        }
+        else {
+            this.scrolling = true;
+        }
+        this.xScroll = window.scrollX;
+        this.yScroll = window.scrollY;
     }
     // ------------------ private ----------------------------
     // returns the Node associated with a top-level div
@@ -323,13 +387,12 @@ export class GraphView {
             arrow.update();
         }
     }
-    json(node) {
-        if (!node) {
-            node = this.columns[0][0];
-        }
+    json() {
+        let node = this.columns[0][0];
         let nodes = this.allChildren(node);
         return { xScroll: this.xScroll, yScroll: this.yScroll,
-            nodes: nodes.map(node => node.json()) };
+            nodes: nodes.map(node => node.json()),
+            closed: this.closedNodes };
     }
 }
 // stores information about a div we're managing

@@ -346,7 +346,7 @@ function openCard(uid, button) {
         if (parent)
             parentID = parent.id;
     }
-    s_graphView.open(uid, linkID, parentID, new CardView(CardViewState.Compact));
+    s_graphView.reopen(uid, linkID, parentID, new CardView(CardViewState.Compact));
     if (button) {
         highlightLink(button, true);
     }

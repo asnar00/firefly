@@ -11,6 +11,12 @@ import {scrollToView} from "./util.js";
 import {rect} from "./util.js";
 import {Rect} from "./util.js";
 import {getChildNodeIndex} from "./util.js";
+import {splitArray} from "./util.js";
+
+function user(id: string) {
+    const parts = id.split("_");
+    return parts[parts.length-1];
+}
 
 
 // manages all top-level DOM nodes inside a container
@@ -24,8 +30,14 @@ export class GraphView {
     htmlFunction : Function;
     highlightFunction : Function;
     attentionNode: Node|null;
+    scrolling: boolean = false;
     xScroll: number = 0;
     yScroll: number = 0;
+    xScrollTarget: number = 0;
+    yScrollTarget: number = 0;
+    autoScroll: boolean = false;
+    closedNodes: any[] = [];            // nodes we've closed but might reopen, stored as json
+
     // setup: pass the div that's going to hold all nodes
     constructor(container: HTMLElement, htmlFunction: Function, highlightFunction: Function) {
         this.container = container;
@@ -33,7 +45,6 @@ export class GraphView {
         this.highlightFunction = highlightFunction;
         this.arrowsSVG = this.initArrows();
         this.attentionNode = null;
-        window.addEventListener('scroll', this.onWindowScroll.bind(this));
     }
 
     // given an id, returns the first div with that ID (expected to be unique)
@@ -62,6 +73,11 @@ export class GraphView {
         const node = this.get(div)!;
         if (node) {
             let nodes = this.allChildren(node);
+            for(let i = 1; i < nodes.length; i++) { 
+                this.closedNodes.push(nodes[i].json());
+            }
+            //console.log("closed nodes:");
+            //for(const c of this.closedNodes) { console.log("  ", user(c.id)) };
             for(let node of nodes) { this.disappear(node); }
         }
         this.arrangeAll();
@@ -70,13 +86,7 @@ export class GraphView {
     // pay attention to (div)
     attention(div: HTMLElement) {
         this.attentionNode = this.get(div);
-    }
-
-    // when the user scrolls the window, stop paying attention
-    onWindowScroll() {
-        this.attentionNode = null;
-        this.xScroll = window.scrollX;
-        this.yScroll = window.scrollY;
+        //console.log("attention:", user(this.attentionNode!.div.id));
     }
 
     // animates to nothing over (time) seconds, then closes
@@ -104,12 +114,50 @@ export class GraphView {
         this.nodeMap.delete(node.div);
         node.div.remove();
         node.remove();
-
     }
 
+    reopen(id: string, linkID: string, parentID: string, userObj: any, emphasize: boolean=false) {
+        let toOpen : any[] = [];
+
+        let i = this.closedNodes.findIndex(n => n.id == id);        // is new node in closedNodes?
+        if (i == -1) {
+            toOpen = [ { id: id, link: linkID ?? "null",            // if no, make a new json version
+                parent: parentID ?? "null",
+                emphasize: emphasize,
+                userObj: userObj }];
+        } else {
+            toOpen = this.closedNodes.splice(i, 1);                 // otherwise get it from closedNodes
+        }
+
+        // grab all nodes from closedNodes whose parents are in (tOpen)
+        let iCheck = 0;
+        while(iCheck < toOpen.length) {
+            const p = toOpen[iCheck++];
+            let remaining: any[] = [];
+            for(let c of this.closedNodes) {
+                if (c.parent == p.id) {
+                    toOpen.push(c);
+                } else {
+                    remaining.push(c);
+                }
+            }
+            this.closedNodes = remaining;
+        }
+        //console.log("reopen", user(id));
+        for(const c of toOpen) {
+            //console.log("   ", user(c.id));
+        }
+
+        // and open them
+        this.openJsonNodeList(toOpen);
+        this.attentionNode = this.get(this.find(id)!);
+        //console.log("attention:", user(this.attentionNode!.div.id));
+    }
+
+    // opens a new node, generates the HTML
     open(id: string, linkID: string, parentID: string, userObj: any, emphasize: boolean=false) {
         let div = this.htmlFunction(id, userObj);
-        div.style.transition = 'max-width 0.3s, max-height 0.3s, background-color 0.3s';
+        div.style.transition = 'max-width 0.5s, max-height 0.5s, background-color 0.5s';
         this.container.appendChild(div);
         let linkDiv = null;
         if (linkID != "" && parentID != "") {
@@ -123,17 +171,21 @@ export class GraphView {
         if (emphasize) {
             node!.emphasize = true;
         }
-        this.attentionNode = node;
     }
 
     openJson(obj: any) {
-        let nodesJson : any[] = obj.nodes;
-        for(let n of nodesJson) {
-            this.open(n.id, n.link, n.parent, n.userObj, n.emphasize);
-        }
+        this.openJsonNodeList(obj.nodes);
+        this.closedNodes = obj.closed;
+        //console.log("closed nodelist:", this.closedNodes);
         this.xScroll = obj.xScroll;
         this.yScroll = obj.yScroll;
         scrollTo(this.xScroll, this.yScroll);
+    }
+
+    openJsonNodeList(nodesJson: any[]) {
+        for(let n of nodesJson) {
+            this.open(n.id, n.link, n.parent, n.userObj, n.emphasize);
+        }
     }
 
     // adds a div to the manager, and to the container div
@@ -196,17 +248,31 @@ export class GraphView {
         if (this.anyNodeSizeChanged()) {
             this.arrangeAll();
         }
-
-        if (this.attentionNode && 
-            (this.attentionNode.sizeChanged() ||
-             this.attentionNode.moving())) {
-            scrollToView(this.attentionNode.div);
-        }
-
+        this.updateScroll();
         for(let node of this.nodeMap.values()) {
             node.update();
         }
         this.updateArrows();
+    }
+
+    updateScroll() {
+        if (this.attentionNode && 
+            (this.attentionNode.sizeChanged() ||
+             this.attentionNode.moving())) {
+                [this.xScrollTarget, this.yScrollTarget] = scrollToView(this.attentionNode.div);
+        }
+        if (window.scrollX == this.xScroll &&
+            window.scrollY == this.yScroll) {
+            if (this.scrolling && this.attentionNode) {
+                //console.log("cleared attention node");
+                this.attentionNode = null;
+            }
+            this.scrolling = false;
+        } else {
+            this.scrolling = true;
+        }
+        this.xScroll = window.scrollX;
+        this.yScroll = window.scrollY;
     }
 
     // ------------------ private ----------------------------
@@ -352,11 +418,12 @@ export class GraphView {
         }
     }
 
-    json(node?: Node) {
-        if (!node) { node = this.columns[0][0]; }
+    json() : any {
+        let node : Node = this.columns[0][0];
         let nodes: Node[] = this.allChildren(node);
         return { xScroll: this.xScroll, yScroll: this.yScroll,
-                 nodes:  nodes.map(node => node.json()) };
+                 nodes:  nodes.map(node => node.json()),
+                 closed: this.closedNodes };
     }
 }
 

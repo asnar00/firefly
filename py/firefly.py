@@ -115,7 +115,7 @@ def load(path):
         return json
     else:
         print("notfound!")
-        return { "error" : f"{path} not found" }
+        return { "error" : f"{path.replace(root, '')} not found" }
     
 def writeJsonToFile(obj, path: str):
     os.makedirs(os.path.dirname(path), exist_ok=True)

@@ -64,6 +64,7 @@ export function scrollToView(div, padding = 10) {
     if (x != window.scrollX || y != window.scrollY) {
         window.scrollTo(x, y);
     }
+    return [x, y];
 }
 export function scrollTo(x, y) {
     let scrollOptions = {
@@ -72,6 +73,19 @@ export function scrollTo(x, y) {
     scrollOptions.left = x;
     scrollOptions.top = y;
     window.scrollTo(scrollOptions);
+}
+export function splitArray(arr, cond) {
+    const trueArray = [];
+    const falseArray = [];
+    arr.forEach(item => {
+        if (cond(item)) {
+            trueArray.push(item);
+        }
+        else {
+            falseArray.push(item);
+        }
+    });
+    return [trueArray, falseArray];
 }
 // Debounce function
 export function debounce(func, wait) {
