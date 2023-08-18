@@ -18,6 +18,8 @@ export class GraphView {
         this.columns = [];
         this.padding = 24;
         this.arrowMap = new Map();
+        this.xScroll = 0;
+        this.yScroll = 0;
         this.container = container;
         this.htmlFunction = htmlFunction;
         this.highlightFunction = highlightFunction;
@@ -64,6 +66,8 @@ export class GraphView {
     // when the user scrolls the window, stop paying attention
     onWindowScroll() {
         this.attentionNode = null;
+        this.xScroll = window.scrollX;
+        this.yScroll = window.scrollY;
     }
     // animates to nothing over (time) seconds, then closes
     disappear(node, time = 0.25) {
@@ -116,7 +120,9 @@ export class GraphView {
         for (let n of nodesJson) {
             this.open(n.id, n.link, n.parent, n.userObj, n.emphasize);
         }
-        this.attentionNode = this.get(this.find(obj.attentionID));
+        this.xScroll = obj.xScroll;
+        this.yScroll = obj.yScroll;
+        scrollTo(this.xScroll, this.yScroll);
     }
     // adds a div to the manager, and to the container div
     add(div, link, userObj = null) {
@@ -318,12 +324,11 @@ export class GraphView {
         }
     }
     json(node) {
-        var _a, _b;
         if (!node) {
             node = this.columns[0][0];
         }
         let nodes = this.allChildren(node);
-        return { attentionID: (_b = (_a = this.attentionNode) === null || _a === void 0 ? void 0 : _a.div.id) !== null && _b !== void 0 ? _b : "",
+        return { xScroll: this.xScroll, yScroll: this.yScroll,
             nodes: nodes.map(node => node.json()) };
     }
 }

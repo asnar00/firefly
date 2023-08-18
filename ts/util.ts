@@ -38,29 +38,37 @@ export function scrollToView(div: HTMLElement, padding: number = 10) {
     const rect = div.getBoundingClientRect();
     const windowHeight = window.innerHeight;
     const windowWidth = window.innerWidth;
-    let scrollOptions: ScrollToOptions = {
-        behavior: 'smooth'
-    };
+    let x = window.scrollX;
+    let y = window.scrollY;
     // Check vertical visibility
     if (rect.top - padding < 0) {
         // The div is above the viewport
-        scrollOptions.top = window.scrollY + rect.top - padding;
+        y= window.scrollY + rect.top - padding;
     } else if (rect.bottom + padding > windowHeight) {
         // The div is below the viewport
-        scrollOptions.top = window.scrollY + rect.bottom + padding - windowHeight;
+        y= window.scrollY + rect.bottom + padding - windowHeight;
     }
     // Check horizontal visibility
     if (rect.left - padding < 0) {
         // The div is to the left of the viewport
-        scrollOptions.left = window.scrollX + rect.left - padding;
+        x = window.scrollX + rect.left - padding;
     } else if (rect.right + padding > windowWidth) {
         // The div is to the right of the viewport
-        scrollOptions.left = window.scrollX + rect.right + padding - windowWidth;
+        x = window.scrollX + rect.right + padding - windowWidth;
     }
     // Perform the scroll if needed
-    if (scrollOptions.top || scrollOptions.left) {
-        window.scrollTo(scrollOptions);
+    if (x != window.scrollX || y != window.scrollY) {
+        window.scrollTo(x, y);
     }
+}
+
+export function scrollTo(x: number | undefined, y: number | undefined) {
+    let scrollOptions: ScrollToOptions = {
+        behavior: 'smooth'
+    };
+    scrollOptions.left = x;
+    scrollOptions.top = y;
+    window.scrollTo(scrollOptions);
 }
 
 // Debounce function

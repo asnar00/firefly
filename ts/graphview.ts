@@ -24,6 +24,8 @@ export class GraphView {
     htmlFunction : Function;
     highlightFunction : Function;
     attentionNode: Node|null;
+    xScroll: number = 0;
+    yScroll: number = 0;
     // setup: pass the div that's going to hold all nodes
     constructor(container: HTMLElement, htmlFunction: Function, highlightFunction: Function) {
         this.container = container;
@@ -73,6 +75,8 @@ export class GraphView {
     // when the user scrolls the window, stop paying attention
     onWindowScroll() {
         this.attentionNode = null;
+        this.xScroll = window.scrollX;
+        this.yScroll = window.scrollY;
     }
 
     // animates to nothing over (time) seconds, then closes
@@ -127,7 +131,9 @@ export class GraphView {
         for(let n of nodesJson) {
             this.open(n.id, n.link, n.parent, n.userObj, n.emphasize);
         }
-        this.attentionNode = this.get(this.find(obj.attentionID)!);
+        this.xScroll = obj.xScroll;
+        this.yScroll = obj.yScroll;
+        scrollTo(this.xScroll, this.yScroll);
     }
 
     // adds a div to the manager, and to the container div
@@ -349,7 +355,7 @@ export class GraphView {
     json(node?: Node) {
         if (!node) { node = this.columns[0][0]; }
         let nodes: Node[] = this.allChildren(node);
-        return { attentionID: this.attentionNode?.div.id ?? "",
+        return { xScroll: this.xScroll, yScroll: this.yScroll,
                  nodes:  nodes.map(node => node.json()) };
     }
 }
