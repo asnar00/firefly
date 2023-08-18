@@ -226,6 +226,10 @@ export class GraphView {
 
     // arranges all views : computes xTarget, yTarget for each view
     arrangeAll() {
+        for(let i = 0; i < this.columns.length; i++) {
+            this.columns[i].sort((a, b) => (a.linkIndex - b.linkIndex));
+        }
+
         let xPos = rect(this.columns[0][0].div).right + (this.padding * 2);
         for(let i = 1; i < this.columns.length; i++) {
             let groups : Node[][] = this.splitColumnIntoGroups(i);
@@ -381,7 +385,6 @@ export class GraphView {
             this.columns.push([]);
         }
         this.columns[node.column].push(node);
-        this.columns[node.column].sort((a, b) => (a.yLink() - b.yLink()));
     }
 
     //----------------------------- arrows ---------------------------------
@@ -435,6 +438,7 @@ class Node {
     div: HTMLElement;                       // the div we're tracking
     linkDiv: HTMLElement | null;            // the link that triggered this
     parentDiv: HTMLElement | null;          // the parent div of the link div that opened this node
+    parentNode: Node | null = null;         // the parent node corresponding to parentDiv
     column: number = 0;                     // column we're in (first one zero)
     x: number = 0;                          // position right now
     y: number = 0;                          // ..
@@ -444,6 +448,7 @@ class Node {
     height: number =0;                      // ..
     shadow: HTMLElement;                    // the shadow, all-important :-)
     emphasize: boolean = false;             // if set, comes forward in the stack
+    linkIndex: number = 0;                  // sort index for vertical ordering
 
     constructor(view: GraphView, div: HTMLElement, linkDiv: HTMLElement | null, parentDiv: HTMLElement | null, userObj: any =null) {
         this.graph = view;
@@ -454,6 +459,8 @@ class Node {
         this.div = div; this.linkDiv = linkDiv; this.parentDiv = parentDiv;
         if (parentDiv) { 
             this.column = this.graph.get(parentDiv)!.column + 1;
+            this.parentNode = this.graph.get(parentDiv);
+            this.linkIndex = this.computeLinkIndex();
         }
         this.graph.addToColumnArray(this);
 
@@ -502,8 +509,19 @@ class Node {
         this.width = this.div.clientWidth; this.height = this.div.clientHeight;
     }
 
-    yLink() {
-        return getChildNodeIndex(this.linkDiv!);
+    computeLinkIndex() {
+        let result = 0;
+        let digit = 1;
+        let node : Node | null = this;
+        while(node) {
+            if (node.linkDiv) {
+                let i = getChildNodeIndex(node.linkDiv);
+                result += (i * digit);
+                digit *= 1000;        // max 1000 links per page!
+            }
+            node = node.parentNode;
+        }
+        return result;
     }
 
     updateShadow() {

@@ -60,19 +60,19 @@ TODAY:
 - supercompact view: want to see all the code !!! 
 - class view: don't want to see all the code, just headers
 - want to see class.property etc not just property
-- restrict size of expanded
-- animate size to make it less jarring
-- reopen old trees
-- make sure buttons get highlighted properly
-- serialise session
-- smooth motion
+- restrict size of expanded DONE
+- animate size to make it less jarring DONE
+- reopen old trees DONE
+- make sure buttons get highlighted properly DONE
+- serialise session DONE
+- smooth motion DONE
 - noob comes with you
 - open/close logic for multiple references
 - loopback/recursion
 - some way of viewing "boundaries" eg. client/server/python
 - open dependents
 - tree extends upwards
-- session persistence
+- session persistence DONE
 - multiple sessions
 - restore scroll position on compact DONE
 - transitive close DONE
@@ -89,7 +89,7 @@ TODAY:
 
 ### importing logic
 - cross-project dependencies
-- python classes / properties / methods NEXT
+- python classes / properties / methods DONE
 - multi-file imports DONE
 - mixed codebase DONE
 - language server

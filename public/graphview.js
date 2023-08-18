@@ -210,6 +210,9 @@ export class GraphView {
     }
     // arranges all views : computes xTarget, yTarget for each view
     arrangeAll() {
+        for (let i = 0; i < this.columns.length; i++) {
+            this.columns[i].sort((a, b) => (a.linkIndex - b.linkIndex));
+        }
         let xPos = rect(this.columns[0][0].div).right + (this.padding * 2);
         for (let i = 1; i < this.columns.length; i++) {
             let groups = this.splitColumnIntoGroups(i);
@@ -356,7 +359,6 @@ export class GraphView {
             this.columns.push([]);
         }
         this.columns[node.column].push(node);
-        this.columns[node.column].sort((a, b) => (a.yLink() - b.yLink()));
     }
     //----------------------------- arrows ---------------------------------
     // set up the SVG arrow renderer
@@ -398,6 +400,7 @@ export class GraphView {
 // stores information about a div we're managing
 class Node {
     constructor(view, div, linkDiv, parentDiv, userObj = null) {
+        this.parentNode = null; // the parent node corresponding to parentDiv
         this.column = 0; // column we're in (first one zero)
         this.x = 0; // position right now
         this.y = 0; // ..
@@ -406,6 +409,7 @@ class Node {
         this.width = 0; // width on last frame, so we can react to animation
         this.height = 0; // ..
         this.emphasize = false; // if set, comes forward in the stack
+        this.linkIndex = 0; // sort index for vertical ordering
         this.graph = view;
         this.userObj = userObj;
         if (parentDiv === undefined) {
@@ -416,6 +420,8 @@ class Node {
         this.parentDiv = parentDiv;
         if (parentDiv) {
             this.column = this.graph.get(parentDiv).column + 1;
+            this.parentNode = this.graph.get(parentDiv);
+            this.linkIndex = this.computeLinkIndex();
         }
         this.graph.addToColumnArray(this);
         this.shadow = element(`<div class="shadow"></div>`);
@@ -458,8 +464,19 @@ class Node {
         this.width = this.div.clientWidth;
         this.height = this.div.clientHeight;
     }
-    yLink() {
-        return getChildNodeIndex(this.linkDiv);
+    computeLinkIndex() {
+        let result = 0;
+        let digit = 1;
+        let node = this;
+        while (node) {
+            if (node.linkDiv) {
+                let i = getChildNodeIndex(node.linkDiv);
+                result += (i * digit);
+                digit *= 1000; // max 1000 links per page!
+            }
+            node = node.parentNode;
+        }
+        return result;
     }
     updateShadow() {
         const sr = rect(this.div);
