@@ -1,5 +1,5 @@
 {
-    "attentionID": "ts_firefly_firefly_function_openMain",
+    "attentionID": "ts_firefly_firefly_function_animateLogoToLeft",
     "nodes": [
         {
             "id": "ts_firefly_firefly_function_main",
@@ -9,17 +9,16 @@
             "userObj": {
                 "state": 1,
                 "xScroll": 0,
-                "yScroll": 0,
-                "uid": "ts_firefly_firefly_function_main"
+                "yScroll": 0
             }
         },
         {
             "id": "ts_firefly_firefly_function_setupEvents",
             "link": "linkto_ts_firefly_firefly_function_setupEvents",
             "parent": "ts_firefly_firefly_function_main",
-            "emphasize": true,
+            "emphasize": false,
             "userObj": {
-                "state": 2,
+                "state": 1,
                 "xScroll": 0,
                 "yScroll": 0
             }
@@ -47,8 +46,8 @@
             }
         },
         {
-            "id": "ts_firefly_firefly_function_animateLogoToLeft",
-            "link": "linkto_ts_firefly_firefly_function_animateLogoToLeft",
+            "id": "ts_firefly_firefly_function_openMain",
+            "link": "linkto_ts_firefly_firefly_function_openMain",
             "parent": "ts_firefly_firefly_function_setupEvents",
             "emphasize": false,
             "userObj": {
@@ -58,8 +57,19 @@
             }
         },
         {
-            "id": "ts_firefly_firefly_function_openMain",
-            "link": "linkto_ts_firefly_firefly_function_openMain",
+            "id": "ts_firefly_firefly_function_openCard",
+            "link": "linkto_ts_firefly_firefly_function_openCard",
+            "parent": "ts_firefly_firefly_function_openMain",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_animateLogoToLeft",
+            "link": "linkto_ts_firefly_firefly_function_animateLogoToLeft",
             "parent": "ts_firefly_firefly_function_setupEvents",
             "emphasize": false,
             "userObj": {

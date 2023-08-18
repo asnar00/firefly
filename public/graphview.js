@@ -73,6 +73,7 @@ export class GraphView {
     }
     open(id, linkID, parentID, userObj, emphasize = false) {
         let div = this.htmlFunction(id, userObj);
+        div.style.transition = 'max-width 0.3s, max-height 0.3s, background-color 0.3s';
         this.container.appendChild(div);
         let linkDiv = null;
         if (linkID != "" && parentID != "") {
@@ -162,6 +163,9 @@ export class GraphView {
     }
     // update
     update() {
+        if (this.anyNodeSizeChanged()) {
+            this.arrangeAll();
+        }
         for (let node of this.nodeMap.values()) {
             node.update();
         }
@@ -182,6 +186,15 @@ export class GraphView {
             parent = parent.parentElement;
         }
         return (parent) ? parent : null;
+    }
+    anyNodeSizeChanged() {
+        for (let node of this.nodeMap.values()) {
+            if (node.width != node.div.clientWidth ||
+                node.height != node.div.clientHeight)
+                console.log("size changed");
+            return true;
+        }
+        return false;
     }
     splitColumnIntoGroups(i) {
         let groups = [];
@@ -307,6 +320,8 @@ class Node {
         this.y = 0; // ..
         this.xTarget = 0; // where we're trying to get to, to avoid others
         this.yTarget = 0; // ..
+        this.width = 0; // width on last frame, so we can react to animation
+        this.height = 0; // ..
         this.emphasize = false; // if set, comes forward in the stack
         this.graph = view;
         this.userObj = userObj;
@@ -322,14 +337,14 @@ class Node {
         this.graph.addToColumnArray(this);
         this.shadow = element(`<div class="shadow"></div>`);
         this.graph.container.appendChild(this.shadow);
+        this.width = div.clientWidth;
+        this.height = div.clientHeight;
     }
     remove() {
         this.graph.columns[this.column] = this.graph.columns[this.column].filter(item => item !== this);
         this.shadow.remove();
     }
     setTargetPos(x, y) {
-        const str = this.div.id.split("_");
-        console.log(str[str.length - 1], y);
         this.xTarget = x;
         this.yTarget = y;
     }
@@ -350,6 +365,8 @@ class Node {
         const y = (Math.abs(dy) <= 1) ? this.yTarget : (this.y + dy * 0.1);
         this.setPos(x, y);
         this.updateShadow();
+        this.width = this.div.clientWidth;
+        this.height = this.div.clientHeight;
     }
     yLink() {
         return rect(this.linkDiv).top;

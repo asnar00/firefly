@@ -247,7 +247,6 @@ function listen(elem: HTMLElement, type: string, func: Function) {
 }
 
 function expandOrContract(div : HTMLElement) {
-    console.log("expandOrContract", div.id);
     let view = s_graphView.userObj(div);
     if (view.state == CardViewState.Compact) {
         div.classList.add("code-expanded");
@@ -260,7 +259,6 @@ function expandOrContract(div : HTMLElement) {
          div.scrollTop = view.yScroll;
     }
     s_graphView.emphasize(div, div.classList.contains("code-expanded"));
-    s_graphView.arrangeAll();
     scrollToView(div);
 }
 
