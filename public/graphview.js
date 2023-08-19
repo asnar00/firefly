@@ -80,10 +80,16 @@ export class GraphView {
     // animates to nothing over (time) seconds, then closes
     disappear(node, time = 0.25) {
         let div = node.div;
-        // Set the transition property for the div
-        div.style.transition = `max-width ${time}s, max-height ${time}s`;
-        // Begin the transition by setting width and height to 0
-        setTimeout(() => { div.style.maxWidth = '0'; div.style.maxHeight = '0'; }, 0);
+        if (node.linkDiv) {
+            this.removeArrow(node.linkDiv);
+        }
+        div.style.width = div.scrollWidth + "px";
+        div.style.height = div.scrollHeight + "px";
+        div.style.transition = `width ${time}s, height ${time}s`;
+        div.offsetWidth;
+        div.offsetHeight;
+        div.style.width = '0';
+        div.style.height = '0';
         setTimeout(() => { this.closeSingleNode(node); }, (time - 0.1) * 1000);
     }
     allChildren(node) {
