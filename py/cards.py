@@ -377,6 +377,7 @@ def writeTextToFile(text: str, path: str):
 
 def importCardsFromText(project: str, module: str, language: Language, text: str, parent: Card, minIndent: int)-> List[Card]:
     cards = language.importCards(project, module, text, minIndent)
+    removeIndents(cards)
     for c in cards:
         c.parent = parent
         (c.kind, c.name) = language.findTypeAndName(c)
@@ -385,6 +386,17 @@ def importCardsFromText(project: str, module: str, language: Language, text: str
         #print(c.code[0].text)
     return cards
     
+def removeIndents(cards: List[Card]):
+    for card in cards:
+        lines = card.code[0].text.split('\n')
+        minLeadingSpaces = 10000
+        for line in lines:
+            nLeadingSpaces = len(line) - len(line.lstrip(' '))
+            minLeadingSpaces = min(minLeadingSpaces, nLeadingSpaces)
+        if minLeadingSpaces > 0:
+            lines = [l[minLeadingSpaces:] for l in lines]
+            card.code[0].text = '\n'.join(lines)
+
 def findWordInString(word: str, string: str) -> int:    # not part of another word
     punc = " !@#$%^&*()+-={}[]:\";\',.<>/?\`~"
     index = 0
