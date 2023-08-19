@@ -208,7 +208,7 @@ export class GraphView {
         } else {
             const crect = rect(div);
             xTarget = crect.left + 150;
-            yTarget = (window.innerHeight / 2) - (crect.height()/2);
+            yTarget = (window.innerHeight / 2) - (crect.height()/2) - 32;
         }
         let node = new Node(this, div, link, parentDiv, userObj);
         node.setTargetPos(xTarget, yTarget);
@@ -278,7 +278,11 @@ export class GraphView {
         if (this.attentionNode && 
             (this.attentionNode.sizeChanged() ||
              this.attentionNode.moving())) {
-                [this.xScrollTarget, this.yScrollTarget] = scrollToView(this.attentionNode.div);
+                if (this.attentionNode.div.parentElement) {
+                    [this.xScrollTarget, this.yScrollTarget] = scrollToView(this.attentionNode.div);
+                } else {
+                    this.attentionNode = null;
+                }
         }
         if (window.scrollX == this.xScroll &&
             window.scrollY == this.yScroll) {

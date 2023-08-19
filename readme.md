@@ -47,7 +47,7 @@ Most likely, we can actually just use a comment or decoration, or something clev
 
 
 TODAY:
-- titles
+- titles DONE
 - class/subclass map
 - body resize
 - github repo download

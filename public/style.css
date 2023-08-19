@@ -1,7 +1,10 @@
 body {
     height: 100vh; /* Set the height to fill the entire viewport */
     margin: 0;
-    background: linear-gradient(to bottom, #3a7b6f, #54a998);
+    background: linear-gradient(to bottom, 
+    #3a7b6f 0%,   /* Start color at the top */
+    #54a998 100%  /* End color till the bottom */
+    );
 }
 
 h3 {
@@ -76,7 +79,7 @@ h3 {
 
 .code-container {
     display: inline-block;
-    border-radius: 5px;
+    border-radius: 6px;
     overflow: hidden;
     position: absolute;
     transition: width 0.3s, height 0.3s;
