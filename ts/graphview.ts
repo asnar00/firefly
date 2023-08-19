@@ -226,25 +226,35 @@ export class GraphView {
 
     // arranges all views : computes xTarget, yTarget for each view
     arrangeAll() {
-        for(let i = 0; i < this.columns.length; i++) {
-            this.columns[i].sort((a, b) => (a.linkIndex - b.linkIndex));
-        }
-
-        let xPos = rect(this.columns[0][0].div).right + (this.padding * 2);
+        this.sortColumns();
+        let xPos = this.xMax(this.columns[0]);
         for(let i = 1; i < this.columns.length; i++) {
             let groups : Node[][] = this.splitColumnIntoGroups(i);
             for (let group of groups) {
                 this.spaceNodesInGroup(group, xPos);
             }
             this.spaceGroupsVertically(groups);
-            // now get xPos = max of all right-edges
-            for(const node of this.columns[i]) {
-                xPos = Math.max(xPos, node.targetRect().right + (this.padding * 2));
-            }
+            xPos = this.xMax(this.columns[i]);
         }
         const widthInPixels = getBodyWidth();
         const newWidth = Math.max(window.innerWidth, xPos);
         document.body.style.width = `${newWidth}px`;
+    }
+
+    // sort nodes within each column by link order
+    sortColumns() {
+        for(let col of this.columns) {
+            col.sort((a, b) => (a.linkIndex - b.linkIndex));
+        }
+    }
+
+    // right edge of column
+    xMax(nodes: Node[]) : number {
+        let x = 0;
+        for (const node of nodes) {
+            x = Math.max(x, node.targetRect().right + (this.padding * 2));
+        }
+        return x;
     }
 
     // update
@@ -586,10 +596,10 @@ class Arrow {
         this.xVertical = (xFrom + xTo)/2;
     }
     updatePath() {
-        if (!document.body.contains(this.linkDiv) || !document.body.contains(this.div)) {
+        /*if (!document.body.contains(this.linkDiv) || !document.body.contains(this.div)) {
             this.removeFromSVG();
             return;
-        }
+        }*/
         const startX = this.drawRect.left;
         const startY = this.drawRect.top;
         const endX = this.drawRect.right;

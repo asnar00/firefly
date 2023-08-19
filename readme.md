@@ -46,11 +46,17 @@ but the *link* can be made direct, as long as the editor understands the boilerp
 Most likely, we can actually just use a comment or decoration, or something clever with the function names.
 
 
-
 TODAY:
-- python classes and methods
-- deal with overlapping Dependency ranges
-- do the full supercompact tree view. It'll rock.
+- titles
+- class/subclass map
+- body resize
+- github repo download
+- journal back up and running
+
+yesterday:
+- python classes and methods DONE
+- deal with overlapping Dependency ranges DONE
+- do the full supercompact tree view. It'll rock. NEXT
 - embedding service! infrastructure ahoy! needs a super overhaul.
 
 ## TODO
@@ -63,6 +69,9 @@ TODAY:
 
 
 ### visual / UI
+- titlebars per node with Class.method() names
+- tree extends upwards and downwards as far as necessary
+- map class relationships, use it to open multi-class method implementations (Language.importx example)
 - conflicting dependencies (constructor vs classname) DONE
 - supercompact view: want to see all the code !!! 
 - class view: don't want to see all the code, just headers
@@ -78,7 +87,6 @@ TODAY:
 - loopback/recursion
 - some way of viewing "boundaries" eg. client/server/python
 - open dependents
-- tree extends upwards
 - session persistence DONE
 - multiple sessions
 - restore scroll position on compact DONE
@@ -99,6 +107,7 @@ TODAY:
 - python classes / properties / methods DONE
 - multi-file imports DONE
 - mixed codebase DONE
+- download github repo !
 - language server
 - tests
 

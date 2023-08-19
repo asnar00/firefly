@@ -231,8 +231,6 @@ function cardToHTML(id: string, view: CardView) : HTMLElement {
     setTimeout(() => { elem.scrollLeft = view.xScroll; elem.scrollTop = view.yScroll;}, 0);
     listen(elem, 'click', function() { expandOrContract(elem); });
     listen(elem, 'scroll', function(event: any) { getScrollPos(elem); });
-    let container : HTMLElement = element(`<div id="${card.uid}" class="code-container" spellcheck="false" contenteditable="false"><b>${shortName(card)}</b><div>`);
-    container.appendChild(elem);
     return elem;
 }
 
