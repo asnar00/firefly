@@ -185,7 +185,6 @@ async function animateLogoToLeft(): Promise<void> {
     });
 }
 
-// returns fresh JSON for all cards in the codebase
 async function importFolders(project: string, folders: string[]) {
     return await remote("@firefly.importFolders", { project: project, folders: folders });
 }
@@ -202,7 +201,7 @@ function cardToHTML(id: string, view: CardView) : HTMLElement {
     let card : Card | null = findCard(id);
     if (!card) { return element(`<div></div>`); }
     let style = "code"; if (view.state == CardViewState.Fullsize) { style += " code-expanded"; }
-    let elem : HTMLElement = element(`<div id="${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
+    let elem : HTMLElement = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
     let text : string = card.code[0].text;
     if (card.dependsOn.length==0) {
         elem.innerText = text;
@@ -231,15 +230,29 @@ function cardToHTML(id: string, view: CardView) : HTMLElement {
     setTimeout(() => { elem.scrollLeft = view.xScroll; elem.scrollTop = view.yScroll;}, 0);
     listen(elem, 'click', function() { expandOrContract(elem); });
     listen(elem, 'scroll', function(event: any) { getScrollPos(elem); });
-    return elem;
+    let container = codeContainer(elem, shortName(card));
+    container.id = card.uid;
+    return container;
 }
 
+function codeContainer(codeDiv: HTMLElement, title: string) : HTMLElement {
+    const containerDiv = document.createElement('div');
+    containerDiv.className = 'code-container';
+
+    // Create the title div
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'code-title';
+    titleDiv.textContent = title;
+
+    // Append the title and the code div to the container
+    containerDiv.appendChild(titleDiv);
+    containerDiv.appendChild(codeDiv);
+
+    return containerDiv;
+}
 
 function shortName(card: Card) : string {
     let result: string = "";
-    console.log("shortName",card.uid);
-    console.log(card.parent);
-    console.log(typeof(card.parent));
     if (card.parent != "null") { result += findCard(card.parent)!.name + "."; }
     result += card.name;
     if (card.kind=="method" || card.kind=="function") result += "()";
@@ -259,23 +272,25 @@ function listen(elem: HTMLElement, type: string, func: Function) {
     });
 }
 
-function expandOrContract(div : HTMLElement) {
+function expandOrContract(elem : HTMLElement) {
+    let div = elem.parentElement!;
     let view = s_graphView.userObj(div);
     if (view.state == CardViewState.Compact) {
-        div.classList.add("code-expanded");
+        elem.classList.add("code-expanded");
         view.state = CardViewState.Fullsize;
 
     } else if (view.state == CardViewState.Fullsize) {
-         div.classList.remove("code-expanded");
+         elem.classList.remove("code-expanded");
          view.state = CardViewState.Compact;
-         div.scrollLeft = view.xScroll;
-         div.scrollTop = view.yScroll;
+         elem.scrollLeft = view.xScroll;
+         elem.scrollTop = view.yScroll;
     }
-    s_graphView.emphasize(div, div.classList.contains("code-expanded"));
+    s_graphView.emphasize(div, elem.classList.contains("code-expanded"));
     s_graphView.attention(div);
 }
 
-function getScrollPos(div: HTMLElement) {
+function getScrollPos(elem: HTMLElement) {
+    let div = elem.parentElement!;
     let view = s_graphView.userObj(div);
     if (view.state == CardViewState.Compact) {
         view.xScroll = div.scrollLeft;
@@ -301,6 +316,7 @@ async function load(path: string) : Promise<any> {
 
 // if a card view is closed, opens it; otherwise closes it
 function openOrCloseCard(uid: string, button: HTMLElement) {
+    console.log("openOrCloseCard");
     const card : Card | null = findCard(uid);
     if (!card) return;
     let existing = s_graphView.find(uid);

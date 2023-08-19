@@ -211,7 +211,6 @@ function animateLogoToLeft() {
         });
     });
 }
-// returns fresh JSON for all cards in the codebase
 function importFolders(project, folders) {
     return __awaiter(this, void 0, void 0, function* () {
         return yield remote("@firefly.importFolders", { project: project, folders: folders });
@@ -234,7 +233,7 @@ function cardToHTML(id, view) {
     if (view.state == CardViewState.Fullsize) {
         style += " code-expanded";
     }
-    let elem = element(`<div id="${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
+    let elem = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
     let text = card.code[0].text;
     if (card.dependsOn.length == 0) {
         elem.innerText = text;
@@ -266,13 +265,24 @@ function cardToHTML(id, view) {
     setTimeout(() => { elem.scrollLeft = view.xScroll; elem.scrollTop = view.yScroll; }, 0);
     listen(elem, 'click', function () { expandOrContract(elem); });
     listen(elem, 'scroll', function (event) { getScrollPos(elem); });
-    return elem;
+    let container = codeContainer(elem, shortName(card));
+    container.id = card.uid;
+    return container;
+}
+function codeContainer(codeDiv, title) {
+    const containerDiv = document.createElement('div');
+    containerDiv.className = 'code-container';
+    // Create the title div
+    const titleDiv = document.createElement('div');
+    titleDiv.className = 'code-title';
+    titleDiv.textContent = title;
+    // Append the title and the code div to the container
+    containerDiv.appendChild(titleDiv);
+    containerDiv.appendChild(codeDiv);
+    return containerDiv;
 }
 function shortName(card) {
     let result = "";
-    console.log("shortName", card.uid);
-    console.log(card.parent);
-    console.log(typeof (card.parent));
     if (card.parent != "null") {
         result += findCard(card.parent).name + ".";
     }
@@ -295,22 +305,24 @@ function listen(elem, type, func) {
         debouncedSaveAll();
     }));
 }
-function expandOrContract(div) {
+function expandOrContract(elem) {
+    let div = elem.parentElement;
     let view = s_graphView.userObj(div);
     if (view.state == CardViewState.Compact) {
-        div.classList.add("code-expanded");
+        elem.classList.add("code-expanded");
         view.state = CardViewState.Fullsize;
     }
     else if (view.state == CardViewState.Fullsize) {
-        div.classList.remove("code-expanded");
+        elem.classList.remove("code-expanded");
         view.state = CardViewState.Compact;
-        div.scrollLeft = view.xScroll;
-        div.scrollTop = view.yScroll;
+        elem.scrollLeft = view.xScroll;
+        elem.scrollTop = view.yScroll;
     }
-    s_graphView.emphasize(div, div.classList.contains("code-expanded"));
+    s_graphView.emphasize(div, elem.classList.contains("code-expanded"));
     s_graphView.attention(div);
 }
-function getScrollPos(div) {
+function getScrollPos(elem) {
+    let div = elem.parentElement;
     let view = s_graphView.userObj(div);
     if (view.state == CardViewState.Compact) {
         view.xScroll = div.scrollLeft;
@@ -337,6 +349,7 @@ function load(path) {
 }
 // if a card view is closed, opens it; otherwise closes it
 function openOrCloseCard(uid, button) {
+    console.log("openOrCloseCard");
     const card = findCard(uid);
     if (!card)
         return;

@@ -49,7 +49,7 @@ h3 {
     font-size: 9pt;
     background-color: #87bdb5; 
     padding: 0.5em;
-    border-radius: 8px;
+    /*border-radius: 8px;*/
     color: #000000;
     display: block;
     overflow-x: auto; /* Enable horizontal scrolling if the content overflows */
@@ -62,7 +62,7 @@ h3 {
     white-space: pre; /* This prevents the content from wrapping to the next line */
     width: fit-content; /* This makes the div size to its content up to its maximum width */
     height: fit-content; /* This makes the div size to its content up to its maximum height */
-    position: absolute; /* or relative, depending on your layout needs */
+    position: relative; /* or relative, depending on your layout needs */
     cursor: pointer;
     line-height: 125%;
     transition: max-width 0.3s, max-height 0.3s, background-color 0.3s;
@@ -72,6 +72,23 @@ h3 {
     max-width: 768px;
     max-height: 768px;
     background-color: #a8c9c4;
+}
+
+.code-container {
+    display: inline-block;
+    border-radius: 5px;
+    overflow: hidden;
+    position: absolute;
+}
+
+.code-title {    
+    font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;
+    font-size: 9pt;
+    background-color: #72a19a;
+    color: #000000;
+    padding: 0.5em;
+    font-weight: 600;
+    border-bottom: 1px solid #87bdb5;
 }
 
 [contenteditable]:focus {
