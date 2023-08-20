@@ -405,11 +405,13 @@ export class GraphView {
         for(const node of group) {
             sumHeight += node.targetRect().height();
         }
+
         // then find the centerline of the group's parent
         const parentDiv = group[0].parentDiv!;
         const parentNode = this.get(parentDiv)!;
         const parentRect = parentNode.targetRect();
         const centerLine = (parentRect.top + parentRect.bottom)/2;
+        
         // now space group out vertically around the centerline
         let yPos = Math.max(this.padding, centerLine - (sumHeight/2));
         let pivot = (group.length-1)/2;

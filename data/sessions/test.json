@@ -1,5 +1,5 @@
 {
-    "xScroll": 187,
+    "xScroll": 0,
     "yScroll": 0,
     "nodes": [
         {
@@ -25,8 +25,8 @@
             }
         },
         {
-            "id": "ts_firefly_firefly_function_animateLogoToLeft",
-            "link": "linkto_ts_firefly_firefly_function_animateLogoToLeft",
+            "id": "ts_firefly_firefly_function_loadCards",
+            "link": "linkto_ts_firefly_firefly_function_loadCards",
             "parent": "ts_firefly_firefly_function_setupEvents",
             "emphasize": false,
             "userObj": {
@@ -36,9 +36,9 @@
             }
         },
         {
-            "id": "ts_firefly_graphview_method_GraphView_constructor",
-            "link": "linkto_ts_firefly_graphview_method_GraphView_constructor",
-            "parent": "ts_firefly_firefly_function_setupEvents",
+            "id": "ts_firefly_firefly_function_importFolders",
+            "link": "linkto_ts_firefly_firefly_function_importFolders",
+            "parent": "ts_firefly_firefly_function_loadCards",
             "emphasize": false,
             "userObj": {
                 "state": 1,
@@ -47,9 +47,64 @@
             }
         },
         {
-            "id": "ts_firefly_firefly_global_s_graphView",
-            "link": "linkto_ts_firefly_firefly_global_s_graphView",
-            "parent": "ts_firefly_firefly_function_setupEvents",
+            "id": "py_firefly_firefly_function_importFolders",
+            "link": "linkto_py_firefly_firefly_function_importFolders",
+            "parent": "ts_firefly_firefly_function_importFolders",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_cards_function_importAllCards",
+            "link": "linkto_py_firefly_cards_function_importAllCards",
+            "parent": "py_firefly_firefly_function_importFolders",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_cards_function_importCardsFromFile",
+            "link": "linkto_py_firefly_cards_function_importCardsFromFile",
+            "parent": "py_firefly_cards_function_importAllCards",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_cards_function_importCards",
+            "link": "linkto_py_firefly_cards_function_importCards",
+            "parent": "py_firefly_cards_function_importCardsFromFile",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_cards_function_importCardsFromText",
+            "link": "linkto_py_firefly_cards_function_importCardsFromText",
+            "parent": "py_firefly_cards_function_importCards",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_cards_method_Language_importCards",
+            "link": "linkto_py_firefly_cards_method_Language_importCards",
+            "parent": "py_firefly_cards_function_importCardsFromText",
             "emphasize": false,
             "userObj": {
                 "state": 1,

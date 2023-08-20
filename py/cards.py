@@ -153,21 +153,17 @@ class Typescript(Language):
         indent = 0
         for iLine in range(0, len(lines)):
             line = lines[iLine]
-            if line.strip():
-                if indent >= minIndent:
-                    # should we start a new card?
-                    # YES if current line has indent = minIndent, and previous line is not a comment
-                    # NO if line is just a close-brace
-                    singleClose = (indent <= minIndent) and (line.strip() == "}")
-                    if not singleClose:
-                        if indent == minIndent and not prevLine.strip().startswith("//"):
-                            card = Card(project, module, line, self, iLine+1)
-                            cards.append(card)
-                        else:
-                            card.code[0].text += "\n" + line
-                            card.code[0].jLine = iLine + 1
-                indent = indent + countBraces(line)
-                prevLine = line
+            if indent >= minIndent: # only consider lines above the min indent level
+                # should we start a new card?
+                # YES if current line has indent = minIndent, and previous line is not a comment
+                if indent == minIndent and not prevLine.strip().startswith("//"):
+                    card = Card(project, module, line, self, iLine+1)
+                    cards.append(card)
+                else:
+                    card.code[0].text += "\n" + line
+                    card.code[0].jLine = iLine + 1
+            indent = indent + countBraces(line)
+            prevLine = line
         return cards
     def findTypeAndName(self, card) -> (str, str):
         lines = card.code[0].text.split("\n")
