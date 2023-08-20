@@ -299,8 +299,6 @@ export class GraphView {
             bounds.right == this.canvasRect.right &&
             bounds.bottom == this.canvasRect.bottom) return;
 
-        console.log("updateCanvas");
-        console.log("bounds", bounds);
         const deltaX = bounds.left - this.canvasRect.left;
         const deltaY = bounds.top - this.canvasRect.top;
         
@@ -309,7 +307,6 @@ export class GraphView {
         const ySize = this.canvasRect.height();
         if (xSize != this.container.offsetWidth ||
             ySize != this.container.offsetHeight) {
-            console.log("setting container size");
             this.container.style.width = `${xSize}px`;
             this.container.style.height = `${ySize}px`;
             document.body.style.width = `${xSize}px`;
@@ -318,9 +315,6 @@ export class GraphView {
 
         // If any code-container div has drifted upwards or left, adjust all divs
         if (deltaX != 0 || deltaY != 0) {
-            console.log("scrolling...");
-            console.log(" deltaX", deltaX);
-            console.log(" deltaY", deltaY);
     
             for (let node of this.nodeMap.values()) {
                 node.setPos(node.x, node.y);
