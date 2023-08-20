@@ -306,10 +306,14 @@ export class GraphView {
         const ySize = this.canvasRect.height();
         if (xSize != this.container.offsetWidth ||
             ySize != this.container.offsetHeight) {
+            console.log("canvas:", xSize, ySize);
             this.container.style.width = `${xSize}px`;
             this.container.style.height = `${ySize}px`;
             document.body.style.width = `${xSize}px`;
             document.body.style.height = `${ySize}px`;
+            this.arrowsSVG.setAttribute('viewBox', `0 0 ${xSize} ${ySize}`);
+            this.arrowsSVG.style.width = `${xSize}px`;
+            this.arrowsSVG.style.height = `${ySize}px`;
         }
 
         // If any code-container div has drifted upwards or left, adjust all divs
@@ -485,15 +489,6 @@ export class GraphView {
     }
 
     updateArrows() {
-        const width = this.container.offsetWidth;
-        const height = this.container.offsetHeight;
-        if (width > 0 && height > 0 &&
-            width != this.arrowsSVG.clientWidth &&
-            height != this.arrowsSVG.clientHeight) {
-            this.arrowsSVG.setAttribute('viewBox', `0 0 ${width} ${height}`);
-            this.arrowsSVG.style.width = `${width}px`;
-            this.arrowsSVG.style.height = `${height}px`;
-        }
         for (let arrow of this.arrowMap.values()) {
             arrow.update();
         }

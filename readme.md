@@ -125,6 +125,13 @@ yesterday:
 
 
 ____________________
+Disambiguation: we need to coalesce to an array of dependencies;
+or we need to disambiguate in the client.
+I'd rather do it in the data, TBH.
+In the absence of a language server, we have to guess, and hold all guesses.
+
+
+____________________
 Lets think about multiple languages here in this example.
 
 1. We want to be able to define the same name in ts and py, and they shouldn't clash.

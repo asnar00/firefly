@@ -135,7 +135,6 @@ function importLocalFolder() {
                             <h3 style="display: inline-block;">▶︎</h3></button>`);
         logo.insertBefore(button, logo.children[1]);
         button.addEventListener('click', () => __awaiter(this, void 0, void 0, function* () {
-            console.log("button pressed!");
             if (!window.showDirectoryPicker) {
                 console.log("showDirectoryPicker is null");
                 return;
