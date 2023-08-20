@@ -149,7 +149,6 @@ export class GraphView {
     open(id, linkID, parentID, userObj, emphasize = false) {
         let div = this.htmlFunction(id, userObj);
         div.style.transition = 'max-width 0.5s, max-height 0.5s, background-color 0.5s';
-        this.container.appendChild(div);
         let linkDiv = null;
         if (linkID != "" && parentID != "") {
             let parentDiv = this.find(parentID);

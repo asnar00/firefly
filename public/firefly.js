@@ -349,7 +349,6 @@ function load(path) {
 }
 // if a card view is closed, opens it; otherwise closes it
 function openOrCloseCard(uid, button) {
-    console.log("openOrCloseCard");
     const card = findCard(uid);
     if (!card)
         return;

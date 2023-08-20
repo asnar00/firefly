@@ -316,7 +316,6 @@ async function load(path: string) : Promise<any> {
 
 // if a card view is closed, opens it; otherwise closes it
 function openOrCloseCard(uid: string, button: HTMLElement) {
-    console.log("openOrCloseCard");
     const card : Card | null = findCard(uid);
     if (!card) return;
     let existing = s_graphView.find(uid);
