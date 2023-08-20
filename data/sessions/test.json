@@ -1,5 +1,5 @@
 {
-    "xScroll": 80.5,
+    "xScroll": 187,
     "yScroll": 0,
     "nodes": [
         {
@@ -25,8 +25,8 @@
             }
         },
         {
-            "id": "ts_firefly_firefly_function_eventLoop",
-            "link": "linkto_ts_firefly_firefly_function_eventLoop",
+            "id": "ts_firefly_firefly_function_animateLogoToLeft",
+            "link": "linkto_ts_firefly_firefly_function_animateLogoToLeft",
             "parent": "ts_firefly_firefly_function_setupEvents",
             "emphasize": false,
             "userObj": {
@@ -36,20 +36,66 @@
             }
         },
         {
-            "id": "ts_firefly_graphview_method_GraphView_update",
-            "link": "linkto_ts_firefly_graphview_method_GraphView_update",
-            "parent": "ts_firefly_firefly_function_eventLoop",
-            "emphasize": true,
+            "id": "ts_firefly_graphview_method_GraphView_constructor",
+            "link": "linkto_ts_firefly_graphview_method_GraphView_constructor",
+            "parent": "ts_firefly_firefly_function_setupEvents",
+            "emphasize": false,
             "userObj": {
-                "state": 2,
+                "state": 1,
                 "xScroll": 0,
                 "yScroll": 0
             }
         },
         {
-            "id": "ts_firefly_graphview_method_GraphView_arrangeAll",
-            "link": "linkto_ts_firefly_graphview_method_GraphView_arrangeAll",
-            "parent": "ts_firefly_graphview_method_GraphView_update",
+            "id": "ts_firefly_firefly_global_s_graphView",
+            "link": "linkto_ts_firefly_firefly_global_s_graphView",
+            "parent": "ts_firefly_firefly_function_setupEvents",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        }
+    ],
+    "closed": [
+        {
+            "id": "ts_firefly_graphview_method_GraphView_xMax",
+            "link": "linkto_ts_firefly_graphview_method_GraphView_xMax",
+            "parent": "ts_firefly_graphview_method_GraphView_arrangeAll",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_method_GraphView_splitColumnIntoGroups",
+            "link": "linkto_ts_firefly_graphview_method_GraphView_splitColumnIntoGroups",
+            "parent": "ts_firefly_graphview_method_GraphView_arrangeAll",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_util_function_getBodyWidth",
+            "link": "linkto_ts_firefly_util_function_getBodyWidth",
+            "parent": "ts_firefly_graphview_method_GraphView_arrangeAll",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_method_GraphView_spaceNodesInGroup",
+            "link": "linkto_ts_firefly_graphview_method_GraphView_spaceNodesInGroup",
+            "parent": "ts_firefly_graphview_method_GraphView_arrangeAll",
             "emphasize": false,
             "userObj": {
                 "state": 1,
@@ -69,9 +115,9 @@
             }
         },
         {
-            "id": "ts_firefly_firefly_global_s_graphView",
-            "link": "linkto_ts_firefly_firefly_global_s_graphView",
-            "parent": "ts_firefly_firefly_function_eventLoop",
+            "id": "ts_firefly_graphview_property_Node_linkIndex",
+            "link": "linkto_ts_firefly_graphview_property_Node_linkIndex",
+            "parent": "ts_firefly_graphview_method_GraphView_sortColumns",
             "emphasize": false,
             "userObj": {
                 "state": 1,
@@ -80,20 +126,9 @@
             }
         },
         {
-            "id": "ts_firefly_graphview_class_GraphView",
-            "link": "linkto_ts_firefly_graphview_class_GraphView",
-            "parent": "ts_firefly_firefly_global_s_graphView",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_graphview_class_Arrow",
-            "link": "linkto_ts_firefly_graphview_class_Arrow",
-            "parent": "ts_firefly_graphview_class_GraphView",
+            "id": "ts_firefly_graphview_property_GraphView_columns",
+            "link": "linkto_ts_firefly_graphview_property_GraphView_columns",
+            "parent": "ts_firefly_graphview_method_GraphView_sortColumns",
             "emphasize": false,
             "userObj": {
                 "state": 1,
@@ -101,6 +136,5 @@
                 "yScroll": 0
             }
         }
-    ],
-    "closed": []
+    ]
 }

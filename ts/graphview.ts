@@ -306,7 +306,6 @@ export class GraphView {
         const ySize = this.canvasRect.height();
         if (xSize != this.container.offsetWidth ||
             ySize != this.container.offsetHeight) {
-            console.log("canvas:", xSize, ySize);
             this.container.style.width = `${xSize}px`;
             this.container.style.height = `${ySize}px`;
             document.body.style.width = `${xSize}px`;
@@ -319,8 +318,13 @@ export class GraphView {
         // If any code-container div has drifted upwards or left, adjust all divs
         if (deltaX != 0 || deltaY != 0) {
     
-            for (let node of this.nodeMap.values()) {
-                node.setPos(node.x, node.y);
+            for (let child of Array.from(this.container.children)) {
+                if (child instanceof HTMLElement) {
+                    let div = child as HTMLElement;
+                    div.style.left = `${div.clientLeft + deltaX}px`;
+                    div.style.top = `${div.clientTop + deltaY}py`;
+                }
+                
             }
 
             document.body.scrollLeft += deltaX;

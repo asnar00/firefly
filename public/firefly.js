@@ -21,6 +21,7 @@ import { GraphView } from "./graphview.js";
 import { element } from "./util.js";
 import { debounce } from "./util.js";
 import { remote } from "./util.js";
+import { rect } from "./util.js";
 window.onload = () => { main(); };
 const s_useLocalFiles = false; // change this to true to enable local file access
 let dirHandle = null;
@@ -194,6 +195,7 @@ function animateLogoToLeft() {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => {
             const logoAndShadow = document.getElementById("logo_and_shadow");
+            console.log("diff=", (window.innerHeight / 2) - rect(logoAndShadow).top);
             // Set animation properties
             logoAndShadow.style.animationName = "moveToLeft";
             logoAndShadow.style.animationDuration = "0.25s";

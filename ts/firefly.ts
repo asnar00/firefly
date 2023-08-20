@@ -7,6 +7,7 @@ import {element} from "./util.js";
 import {scrollToView} from "./util.js";
 import {debounce} from "./util.js";
 import {remote} from "./util.js";
+import {rect} from "./util.js";
 
 window.onload = () => { main(); };
 
@@ -165,6 +166,7 @@ function readFileAsText(file: File): Promise<string> {
 async function animateLogoToLeft(): Promise<void> {
     return new Promise((resolve, reject) => {
         const logoAndShadow = document.getElementById("logo_and_shadow")!;
+        console.log("diff=", (window.innerHeight/2)-rect(logoAndShadow).top);
 
         // Set animation properties
         logoAndShadow.style.animationName = "moveToLeft";
