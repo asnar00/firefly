@@ -1,6 +1,7 @@
 body {
     height: 100vh; /* Set the height to fill the entire viewport */
     margin: 0;
+    background-attachment: local;
     background: linear-gradient(to bottom, 
     #3a7b6f 0%,   /* Start color at the top */
     #54a998 100%  /* End color till the bottom */

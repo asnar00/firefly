@@ -34,7 +34,7 @@ export function getBodyWidth() : number {
     return parseInt(bodyWidth, 10);
 }
 
-export function scrollToView(div: HTMLElement, padding: number = 10) : [number, number]{
+export function scrollToView(div: HTMLElement, padding: number = 48) : [number, number]{
     const rect = div.getBoundingClientRect();
     const windowHeight = window.innerHeight;
     const windowWidth = window.innerWidth;

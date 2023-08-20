@@ -37,6 +37,7 @@ export class GraphView {
     yScrollTarget: number = 0;
     autoScroll: boolean = false;
     closedNodes: any[] = [];            // nodes we've closed but might reopen, stored as json
+    canvasRect: Rect;                   // bounding-rect of all nodes, or window rect, whichever is bigger
 
     // setup: pass the div that's going to hold all nodes
     constructor(container: HTMLElement, htmlFunction: Function, highlightFunction: Function) {
@@ -45,6 +46,7 @@ export class GraphView {
         this.highlightFunction = highlightFunction;
         this.arrowsSVG = this.initArrows();
         this.attentionNode = null;
+        this.canvasRect = new Rect(0, 0, document.body.clientWidth, document.body.clientHeight);
     }
 
     // given an id, returns the first div with that ID (expected to be unique)
@@ -267,11 +269,66 @@ export class GraphView {
         if (this.anyNodeSizeChanged()) {
             this.arrangeAll();
         }
+        this.updateCanvas();
         this.updateScroll();
         for(let node of this.nodeMap.values()) {
             node.update();
         }
         this.updateArrows();
+    }
+
+    updateCanvas() {
+        let bounds = new Rect(0,0, window.innerWidth, window.innerHeight);
+        let padding = 10;
+        
+        // Calculate canvas rect based on node positions/sizes
+        // note: bounds may be negative, that's fine
+        for (const node of this.nodeMap.values()) {
+            const r = node.targetRect();
+            bounds.left = Math.min(bounds.left, r.left - padding);
+            bounds.top = Math.min(bounds.top, r.top - padding);
+            bounds.right = Math.max(bounds.right, r.right + padding);
+            bounds.bottom = Math.max(bounds.bottom, r.bottom + padding);
+        }
+        bounds.left = Math.floor(bounds.left);
+        bounds.top = Math.floor(bounds.top);
+        bounds.right = Math.ceil(bounds.right);
+        bounds.bottom = Math.ceil(bounds.bottom);
+        if (bounds.left == this.canvasRect.left &&
+            bounds.top == this.canvasRect.top &&
+            bounds.right == this.canvasRect.right &&
+            bounds.bottom == this.canvasRect.bottom) return;
+
+        console.log("updateCanvas");
+        console.log("bounds", bounds);
+        const deltaX = bounds.left - this.canvasRect.left;
+        const deltaY = bounds.top - this.canvasRect.top;
+        
+        this.canvasRect = bounds;
+        const xSize = this.canvasRect.width();
+        const ySize = this.canvasRect.height();
+        if (xSize != this.container.offsetWidth ||
+            ySize != this.container.offsetHeight) {
+            console.log("setting container size");
+            this.container.style.width = `${xSize}px`;
+            this.container.style.height = `${ySize}px`;
+            document.body.style.width = `${xSize}px`;
+            document.body.style.height = `${ySize}px`;
+        }
+
+        // If any code-container div has drifted upwards or left, adjust all divs
+        if (deltaX != 0 || deltaY != 0) {
+            console.log("scrolling...");
+            console.log(" deltaX", deltaX);
+            console.log(" deltaY", deltaY);
+    
+            for (let node of this.nodeMap.values()) {
+                node.setPos(node.x, node.y);
+            }
+
+            document.body.scrollLeft += deltaX;
+            document.body.scrollTop += deltaY;
+        }
     }
 
     updateScroll() {
@@ -411,12 +468,12 @@ export class GraphView {
     // set up the SVG arrow renderer
     initArrows() : SVGSVGElement {
         const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-        svg.style.position = 'relative';
+        svg.style.position = 'absolute';
         svg.style.width = '100%';
         svg.style.height = '100%';
         svg.style.pointerEvents = 'none';
         svg.style.zIndex = '1000';
-        this.container.parentElement!.appendChild(svg);
+        this.container.appendChild(svg);
         return svg;
     }
 
@@ -435,6 +492,15 @@ export class GraphView {
     }
 
     updateArrows() {
+        const width = this.container.offsetWidth;
+        const height = this.container.offsetHeight;
+        if (width > 0 && height > 0 &&
+            width != this.arrowsSVG.clientWidth &&
+            height != this.arrowsSVG.clientHeight) {
+            this.arrowsSVG.setAttribute('viewBox', `0 0 ${width} ${height}`);
+            this.arrowsSVG.style.width = `${width}px`;
+            this.arrowsSVG.style.height = `${height}px`;
+        }
         for (let arrow of this.arrowMap.values()) {
             arrow.update();
         }
@@ -484,6 +550,7 @@ class Node {
         this.graph.addToColumnArray(this);
 
         this.shadow = element(`<div class="shadow"></div>`);
+        this.shadow.style.transition = `top $0.3s`;
         this.graph.container.appendChild(this.shadow);
         this.width = div.clientWidth; this.height = div.clientHeight;
     }
@@ -500,8 +567,8 @@ class Node {
 
     setPos(x: number, y: number) {
         this.x = x; this.y = y;
-        this.div.style.left = `${x}px`;
-        this.div.style.top = `${y}px`;
+        this.div.style.left = `${x - this.graph.canvasRect.left}px`;
+        this.div.style.top = `${y - this.graph.canvasRect.top}px`;
     }
 
     targetRect() : Rect {
