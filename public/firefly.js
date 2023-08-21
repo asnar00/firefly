@@ -385,7 +385,6 @@ function openOrCloseCard(uid, button) {
 }
 // opens a card, optionally connected to a button element
 function openCard(uid, button) {
-    console.log("openCard", uid);
     let linkID = "";
     let parentID = "";
     if (button) {

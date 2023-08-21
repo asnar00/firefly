@@ -1,5 +1,5 @@
 {
-    "xScroll": 0,
+    "xScroll": 55.5,
     "yScroll": 0,
     "nodes": [
         {
@@ -17,17 +17,50 @@
             "id": "ts_firefly_firefly_function_run",
             "link": "linkto_ts_firefly_firefly_function_run",
             "parent": "ts_firefly_firefly_function_main",
-            "emphasize": true,
+            "emphasize": false,
             "userObj": {
-                "state": 2,
+                "state": 1,
                 "xScroll": 0,
                 "yScroll": 0
             }
         },
         {
-            "id": "ts_firefly_firefly_function_init",
-            "link": "linkto_ts_firefly_firefly_function_init",
+            "id": "ts_firefly_firefly_function_eventLoop",
+            "link": "linkto_ts_firefly_firefly_function_eventLoop",
             "parent": "ts_firefly_firefly_function_run",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_method_GraphView_update",
+            "link": "linkto_ts_firefly_graphview_method_GraphView_update__ts_firefly_graphview_method_Node_update__ts_firefly_graphview_method_Arrow_update",
+            "parent": "ts_firefly_firefly_function_eventLoop",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_method_Node_update",
+            "link": "linkto_ts_firefly_graphview_method_GraphView_update__ts_firefly_graphview_method_Node_update__ts_firefly_graphview_method_Arrow_update",
+            "parent": "ts_firefly_firefly_function_eventLoop",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_method_Arrow_update",
+            "link": "linkto_ts_firefly_graphview_method_GraphView_update__ts_firefly_graphview_method_Node_update__ts_firefly_graphview_method_Arrow_update",
+            "parent": "ts_firefly_firefly_function_eventLoop",
             "emphasize": false,
             "userObj": {
                 "state": 1,
@@ -151,39 +184,6 @@
             "id": "ts_firefly_graphview_method_GraphView_open",
             "link": "linkto_ts_firefly_graphview_method_GraphView_open",
             "parent": "ts_firefly_graphview_method_GraphView_openJsonNodeList",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_graphview_method_GraphView_update",
-            "link": "linkto_ts_firefly_graphview_method_GraphView_update__ts_firefly_graphview_method_Node_update__ts_firefly_graphview_method_Arrow_update",
-            "parent": "ts_firefly_firefly_function_eventLoop",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_graphview_method_Node_update",
-            "link": "linkto_ts_firefly_graphview_method_GraphView_update__ts_firefly_graphview_method_Node_update__ts_firefly_graphview_method_Arrow_update",
-            "parent": "ts_firefly_firefly_function_eventLoop",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_graphview_method_Arrow_update",
-            "link": "linkto_ts_firefly_graphview_method_GraphView_update__ts_firefly_graphview_method_Node_update__ts_firefly_graphview_method_Arrow_update",
-            "parent": "ts_firefly_firefly_function_eventLoop",
             "emphasize": false,
             "userObj": {
                 "state": 1,
