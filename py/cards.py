@@ -17,9 +17,8 @@ def importAllCards(project, folders) -> dict:
         print("files:", files)
         for file in files:
             cards.extend(importCardsFromFile(project, file))
+    cards = list(filter(lambda c: not c.uid().endswith("_"), cards))
     computeDependencies(cards)
-    for c in cards:
-        print(c.uid())
     #computeLevels(cards)
     return cardsToJsonDict(cards)
 
@@ -82,8 +81,8 @@ def card_serialiser(obj):
             "inputs" : obj.inputs,
             "outputs" : obj.outputs,
             "code" : [{ "text" : c.text, "language" : c.language.shortName(), "iLine" : c.iLine, "jLine" : c.jLine } for c in obj.code],
-            "dependsOn" : [ { "target" : d.target.uid(), "iChar": d.iChar, "jChar": d.jChar } for d in obj.dependsOn],
-            "dependents" : [ { "target" : d.target.uid(), "iChar": d.iChar, "jChar": d.jChar } for d in obj.dependents],
+            "dependsOn" : [ { "targets" : [t.uid() for t in d.targets], "iChar": d.iChar, "jChar": d.jChar } for d in obj.dependsOn],
+            "dependents" : [ { "targets" : [t.uid() for t in d.targets], "iChar": d.iChar, "jChar": d.jChar } for d in obj.dependents],
             "children" : [ c.uid() for c in obj.children],
             "parent" : obj.parent.uid() if obj.parent else "null"
         }
@@ -93,7 +92,20 @@ class Dependency:
     def __init__(self, iChar: int, jChar: int, target: Card):
         self.iChar = iChar
         self.jChar = jChar
-        self.target = target
+        self.targets = [ target ]
+    def combine(self, dep):
+        len0 = self.jChar - self.iChar
+        len1 = dep.jChar - dep.iChar
+        if len1 > len0: # dep wins because longer
+            self.iChar = dep.iChar
+            self.jChar = dep.jChar
+            self.targets = dep.targets
+        elif len1 < len0 : # self wins because longer
+            pass
+        else: # equal length; combine the arrays
+            self.iChar = min(self.iChar, dep.iChar)
+            self.jChar = max(self.jChar, dep.jChar)
+            self.targets += dep.targets
 
 class Python(Language):
     def name(self): return "python"
@@ -233,7 +245,10 @@ def importCards(project: str, module: str, text: str, ext: str) -> List[Card]:
 def cardsToJsonDict(cards: List[Card]) -> dict:
     print("cardsToJsonDict:", len(cards), "cards")
     jsonObj = { "cards" : [card_serialiser(c) for c in cards] }
-    print("type(jsonObj)=", type(jsonObj))
+    jsonStr = json.dumps(jsonObj, indent=4)
+    print("saving...")
+    writeTextToFile(jsonStr, "/Users/asnaroo/desktop/experiments/firefly/data/cards/test.json")
+    print("saved")
     return jsonObj
 
 def computeDependencies(cards: List[Card]):
@@ -267,24 +282,10 @@ def computeDependencies(cards: List[Card]):
                 d0 = card.dependsOn[i]
                 d1 = card.dependsOn[i+1]
                 if d0.jChar > d1.iChar and d1.iChar < d0.jChar: # overlaps
-                    if (d0.jChar-d0.iChar) >= (d1.jChar-d1.iChar):   # d0 wins if it's longer
-                        card.dependsOn.remove(d1)                    # we don't step forward, comparing d0 with next one
-                    else:
-                        card.dependsOn.remove(d0)
-                        i += 1
+                    d0.combine(d1)
+                    card.dependsOn.remove(d1)
                 else:
                     i +=1
-
-
-    sortedCards = sorted(cards, key=lambda x: x.fullName())
-    for card in sortedCards:
-        report = card.fullName() + " ==> "
-        for d in card.dependsOn:
-            report += d.target.fullName() + " "
-        report += "\n     <== "
-        for d in card.dependents:
-            report += d.target.fullName() + " "
-        #print(report)
 
 def inComment(iChar: int, code: CodeBlock) -> bool:
     return searchBackwards(code.text, code.language.comment(), iChar)
@@ -316,7 +317,12 @@ def computeLevels(cards: List[Card]):
     #print("\ncomputing rank from top...")
     queue = []
     for c in callables:
-        if len([d for d in c.dependents if d.target in callables])==0:
+        count=0
+        for d in c.dependents:
+            for t in d.targets:
+                if t in callables:
+                    count += 1
+        if count == 0:
             c.rankFromTop = 1
             queue.append(c)
     level = 1
@@ -327,17 +333,23 @@ def computeLevels(cards: List[Card]):
         nextQueue = []
         for c in queue:
             for d in c.dependsOn:
-                if d.target in callables and d.target.rankFromTop == 0:
-                    d.target.rankFromTop = c.rankFromTop + 1
-                    if not d.target in nextQueue:
-                        nextQueue.append(d.target)
+                for t in d.targets:
+                    if t in callables and t.rankFromTop == 0:
+                        t.rankFromTop = c.rankFromTop + 1
+                        if not t in nextQueue:
+                            nextQueue.append(t)
         queue = nextQueue
         level += 1
 
     #print("\ncomputing rank from bottom...")
     queue = []
     for c in callables:
-        if len([d for d in c.dependsOn if d.target in callables])==0:
+        count=0
+        for d in c.dependsOn:
+            for t in d.targets:
+                if t in callables:
+                    count += 1
+        if count == 0:
             c.rankFromBottom = 1
             queue.append(c)
     level = 1
@@ -348,10 +360,11 @@ def computeLevels(cards: List[Card]):
         nextQueue = []
         for c in queue:
             for d in c.dependents:
-                if d.target in callables and d.target.rankFromBottom == 0:
-                    d.target.rankFromBottom = c.rankFromBottom + 1
-                    if not d.target in nextQueue:
-                        nextQueue.append(d.target)
+                for t in d.targets:
+                    if t in callables and t.rankFromBottom == 0:
+                        t.rankFromBottom = c.rankFromBottom + 1
+                        if not t in nextQueue:
+                            nextQueue.append(t)
         queue = nextQueue
         level += 1
     

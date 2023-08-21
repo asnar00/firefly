@@ -26,7 +26,7 @@ export class GraphView {
     columns: Node[][] = [];
     padding: number = 24;
     arrowsSVG: SVGSVGElement;
-    arrowMap: Map<HTMLElement, Arrow> = new Map();
+    arrowMap: Map<HTMLElement, Arrow[]> = new Map();
     htmlFunction : Function;
     highlightFunction : Function;
     attentionNode: Node|null;
@@ -42,6 +42,7 @@ export class GraphView {
     // setup: pass the div that's going to hold all nodes
     constructor(container: HTMLElement, htmlFunction: Function, highlightFunction: Function) {
         this.container = container;
+        this.container.style.zIndex = `-10`;
         this.htmlFunction = htmlFunction;
         this.highlightFunction = highlightFunction;
         this.arrowsSVG = this.initArrows();
@@ -95,7 +96,7 @@ export class GraphView {
     disappear(node: Node, time: number=0.25): void {
         let div = node.div;
         if (node.linkDiv) {
-            this.removeArrow(node.linkDiv);
+            this.removeArrow(node.linkDiv, div);
         } 
         div.style.width = div.scrollWidth + "px";
         div.style.height = div.scrollHeight + "px";
@@ -115,9 +116,6 @@ export class GraphView {
     }
 
     closeSingleNode(node: Node) {
-        if (node.linkDiv) {
-            this.removeArrow(node.linkDiv);
-        }
         this.nodeMap.delete(node.div);
         node.div.remove();
         node.remove();
@@ -317,18 +315,14 @@ export class GraphView {
 
         // If any code-container div has drifted upwards or left, adjust all divs
         if (deltaX != 0 || deltaY != 0) {
-    
             for (let child of Array.from(this.container.children)) {
                 if (child instanceof HTMLElement) {
                     let div = child as HTMLElement;
-                    div.style.left = `${div.clientLeft + deltaX}px`;
-                    div.style.top = `${div.clientTop + deltaY}py`;
+                    div.style.left = `${div.offsetLeft - deltaX}px`;
+                    div.style.top = `${div.offsetTop - deltaY}px`;
                 }
-                
             }
-
-            document.body.scrollLeft += deltaX;
-            document.body.scrollTop += deltaY;
+            window.scrollTo(window.scrollX - deltaX, window.scrollY - deltaY);
         }
     }
 
@@ -345,7 +339,6 @@ export class GraphView {
         if (window.scrollX == this.xScroll &&
             window.scrollY == this.yScroll) {
             if (this.scrolling && this.attentionNode) {
-                //console.log("cleared attention node");
                 this.attentionNode = null;
             }
             this.scrolling = false;
@@ -411,7 +404,7 @@ export class GraphView {
         const parentNode = this.get(parentDiv)!;
         const parentRect = parentNode.targetRect();
         const centerLine = (parentRect.top + parentRect.bottom)/2;
-        
+
         // now space group out vertically around the centerline
         let yPos = Math.max(this.padding, centerLine - (sumHeight/2));
         let pivot = (group.length-1)/2;
@@ -482,21 +475,28 @@ export class GraphView {
 
     addArrow(linkDiv: HTMLElement, parentDiv: HTMLElement, div: HTMLElement) {
         let arrow = new Arrow(linkDiv, parentDiv, div);
-        this.arrowMap.set(linkDiv, arrow);
+        if (!this.arrowMap.has(linkDiv)) { this.arrowMap.set(linkDiv, []); }
+        this.arrowMap.get(linkDiv)!.push(arrow);
         arrow.addToSVG(this.arrowsSVG);
     }
 
-    removeArrow(linkDiv: HTMLElement) {
-        let arrow = this.arrowMap.get(linkDiv);
-        if (arrow) {
-            arrow.removeFromSVG();
-            this.arrowMap.delete(linkDiv);
+    removeArrow(linkDiv: HTMLElement, div: HTMLElement) {
+        let arrows : Arrow[] | undefined = this.arrowMap.get(linkDiv);
+        if (arrows) {
+            const index = arrows.findIndex(a => a.div === div);
+            if (index >= 0) {
+                let arrow: Arrow = arrows[index];
+                arrows.splice(index, 1);
+                arrow.removeFromSVG();
+            }
         }
     }
 
     updateArrows() {
-        for (let arrow of this.arrowMap.values()) {
-            arrow.update();
+        for (let arrows of this.arrowMap.values()) {
+            for (let arrow of arrows) {
+                arrow.update();
+            }
         }
     }
 
@@ -544,7 +544,6 @@ class Node {
         this.graph.addToColumnArray(this);
 
         this.shadow = element(`<div class="shadow"></div>`);
-        this.shadow.style.transition = `top $0.3s`;
         this.graph.container.appendChild(this.shadow);
         this.width = div.clientWidth; this.height = div.clientHeight;
     }
@@ -607,13 +606,13 @@ class Node {
     updateShadow() {
         const sr = rect(this.div);
         const wh = window.innerHeight;
-        let sy = (this.emphasize) ? (wh - 100) : (sr.bottom + 50);
+        let sy = (this.emphasize) ? (sr.bottom + 150) : (sr.bottom + 50);
         sy = Math.max(wh/2+20, sy);
         this.shadow.style.left = `${sr.left}px`;
         this.shadow.style.top = `${sy}px`;
         this.shadow.style.width = `${sr.width()}px`;
         this.shadow.style.height = `1px`;
-        this.shadow.style.zIndex = `-10`;
+        this.shadow.style.zIndex = `-1`;
     }
 
     json() : any {

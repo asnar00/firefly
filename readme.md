@@ -49,7 +49,7 @@ Most likely, we can actually just use a comment or decoration, or something clev
 TODAY:
 - titles DONE
 - class/subclass map
-- body resize
+- body resize DONE
 - github repo download
 - journal back up and running
 

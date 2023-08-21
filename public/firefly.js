@@ -21,7 +21,6 @@ import { GraphView } from "./graphview.js";
 import { element } from "./util.js";
 import { debounce } from "./util.js";
 import { remote } from "./util.js";
-import { rect } from "./util.js";
 window.onload = () => { main(); };
 const s_useLocalFiles = false; // change this to true to enable local file access
 let dirHandle = null;
@@ -37,12 +36,10 @@ class CodeBlock {
     }
 }
 class Dependency {
-    constructor(target, iChar, jChar) {
+    constructor() {
         this.iChar = 0; // character index in code of start of symbol
         this.jChar = 0; // character index in code after symbol
-        this.target = target;
-        this.iChar = iChar;
-        this.jChar = jChar;
+        this.targets = []; // card uids we link to
     }
 }
 ;
@@ -84,18 +81,27 @@ class CardView {
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("firefly ᕦ(ツ)ᕤ");
-        yield setupEvents();
+        yield run();
     });
 }
-function setupEvents() {
+function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        const container = document.getElementById('container');
-        s_graphView = new GraphView(container, cardToHTML, highlightLink);
+        logo();
+        graph();
         yield loadCards();
         yield animateLogoToLeft();
         yield openMain();
         eventLoop();
     });
+}
+function logo() {
+    const logo = document.getElementById('logo_and_shadow');
+    logo.style.left = '32px';
+    logo.style.top = `${(window.innerHeight / 2) - 40}px`;
+}
+function graph() {
+    const container = document.getElementById('container');
+    s_graphView = new GraphView(container, cardToHTML, highlightLink);
 }
 function eventLoop() {
     s_graphView.update();
@@ -195,7 +201,6 @@ function animateLogoToLeft() {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => {
             const logoAndShadow = document.getElementById("logo_and_shadow");
-            console.log("diff=", (window.innerHeight / 2) - rect(logoAndShadow).top);
             // Set animation properties
             logoAndShadow.style.animationName = "moveToLeft";
             logoAndShadow.style.animationDuration = "0.25s";
@@ -248,10 +253,14 @@ function cardToHTML(id, view) {
             }
             // add span containing the link
             const link = text.slice(dep.iChar, dep.jChar);
-            const child = element(`<span class="tag" id="linkto_${dep.target}">${link}</span>`);
+            let linkId = "linkto_" + dep.targets[0];
+            for (let i = 1; i < dep.targets.length; i++) {
+                linkId += "__" + dep.targets[i];
+            }
+            const child = element(`<span class="tag" id="${linkId}">${link}</span>`);
             listen(child, 'click', function (event) {
                 return __awaiter(this, void 0, void 0, function* () {
-                    openOrCloseCard(child.id.slice("linkto_".length), child);
+                    onLinkButtonPress(child);
                 });
             });
             elem.appendChild(child);
@@ -347,6 +356,14 @@ function load(path) {
     return __awaiter(this, void 0, void 0, function* () {
         return yield remote("@firefly.load", { path: "sessions/test.json" });
     });
+}
+// link button pressed
+function onLinkButtonPress(button) {
+    const id = button.id.slice("linkto_".length);
+    const linkIDs = id.split("__");
+    for (const linkID of linkIDs) {
+        openOrCloseCard(linkID, button);
+    }
 }
 // if a card view is closed, opens it; otherwise closes it
 function openOrCloseCard(uid, button) {

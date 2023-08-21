@@ -30,6 +30,7 @@ export class GraphView {
         this.autoScroll = false;
         this.closedNodes = []; // nodes we've closed but might reopen, stored as json
         this.container = container;
+        this.container.style.zIndex = `-10`;
         this.htmlFunction = htmlFunction;
         this.highlightFunction = highlightFunction;
         this.arrowsSVG = this.initArrows();
@@ -82,7 +83,7 @@ export class GraphView {
     disappear(node, time = 0.25) {
         let div = node.div;
         if (node.linkDiv) {
-            this.removeArrow(node.linkDiv);
+            this.removeArrow(node.linkDiv, div);
         }
         div.style.width = div.scrollWidth + "px";
         div.style.height = div.scrollHeight + "px";
@@ -102,9 +103,6 @@ export class GraphView {
         return result;
     }
     closeSingleNode(node) {
-        if (node.linkDiv) {
-            this.removeArrow(node.linkDiv);
-        }
         this.nodeMap.delete(node.div);
         node.div.remove();
         node.remove();
@@ -297,12 +295,11 @@ export class GraphView {
             for (let child of Array.from(this.container.children)) {
                 if (child instanceof HTMLElement) {
                     let div = child;
-                    div.style.left = `${div.clientLeft + deltaX}px`;
-                    div.style.top = `${div.clientTop + deltaY}py`;
+                    div.style.left = `${div.offsetLeft - deltaX}px`;
+                    div.style.top = `${div.offsetTop - deltaY}px`;
                 }
             }
-            document.body.scrollLeft += deltaX;
-            document.body.scrollTop += deltaY;
+            window.scrollTo(window.scrollX - deltaX, window.scrollY - deltaY);
         }
     }
     updateScroll() {
@@ -319,7 +316,6 @@ export class GraphView {
         if (window.scrollX == this.xScroll &&
             window.scrollY == this.yScroll) {
             if (this.scrolling && this.attentionNode) {
-                //console.log("cleared attention node");
                 this.attentionNode = null;
             }
             this.scrolling = false;
@@ -444,19 +440,28 @@ export class GraphView {
     }
     addArrow(linkDiv, parentDiv, div) {
         let arrow = new Arrow(linkDiv, parentDiv, div);
-        this.arrowMap.set(linkDiv, arrow);
+        if (!this.arrowMap.has(linkDiv)) {
+            this.arrowMap.set(linkDiv, []);
+        }
+        this.arrowMap.get(linkDiv).push(arrow);
         arrow.addToSVG(this.arrowsSVG);
     }
-    removeArrow(linkDiv) {
-        let arrow = this.arrowMap.get(linkDiv);
-        if (arrow) {
-            arrow.removeFromSVG();
-            this.arrowMap.delete(linkDiv);
+    removeArrow(linkDiv, div) {
+        let arrows = this.arrowMap.get(linkDiv);
+        if (arrows) {
+            const index = arrows.findIndex(a => a.div === div);
+            if (index >= 0) {
+                let arrow = arrows[index];
+                arrows.splice(index, 1);
+                arrow.removeFromSVG();
+            }
         }
     }
     updateArrows() {
-        for (let arrow of this.arrowMap.values()) {
-            arrow.update();
+        for (let arrows of this.arrowMap.values()) {
+            for (let arrow of arrows) {
+                arrow.update();
+            }
         }
     }
     json() {
@@ -495,7 +500,6 @@ class Node {
         }
         this.graph.addToColumnArray(this);
         this.shadow = element(`<div class="shadow"></div>`);
-        this.shadow.style.transition = `top $0.3s`;
         this.graph.container.appendChild(this.shadow);
         this.width = div.clientWidth;
         this.height = div.clientHeight;
@@ -552,13 +556,13 @@ class Node {
     updateShadow() {
         const sr = rect(this.div);
         const wh = window.innerHeight;
-        let sy = (this.emphasize) ? (wh - 100) : (sr.bottom + 50);
+        let sy = (this.emphasize) ? (sr.bottom + 150) : (sr.bottom + 50);
         sy = Math.max(wh / 2 + 20, sy);
         this.shadow.style.left = `${sr.left}px`;
         this.shadow.style.top = `${sy}px`;
         this.shadow.style.width = `${sr.width()}px`;
         this.shadow.style.height = `1px`;
-        this.shadow.style.zIndex = `-10`;
+        this.shadow.style.zIndex = `-1`;
     }
     json() {
         var _a, _b, _c, _d;

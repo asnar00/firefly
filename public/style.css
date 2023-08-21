@@ -8,6 +8,16 @@ body {
     );
 }
 
+.logo {
+    position: absolute;
+}
+
+.container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
 h3 {
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
     font-weight: 400;  

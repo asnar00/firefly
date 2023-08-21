@@ -28,10 +28,7 @@ class CodeBlock {
 class Dependency {
     iChar: number = 0;                  // character index in code of start of symbol
     jChar: number = 0;                  // character index in code after symbol
-    target: Card;                       // card we link to or from (works both ways)
-    constructor(target: Card, iChar: number, jChar: number) {
-        this.target = target; this.iChar = iChar; this.jChar = jChar; 
-    }
+    targets: string[] = [];             // card uids we link to
 };
 
 class Card {
@@ -72,16 +69,28 @@ class CardView {
 
 async function main() {
     console.log("firefly ᕦ(ツ)ᕤ");
-    await setupEvents();
+    await run();
 }
 
-async function setupEvents() {
-    const container = document.getElementById('container') as HTMLElement;
-    s_graphView = new GraphView(container, cardToHTML, highlightLink);
+
+async function run() {
+    logo();
+    graph();
     await loadCards();
     await animateLogoToLeft();
     await openMain();
     eventLoop();
+}
+
+function logo() {
+    const logo = document.getElementById('logo_and_shadow') as HTMLElement;
+    logo.style.left = '32px';
+    logo.style.top = `${(window.innerHeight/2)-40}px`;
+}
+
+function graph() {
+    const container = document.getElementById('container') as HTMLElement;
+    s_graphView = new GraphView(container, cardToHTML, highlightLink);
 }
 
 function eventLoop() {
@@ -166,7 +175,6 @@ function readFileAsText(file: File): Promise<string> {
 async function animateLogoToLeft(): Promise<void> {
     return new Promise((resolve, reject) => {
         const logoAndShadow = document.getElementById("logo_and_shadow")!;
-        console.log("diff=", (window.innerHeight/2)-rect(logoAndShadow).top);
 
         // Set animation properties
         logoAndShadow.style.animationName = "moveToLeft";
@@ -215,9 +223,13 @@ function cardToHTML(id: string, view: CardView) : HTMLElement {
             }
             // add span containing the link
             const link = text.slice(dep.iChar, dep.jChar);
-            const child = element(`<span class="tag" id="linkto_${dep.target}">${link}</span>`);
+            let linkId = "linkto_" + dep.targets[0];
+            for(let i = 1; i < dep.targets.length; i++) {
+                linkId += "__" + dep.targets[i];
+            }
+            const child = element(`<span class="tag" id="${linkId}">${link}</span>`);
             listen(child, 'click', async function(event: any) {
-                openOrCloseCard(child.id.slice("linkto_".length), child);
+                onLinkButtonPress(child);
             });
             elem.appendChild(child);
             // step
@@ -313,6 +325,15 @@ async function save(json: any, path: string) {
 
 async function load(path: string) : Promise<any> {
     return await remote("@firefly.load", { path: "sessions/test.json"});
+}
+
+// link button pressed
+function onLinkButtonPress(button: HTMLElement) {
+    const id = button.id.slice("linkto_".length);
+    const linkIDs = id.split("__");
+    for(const linkID of linkIDs) {
+        openOrCloseCard(linkID, button);
+    }
 }
 
 // if a card view is closed, opens it; otherwise closes it
