@@ -74,12 +74,16 @@ async function main() {
 
 
 async function run() {
-    logo();
-    graph();
+    await init();
     await loadCards();
     await animateLogoToLeft();
     await openMain();
     eventLoop();
+}
+
+async function init() {
+    logo();
+    graph();
 }
 
 function logo() {

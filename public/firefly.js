@@ -86,12 +86,17 @@ function main() {
 }
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        logo();
-        graph();
+        yield init();
         yield loadCards();
         yield animateLogoToLeft();
         yield openMain();
         eventLoop();
+    });
+}
+function init() {
+    return __awaiter(this, void 0, void 0, function* () {
+        logo();
+        graph();
     });
 }
 function logo() {

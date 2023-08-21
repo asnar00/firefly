@@ -35,10 +35,10 @@
             "outputs": "",
             "code": [
                 {
-                    "text": "// manages all top-level DOM nodes inside a container\nexport class GraphView {\n    container: HTMLElement;\n    nodeMap: Map<HTMLElement, Node> = new Map();\n    columns: Node[][] = [];\n    padding: number = 24;\n    arrowsSVG: SVGSVGElement;\n    arrowMap: Map<HTMLElement, Arrow[]> = new Map();\n    htmlFunction : Function;\n    highlightFunction : Function;\n    attentionNode: Node|null;\n    scrolling: boolean = false;\n    xScroll: number = 0;\n    yScroll: number = 0;\n    xScrollTarget: number = 0;\n    yScrollTarget: number = 0;\n    autoScroll: boolean = false;\n    closedNodes: any[] = [];            // nodes we've closed but might reopen, stored as json\n    canvasRect: Rect;                   // bounding-rect of all nodes, or window rect, whichever is bigger\n\n    // setup: pass the div that's going to hold all nodes\n    constructor(container: HTMLElement, htmlFunction: Function, highlightFunction: Function) {\n        this.container = container;\n        this.container.style.zIndex = `-10`;\n        this.htmlFunction = htmlFunction;\n        this.highlightFunction = highlightFunction;\n        this.arrowsSVG = this.initArrows();\n        this.attentionNode = null;\n        this.canvasRect = new Rect(0, 0, document.body.clientWidth, document.body.clientHeight);\n    }\n\n    // given an id, returns the first div with that ID (expected to be unique)\n    find(id: string, parent?:HTMLElement) : HTMLElement | null {\n        if (!parent) parent = this.container;\n        const elementsArray = Array.from(parent.querySelectorAll(`#${id}`));\n        if (elementsArray.length == 0) return null;\n        return elementsArray[0] as HTMLElement;\n    }\n\n    // given a div, returns the userObj of the first node that matches\n    userObj(div: HTMLElement) : any {\n        const node = this.get(div);\n        if (!node) return null;\n        return node.userObj;\n    }\n\n    // given a div, returns the linkDiv that opened it (todo: more than one? IDK)\n    findLink(div: HTMLElement) : HTMLElement | null {\n        const node = this.get(div);\n        return node ? node.linkDiv : null;\n    }\n\n    // closes a div that's open, and all children as well\n    close(div: HTMLElement) {\n        const node = this.get(div)!;\n        if (node) {\n            let nodes = this.allChildren(node);\n            for(let i = 1; i < nodes.length; i++) { \n                this.closedNodes.push(nodes[i].json());\n            }\n            //console.log(\"closed nodes:\");\n            //for(const c of this.closedNodes) { console.log(\"  \", user(c.id)) };\n            for(let node of nodes) { this.disappear(node); }\n        }\n        this.arrangeAll();\n    }\n\n    // pay attention to (div)\n    attention(div: HTMLElement) {\n        this.attentionNode = this.get(div);\n        //console.log(\"attention:\", user(this.attentionNode!.div.id));\n    }\n\n    // animates to nothing over (time) seconds, then closes\n    disappear(node: Node, time: number=0.25): void {\n        let div = node.div;\n        if (node.linkDiv) {\n            this.removeArrow(node.linkDiv, div);\n        } \n        div.style.width = div.scrollWidth + \"px\";\n        div.style.height = div.scrollHeight + \"px\";\n        div.style.transition = `width ${time}s, height ${time}s`;\n        div.offsetWidth;\n        div.offsetHeight;\n        div.style.width = '0'; div.style.height = '0';\n        setTimeout(() => {this.closeSingleNode(node);}, (time-0.1)*1000);\n    }\n\n    allChildren(node: Node) : Node[] {\n        let result : Node[] = [ node ];\n        for(let n of this.nodeMap.values()) {\n            if (n.parentDiv == node.div) result.push(...this.allChildren(n));\n        }\n        return result;\n    }\n\n    closeSingleNode(node: Node) {\n        this.nodeMap.delete(node.div);\n        node.div.remove();\n        node.remove();\n    }\n\n    reopen(id: string, linkID: string, parentID: string, userObj: any, emphasize: boolean=false) {\n        let toOpen : any[] = [];\n\n        let i = this.closedNodes.findIndex(n => n.id == id);        // is new node in closedNodes?\n        if (i == -1) {\n            toOpen = [ { id: id, link: linkID ?? \"null\",            // if no, make a new json version\n                parent: parentID ?? \"null\",\n                emphasize: emphasize,\n                userObj: userObj }];\n        } else {\n            toOpen = this.closedNodes.splice(i, 1);                 // otherwise get it from closedNodes\n        }\n\n        // grab all nodes from closedNodes whose parents are in (tOpen)\n        let iCheck = 0;\n        while(iCheck < toOpen.length) {\n            const p = toOpen[iCheck++];\n            let remaining: any[] = [];\n            for(let c of this.closedNodes) {\n                if (c.parent == p.id) {\n                    toOpen.push(c);\n                } else {\n                    remaining.push(c);\n                }\n            }\n            this.closedNodes = remaining;\n        }\n        //console.log(\"reopen\", user(id));\n        for(const c of toOpen) {\n            //console.log(\"   \", user(c.id));\n        }\n\n        // and open them\n        this.openJsonNodeList(toOpen);\n        this.attentionNode = this.get(this.find(id)!);\n        //console.log(\"attention:\", user(this.attentionNode!.div.id));\n    }\n\n    // opens a new node, generates the HTML\n    open(id: string, linkID: string, parentID: string, userObj: any, emphasize: boolean=false) {\n        let div = this.htmlFunction(id, userObj);\n        div.style.transition = 'max-width 0.5s, max-height 0.5s, background-color 0.5s';\n        let linkDiv = null;\n        if (linkID != \"\" && parentID != \"\") {\n            let parentDiv = this.find(parentID);\n            if (parentDiv) linkDiv = this.find(linkID, parentDiv); else linkDiv = null;\n        }\n        if (linkDiv) {\n            this.highlightFunction(linkDiv, true);\n        }\n        let node: Node = this.add(div, linkDiv, userObj);\n        if (emphasize) {\n            node!.emphasize = true;\n        }\n    }\n\n    openJson(obj: any) {\n        this.openJsonNodeList(obj.nodes);\n        this.closedNodes = obj.closed;\n        //console.log(\"closed nodelist:\", this.closedNodes);\n        this.xScroll = obj.xScroll;\n        this.yScroll = obj.yScroll;\n        scrollTo(this.xScroll, this.yScroll);\n    }\n\n    openJsonNodeList(nodesJson: any[]) {\n        for(let n of nodesJson) {\n            this.open(n.id, n.link, n.parent, n.userObj, n.emphasize);\n        }\n    }\n\n    // adds a div to the manager, and to the container div\n    add(div: HTMLElement, link: HTMLElement | null, userObj: any = null) : Node {\n        this.container.appendChild(div);\n        let parentDiv = (link)? this.findDivContainingLink(link) : null;\n        let xTarget = 0;\n        let yTarget = 0;\n        if (link && parentDiv) {\n            const prect = rect(parentDiv);\n            const brect = rect(link);\n            const crect = rect(div);\n            xTarget = brect.left;\n            yTarget = ((brect.top + brect.bottom)/2) - (crect.height()/2);\n        } else {\n            const crect = rect(div);\n            xTarget = crect.left + 150;\n            yTarget = (window.innerHeight / 2) - (crect.height()/2) - 32;\n        }\n        let node = new Node(this, div, link, parentDiv, userObj);\n        node.setTargetPos(xTarget, yTarget);\n        node.setPos(xTarget, yTarget);\n        this.nodeMap.set(div, node);\n        if (link && parentDiv) {\n            this.addArrow(link, parentDiv, div);\n        }\n        this.arrangeAll();          // todo: call this every frame\n        return node;\n    }\n\n    // emphasizes element (moves shadow forward in space)\n    emphasize(div: HTMLElement, onOff: boolean) {\n        let node = this.get(div);\n        if (!node) return;\n        node.emphasize = onOff; \n        node.updateShadow();\n    }\n\n    // arranges all views : computes xTarget, yTarget for each view\n    arrangeAll() {\n        this.sortColumns();\n        let xPos = this.xMax(this.columns[0]);\n        for(let i = 1; i < this.columns.length; i++) {\n            let groups : Node[][] = this.splitColumnIntoGroups(i);\n            for (let group of groups) {\n                this.spaceNodesInGroup(group, xPos);\n            }\n            this.spaceGroupsVertically(groups);\n            xPos = this.xMax(this.columns[i]);\n        }\n        const widthInPixels = getBodyWidth();\n        const newWidth = Math.max(window.innerWidth, xPos);\n        document.body.style.width = `${newWidth}px`;\n    }\n\n    // sort nodes within each column by link order\n    sortColumns() {\n        for(let col of this.columns) {\n            col.sort((a, b) => ((a.linkIndex > b.linkIndex) ? 1 : ((a.linkIndex < b.linkIndex) ? -1 : 0)));\n        }\n    }\n\n    // right edge of column\n    xMax(nodes: Node[]) : number {\n        let x = 0;\n        for (const node of nodes) {\n            x = Math.max(x, node.targetRect().right + (this.padding * 2));\n        }\n        return x;\n    }\n\n    // update\n    update() {\n        if (this.anyNodeSizeChanged()) {\n            this.arrangeAll();\n        }\n        this.updateCanvas();\n        this.updateScroll();\n        for(let node of this.nodeMap.values()) {\n            node.update();\n        }\n        this.updateArrows();\n    }\n\n    updateCanvas() {\n        let bounds = new Rect(0,0, window.innerWidth, window.innerHeight);\n        let padding = 10;\n        \n        // Calculate canvas rect based on node positions/sizes\n        // note: bounds may be negative, that's fine\n        for (const node of this.nodeMap.values()) {\n            const r = node.targetRect();\n            bounds.left = Math.min(bounds.left, r.left - padding);\n            bounds.top = Math.min(bounds.top, r.top - padding);\n            bounds.right = Math.max(bounds.right, r.right + padding);\n            bounds.bottom = Math.max(bounds.bottom, r.bottom + padding);\n        }\n        bounds.left = Math.floor(bounds.left);\n        bounds.top = Math.floor(bounds.top);\n        bounds.right = Math.ceil(bounds.right);\n        bounds.bottom = Math.ceil(bounds.bottom);\n        if (bounds.left == this.canvasRect.left &&\n            bounds.top == this.canvasRect.top &&\n            bounds.right == this.canvasRect.right &&\n            bounds.bottom == this.canvasRect.bottom) return;\n\n        const deltaX = bounds.left - this.canvasRect.left;\n        const deltaY = bounds.top - this.canvasRect.top;\n        \n        this.canvasRect = bounds;\n        const xSize = this.canvasRect.width();\n        const ySize = this.canvasRect.height();\n        if (xSize != this.container.offsetWidth ||\n            ySize != this.container.offsetHeight) {\n            this.container.style.width = `${xSize}px`;\n            this.container.style.height = `${ySize}px`;\n            document.body.style.width = `${xSize}px`;\n            document.body.style.height = `${ySize}px`;\n            this.arrowsSVG.setAttribute('viewBox', `0 0 ${xSize} ${ySize}`);\n            this.arrowsSVG.style.width = `${xSize}px`;\n            this.arrowsSVG.style.height = `${ySize}px`;\n        }\n\n        // If any code-container div has drifted upwards or left, adjust all divs\n        if (deltaX != 0 || deltaY != 0) {\n            for (let child of Array.from(this.container.children)) {\n                if (child instanceof HTMLElement) {\n                    let div = child as HTMLElement;\n                    div.style.left = `${div.offsetLeft - deltaX}px`;\n                    div.style.top = `${div.offsetTop - deltaY}px`;\n                }\n            }\n            window.scrollTo(window.scrollX - deltaX, window.scrollY - deltaY);\n        }\n    }\n\n    updateScroll() {\n        if (this.attentionNode && \n            (this.attentionNode.sizeChanged() ||\n             this.attentionNode.moving())) {\n                if (this.attentionNode.div.parentElement) {\n                    [this.xScrollTarget, this.yScrollTarget] = scrollToView(this.attentionNode.div);\n                } else {\n                    this.attentionNode = null;\n                }\n        }\n        if (window.scrollX == this.xScroll &&\n            window.scrollY == this.yScroll) {\n            if (this.scrolling && this.attentionNode) {\n                this.attentionNode = null;\n            }\n            this.scrolling = false;\n        } else {\n            this.scrolling = true;\n        }\n        this.xScroll = window.scrollX;\n        this.yScroll = window.scrollY;\n    }\n\n    // ------------------ private ----------------------------\n\n    // returns the Node associated with a top-level div\n    get(div: HTMLElement) : Node | null {\n        let node = this.nodeMap.get(div);\n        return node ? node : null;\n    }\n\n    // find the top-level div that contains a link elemeent\n    findDivContainingLink(link: HTMLElement | null): HTMLElement | null {\n        if (!link) return null;\n        let parent = link.parentElement;\n        while (parent && parent.parentElement !== this.container) {\n            parent = parent.parentElement;\n        }\n        return (parent) ? parent : null;\n    }\n\n    anyNodeSizeChanged() : boolean {\n        for(let node of this.nodeMap.values()) {\n            if (node.sizeChanged())\n                return true;\n        }\n        return false;\n    }\n\n    splitColumnIntoGroups(i: number) : Node[][] {\n        let groups : Node[][] = [];\n        for(const p of this.columns[i-1]) {\n            let group : Node[] = [];\n            for(const node of this.columns[i]) {\n                if (node.parentDiv!.id === p.div.id) {\n                    group.push(node);\n                }\n            }\n            if (group.length > 0) {\n                groups.push(group);\n            }\n        }\n        return groups;\n    }\n\n    // within a group (nodes with same parent), space out around centerline\n    spaceNodesInGroup(group: Node[], xPos: number) {\n        // first find the total height of the group, plus padding\n        let sumHeight = (group.length-1) * this.padding;\n        for(const node of group) {\n            sumHeight += node.targetRect().height();\n        }\n\n        // then find the centerline of the group's parent\n        const parentDiv = group[0].parentDiv!;\n        const parentNode = this.get(parentDiv)!;\n        const parentRect = parentNode.targetRect();\n        const centerLine = (parentRect.top + parentRect.bottom)/2;\n\n        // now space group out vertically around the centerline\n        let yPos = Math.max(this.padding, centerLine - (sumHeight/2));\n        let pivot = (group.length-1)/2;\n        for (let i = 0; i < group.length; i++) {\n            let node = group[i];\n            let xOffset = (i < pivot) ? i : (pivot - (i - pivot));\n            node.setTargetPos(xPos + (xOffset * this.padding), yPos);\n            yPos += node.targetRect().height() + this.padding;\n        }\n    }\n    \n    // space groups out vertically so they don't overlap\n    spaceGroupsVertically(groups: Node[][]) {\n        if (groups.length < 2) return;\n        const even = (groups.length % 2) == 0;\n        const iPivot = Math.floor((groups.length-1)/2);\n        if (even) {\n            this.checkGroups(groups[iPivot], groups[iPivot+1], 0.5);\n        }\n        for(let i=iPivot; i>0; i--) {\n            this.checkGroups(groups[i-1], groups[1], 0);\n        }\n        for(let i=iPivot; i < groups.length-1; i++) {\n            this.checkGroups(groups[i], groups[i+1], 1);\n        }\n    }\n\n    checkGroups(groupA: Node[], groupB: Node[], mix: number) {\n        const bottomA = groupA[groupA.length-1].targetRect().bottom;\n        const topB = groupB[0].targetRect().top;\n        const overlap =  (bottomA + (this.padding*2)) - topB;\n        if (overlap < 0) return;\n        const moveA = -(overlap * (1 - mix));\n        const moveB = overlap * mix;\n        this.moveGroupVertically(groupA, moveA);\n        this.moveGroupVertically(groupB, moveB);\n    }\n\n    moveGroupVertically(group: Node[], yMove: number) {\n        for(let node of group) {\n            node.yTarget += yMove;\n        }\n    }\n\n    //----------------------------- internal --------------------------------\n\n    // add a Node to the correct column, keep them sorted vertically\n    addToColumnArray(node : Node) {\n        while (this.columns.length <= node.column) {\n            this.columns.push([]);\n        }\n        this.columns[node.column].push(node);\n    }\n\n    //----------------------------- arrows ---------------------------------\n\n    // set up the SVG arrow renderer\n    initArrows() : SVGSVGElement {\n        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');\n        svg.style.position = 'absolute';\n        svg.style.width = '100%';\n        svg.style.height = '100%';\n        svg.style.pointerEvents = 'none';\n        svg.style.zIndex = '1000';\n        this.container.appendChild(svg);\n        return svg;\n    }\n\n    addArrow(linkDiv: HTMLElement, parentDiv: HTMLElement, div: HTMLElement) {\n        let arrow = new Arrow(linkDiv, parentDiv, div);\n        if (!this.arrowMap.has(linkDiv)) { this.arrowMap.set(linkDiv, []); }\n        this.arrowMap.get(linkDiv)!.push(arrow);\n        arrow.addToSVG(this.arrowsSVG);\n    }\n\n    removeArrow(linkDiv: HTMLElement, div: HTMLElement) {\n        let arrows : Arrow[] | undefined = this.arrowMap.get(linkDiv);\n        if (arrows) {\n            const index = arrows.findIndex(a => a.div === div);\n            if (index >= 0) {\n                let arrow: Arrow = arrows[index];\n                arrows.splice(index, 1);\n                arrow.removeFromSVG();\n            }\n        }\n    }\n\n    updateArrows() {\n        for (let arrows of this.arrowMap.values()) {\n            for (let arrow of arrows) {\n                arrow.update();\n            }\n        }\n    }\n\n    json() : any {\n        let node : Node = this.columns[0][0];\n        let nodes: Node[] = this.allChildren(node);\n        return { xScroll: this.xScroll, yScroll: this.yScroll,\n                 nodes:  nodes.map(node => node.json()),\n                 closed: this.closedNodes };\n    }\n}",
+                    "text": "// manages all top-level DOM nodes inside a container\nexport class GraphView {\n    container: HTMLElement;\n    nodeMap: Map<HTMLElement, Node> = new Map();\n    columns: Node[][] = [];\n    padding: number = 24;\n    arrowsSVG: SVGSVGElement;\n    arrowMap: Map<HTMLElement, Arrow[]> = new Map();\n    htmlFunction : Function;\n    highlightFunction : Function;\n    attentionNode: Node|null;\n    scrolling: boolean = false;\n    xScroll: number = 0;\n    yScroll: number = 0;\n    xScrollTarget: number = 0;\n    yScrollTarget: number = 0;\n    autoScroll: boolean = false;\n    closedNodes: any[] = [];            // nodes we've closed but might reopen, stored as json\n    canvasRect: Rect;                   // bounding-rect of all nodes, or window rect, whichever is bigger\n\n    // setup: pass the div that's going to hold all nodes\n    constructor(container: HTMLElement, htmlFunction: Function, highlightFunction: Function) {\n        this.container = container;\n        this.container.style.zIndex = `-10`;\n        this.htmlFunction = htmlFunction;\n        this.highlightFunction = highlightFunction;\n        this.arrowsSVG = this.initArrows();\n        this.attentionNode = null;\n        this.canvasRect = new Rect(0, 0, document.body.clientWidth, document.body.clientHeight);\n    }\n\n    // given an id, returns the first div with that ID (expected to be unique)\n    find(id: string, parent?:HTMLElement) : HTMLElement | null {\n        if (!parent) parent = this.container;\n        const elementsArray = Array.from(parent.querySelectorAll(`#${id}`));\n        if (elementsArray.length == 0) return null;\n        return elementsArray[0] as HTMLElement;\n    }\n\n    // given a div, returns the userObj of the first node that matches\n    userObj(div: HTMLElement) : any {\n        const node = this.get(div);\n        if (!node) return null;\n        return node.userObj;\n    }\n\n    // given a div, returns the linkDiv that opened it (todo: more than one? IDK)\n    findLink(div: HTMLElement) : HTMLElement | null {\n        const node = this.get(div);\n        return node ? node.linkDiv : null;\n    }\n\n    // closes a div that's open, and all children as well\n    close(div: HTMLElement) {\n        const node = this.get(div)!;\n        if (node) {\n            let nodes = this.allChildren(node);\n            for(let i = 1; i < nodes.length; i++) { \n                this.closedNodes.push(nodes[i].json());\n            }\n            //console.log(\"closed nodes:\");\n            //for(const c of this.closedNodes) { console.log(\"  \", user(c.id)) };\n            for(let node of nodes) { this.disappear(node); }\n        }\n        this.arrangeAll();\n    }\n\n    // pay attention to (div)\n    attention(div: HTMLElement) {\n        this.attentionNode = this.get(div);\n        //console.log(\"attention:\", user(this.attentionNode!.div.id));\n    }\n\n    // animates to nothing over (time) seconds, then closes\n    disappear(node: Node, time: number=0.25): void {\n        let div = node.div;\n        if (node.linkDiv) {\n            this.removeArrow(node.linkDiv, div);\n        } \n        div.style.width = div.scrollWidth + \"px\";\n        div.style.height = div.scrollHeight + \"px\";\n        div.style.transition = `width ${time}s, height ${time}s`;\n        div.offsetWidth;\n        div.offsetHeight;\n        div.style.width = '0'; div.style.height = '0';\n        setTimeout(() => {this.closeSingleNode(node);}, (time-0.1)*1000);\n    }\n\n    allChildren(node: Node) : Node[] {\n        let result : Node[] = [ node ];\n        for(let n of this.nodeMap.values()) {\n            if (n.parentDiv == node.div) result.push(...this.allChildren(n));\n        }\n        return result;\n    }\n\n    closeSingleNode(node: Node) {\n        this.nodeMap.delete(node.div);\n        node.div.remove();\n        node.remove();\n    }\n\n    reopen(id: string, linkID: string, parentID: string, userObj: any, emphasize: boolean=false) {\n        let toOpen : any[] = [];\n\n        let i = this.closedNodes.findIndex(n => n.id == id);        // is new node in closedNodes?\n        if (i == -1) {\n            toOpen = [ { id: id, link: linkID ?? \"null\",            // if no, make a new json version\n                parent: parentID ?? \"null\",\n                emphasize: emphasize,\n                userObj: userObj }];\n        } else {\n            toOpen = this.closedNodes.splice(i, 1);                 // otherwise get it from closedNodes\n        }\n\n        // grab all nodes from closedNodes whose parents are in (tOpen)\n        let iCheck = 0;\n        while(iCheck < toOpen.length) {\n            const p = toOpen[iCheck++];\n            let remaining: any[] = [];\n            for(let c of this.closedNodes) {\n                if (c.parent == p.id) {\n                    toOpen.push(c);\n                } else {\n                    remaining.push(c);\n                }\n            }\n            this.closedNodes = remaining;\n        }\n        //console.log(\"reopen\", user(id));\n        for(const c of toOpen) {\n            //console.log(\"   \", user(c.id));\n        }\n\n        // and open them\n        this.openJsonNodeList(toOpen);\n        this.attentionNode = this.get(this.find(id)!);\n        //console.log(\"attention:\", user(this.attentionNode!.div.id));\n    }\n\n    // opens a new node, generates the HTML\n    open(id: string, linkID: string, parentID: string, userObj: any, emphasize: boolean=false) {\n        let div = this.htmlFunction(id, userObj);\n        div.style.transition = 'max-width 0.5s, max-height 0.5s, background-color 0.5s';\n        let linkDiv = null;\n        if (linkID != \"\" && parentID != \"\") {\n            let parentDiv = this.find(parentID);\n            if (parentDiv) linkDiv = this.find(linkID, parentDiv); else linkDiv = null;\n        }\n        if (linkDiv) {\n            this.highlightFunction(linkDiv, true);\n        }\n        let node: Node = this.add(div, linkDiv, userObj);\n        if (emphasize) {\n            node!.emphasize = true;\n        }\n    }\n\n    openJson(obj: any) {\n        this.openJsonNodeList(obj.nodes);\n        this.closedNodes = obj.closed;\n        //console.log(\"closed nodelist:\", this.closedNodes);\n        this.xScroll = obj.xScroll;\n        this.yScroll = obj.yScroll;\n        scrollTo(this.xScroll, this.yScroll);\n    }\n\n    openJsonNodeList(nodesJson: any[]) {\n        for(let n of nodesJson) {\n            this.open(n.id, n.link, n.parent, n.userObj, n.emphasize);\n        }\n    }\n\n    // adds a div to the manager, and to the container div\n    add(div: HTMLElement, link: HTMLElement | null, userObj: any = null) : Node {\n        this.container.appendChild(div);\n        let parentDiv = (link)? this.findDivContainingLink(link) : null;\n        let xTarget = 0;\n        let yTarget = 0;\n        if (link && parentDiv) {\n            const prect = rect(parentDiv);\n            const brect = rect(link);\n            const crect = rect(div);\n            xTarget = brect.left;\n            yTarget = ((brect.top + brect.bottom)/2) - (crect.height()/2);\n        } else {\n            const crect = rect(div);\n            xTarget = crect.left + 150;\n            yTarget = (window.innerHeight / 2) - (crect.height()/2) - 32;\n        }\n        let node = new Node(this, div, link, parentDiv, userObj);\n        node.setTargetPos(xTarget, yTarget);\n        node.setPos(xTarget, yTarget);\n        this.nodeMap.set(div, node);\n        if (link && parentDiv) {\n            this.addArrow(link, parentDiv, div);\n        }\n        this.arrangeAll();          // todo: call this every frame\n        return node;\n    }\n\n    // emphasizes element (moves shadow forward in space)\n    emphasize(div: HTMLElement, onOff: boolean) {\n        let node = this.get(div);\n        if (!node) return;\n        node.emphasize = onOff; \n        node.updateShadow();\n    }\n\n    // arranges all views : computes xTarget, yTarget for each view\n    arrangeAll() {\n        this.sortColumns();\n        let xPos = this.xMax(this.columns[0]);\n        for(let i = 1; i < this.columns.length; i++) {\n            let groups : Node[][] = this.splitColumnIntoGroups(i);\n            for (let group of groups) {\n                this.spaceNodesInGroup(group, xPos);\n            }\n            this.spaceGroupsVertically(groups);\n            xPos = this.xMax(this.columns[i]);\n        }\n        const widthInPixels = getBodyWidth();\n        const newWidth = Math.max(window.innerWidth, xPos);\n        document.body.style.width = `${newWidth}px`;\n    }\n\n    // sort nodes within each column by link order\n    sortColumns() {\n        for(let col of this.columns) {\n            col.sort((a, b) => ((a.linkIndex > b.linkIndex) ? 1 : ((a.linkIndex < b.linkIndex) ? -1 : 0)));\n        }\n    }\n\n    // right edge of column\n    xMax(nodes: Node[]) : number {\n        let x = 0;\n        for (const node of nodes) {\n            x = Math.max(x, node.targetRect().right + (this.padding * 2));\n        }\n        return x;\n    }\n\n    // update\n    update() {\n        if (this.anyNodeSizeChanged()) {\n            this.arrangeAll();\n        }\n        this.updateCanvas();\n        this.updateScroll();\n        for(let node of this.nodeMap.values()) {\n            node.update();\n        }\n        this.updateArrows();\n    }\n\n    updateCanvas() {\n        let bounds = new Rect(0,0, window.innerWidth, window.innerHeight);\n        let padding = 10;\n        \n        // Calculate canvas rect based on node positions/sizes\n        // note: bounds may be negative, that's fine\n        for (const node of this.nodeMap.values()) {\n            const r = node.targetRect();\n            bounds.left = Math.min(bounds.left, r.left - padding);\n            bounds.top = Math.min(bounds.top, r.top - padding);\n            bounds.right = Math.max(bounds.right, r.right + padding);\n            bounds.bottom = Math.max(bounds.bottom, r.bottom + padding);\n        }\n        bounds.left = Math.floor(bounds.left);\n        bounds.top = Math.floor(bounds.top);\n        bounds.right = Math.ceil(bounds.right);\n        bounds.bottom = Math.ceil(bounds.bottom);\n        if (bounds.left == this.canvasRect.left &&\n            bounds.top == this.canvasRect.top &&\n            bounds.right == this.canvasRect.right &&\n            bounds.bottom == this.canvasRect.bottom) return;\n\n        console.log(\"resize\", bounds.width(), bounds.height());\n        const deltaX = bounds.left - this.canvasRect.left;\n        const deltaY = bounds.top - this.canvasRect.top;\n        \n        this.canvasRect = bounds;\n        const xSize = this.canvasRect.width();\n        const ySize = this.canvasRect.height();\n        if (xSize != this.container.offsetWidth ||\n            ySize != this.container.offsetHeight) {\n            this.container.style.width = `${xSize}px`;\n            this.container.style.height = `${ySize}px`;\n            document.body.style.width = `${xSize}px`;\n            document.body.style.height = `${ySize}px`;\n            this.arrowsSVG.setAttribute('viewBox', `0 0 ${xSize} ${ySize}`);\n            this.arrowsSVG.style.width = `${xSize}px`;\n            this.arrowsSVG.style.height = `${ySize}px`;\n        }\n\n        // If any code-container div has drifted upwards or left, adjust all divs\n        if (deltaX != 0 || deltaY != 0) {\n            for (let child of Array.from(this.container.children)) {\n                if (child instanceof HTMLElement) {\n                    let div = child as HTMLElement;\n                    div.style.left = `${div.offsetLeft - deltaX}px`;\n                    div.style.top = `${div.offsetTop - deltaY}px`;\n                }\n            }\n            window.scrollTo(window.scrollX - deltaX, window.scrollY - deltaY);\n        }\n    }\n\n    updateScroll() {\n        if (this.attentionNode && \n            (this.attentionNode.sizeChanged() ||\n             this.attentionNode.moving())) {\n                if (this.attentionNode.div.parentElement) {\n                    [this.xScrollTarget, this.yScrollTarget] = scrollToView(this.attentionNode.div);\n                } else {\n                    this.attentionNode = null;\n                }\n        }\n        if (window.scrollX == this.xScroll &&\n            window.scrollY == this.yScroll) {\n            if (this.scrolling && this.attentionNode) {\n                this.attentionNode = null;\n            }\n            this.scrolling = false;\n        } else {\n            this.scrolling = true;\n        }\n        this.xScroll = window.scrollX;\n        this.yScroll = window.scrollY;\n    }\n\n    // ------------------ private ----------------------------\n\n    // returns the Node associated with a top-level div\n    get(div: HTMLElement) : Node | null {\n        let node = this.nodeMap.get(div);\n        return node ? node : null;\n    }\n\n    // find the top-level div that contains a link elemeent\n    findDivContainingLink(link: HTMLElement | null): HTMLElement | null {\n        if (!link) return null;\n        let parent = link.parentElement;\n        while (parent && parent.parentElement !== this.container) {\n            parent = parent.parentElement;\n        }\n        return (parent) ? parent : null;\n    }\n\n    anyNodeSizeChanged() : boolean {\n        for(let node of this.nodeMap.values()) {\n            if (node.sizeChanged())\n                return true;\n        }\n        return false;\n    }\n\n    splitColumnIntoGroups(i: number) : Node[][] {\n        let groups : Node[][] = [];\n        for(const p of this.columns[i-1]) {\n            let group : Node[] = [];\n            for(const node of this.columns[i]) {\n                if (node.parentDiv!.id === p.div.id) {\n                    group.push(node);\n                }\n            }\n            if (group.length > 0) {\n                groups.push(group);\n            }\n        }\n        return groups;\n    }\n\n    // within a group (nodes with same parent), space out around centerline\n    spaceNodesInGroup(group: Node[], xPos: number) {\n        // first find the total height of the group, plus padding\n        let sumHeight = (group.length-1) * this.padding;\n        for(const node of group) {\n            sumHeight += node.targetRect().height();\n        }\n\n        // then find the centerline of the group's parent\n        const parentDiv = group[0].parentDiv!;\n        const parentNode = this.get(parentDiv)!;\n        const parentRect = parentNode.targetRect();\n        const centerLine = (parentRect.top + parentRect.bottom)/2;\n\n        // now space group out vertically around the centerline\n        let yPos = Math.max(this.padding, centerLine - (sumHeight/2));\n        let pivot = (group.length-1)/2;\n        for (let i = 0; i < group.length; i++) {\n            let node = group[i];\n            let xOffset = (i < pivot) ? i : (pivot - (i - pivot));\n            node.setTargetPos(xPos + (xOffset * this.padding), yPos);\n            yPos += node.targetRect().height() + this.padding;\n        }\n    }\n    \n    // space groups out vertically so they don't overlap\n    spaceGroupsVertically(groups: Node[][]) {\n        if (groups.length < 2) return;\n        const even = (groups.length % 2) == 0;\n        const iPivot = Math.floor((groups.length-1)/2);\n        if (even) {\n            this.checkGroups(groups[iPivot], groups[iPivot+1], 0.5);\n        }\n        for(let i=iPivot; i>0; i--) {\n            this.checkGroups(groups[i-1], groups[1], 0);\n        }\n        for(let i=iPivot; i < groups.length-1; i++) {\n            this.checkGroups(groups[i], groups[i+1], 1);\n        }\n    }\n\n    checkGroups(groupA: Node[], groupB: Node[], mix: number) {\n        const bottomA = groupA[groupA.length-1].targetRect().bottom;\n        const topB = groupB[0].targetRect().top;\n        const overlap =  (bottomA + (this.padding*2)) - topB;\n        if (overlap < 0) return;\n        const moveA = -(overlap * (1 - mix));\n        const moveB = overlap * mix;\n        this.moveGroupVertically(groupA, moveA);\n        this.moveGroupVertically(groupB, moveB);\n    }\n\n    moveGroupVertically(group: Node[], yMove: number) {\n        for(let node of group) {\n            node.yTarget += yMove;\n        }\n    }\n\n    //----------------------------- internal --------------------------------\n\n    // add a Node to the correct column, keep them sorted vertically\n    addToColumnArray(node : Node) {\n        while (this.columns.length <= node.column) {\n            this.columns.push([]);\n        }\n        this.columns[node.column].push(node);\n    }\n\n    //----------------------------- arrows ---------------------------------\n\n    // set up the SVG arrow renderer\n    initArrows() : SVGSVGElement {\n        const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');\n        svg.style.position = 'absolute';\n        svg.style.width = '100%';\n        svg.style.height = '100%';\n        svg.style.pointerEvents = 'none';\n        svg.style.zIndex = '1000';\n        this.container.appendChild(svg);\n        return svg;\n    }\n\n    addArrow(linkDiv: HTMLElement, parentDiv: HTMLElement, div: HTMLElement) {\n        let arrow = new Arrow(linkDiv, parentDiv, div);\n        if (!this.arrowMap.has(linkDiv)) { this.arrowMap.set(linkDiv, []); }\n        this.arrowMap.get(linkDiv)!.push(arrow);\n        arrow.addToSVG(this.arrowsSVG);\n    }\n\n    removeArrow(linkDiv: HTMLElement, div: HTMLElement) {\n        let arrows : Arrow[] | undefined = this.arrowMap.get(linkDiv);\n        if (arrows) {\n            const index = arrows.findIndex(a => a.div === div);\n            if (index >= 0) {\n                let arrow: Arrow = arrows[index];\n                arrows.splice(index, 1);\n                arrow.removeFromSVG();\n            }\n        }\n    }\n\n    updateArrows() {\n        for (let arrows of this.arrowMap.values()) {\n            for (let arrow of arrows) {\n                arrow.update();\n            }\n        }\n    }\n\n    json() : any {\n        let node : Node = this.columns[0][0];\n        let nodes: Node[] = this.allChildren(node);\n        return { xScroll: this.xScroll, yScroll: this.yScroll,\n                 nodes:  nodes.map(node => node.json()),\n                 closed: this.closedNodes };\n    }\n}",
                     "language": "ts",
                     "iLine": 22,
-                    "jLine": 510
+                    "jLine": 511
                 }
             ],
             "dependsOn": [
@@ -477,106 +477,106 @@
                     "targets": [
                         "ts_firefly_firefly_property_Card_children"
                     ],
-                    "iChar": 11130,
-                    "jChar": 11139
+                    "iChar": 11194,
+                    "jChar": 11203
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_method_Node_sizeChanged"
                     ],
-                    "iChar": 11599,
-                    "jChar": 11611
+                    "iChar": 11663,
+                    "jChar": 11675
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_method_Node_moving"
                     ],
-                    "iChar": 11648,
-                    "jChar": 11655
+                    "iChar": 11712,
+                    "jChar": 11719
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_property_GraphView_xScrollTarget"
                     ],
-                    "iChar": 11747,
-                    "jChar": 11761
+                    "iChar": 11811,
+                    "jChar": 11825
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_property_GraphView_yScrollTarget"
                     ],
-                    "iChar": 11767,
-                    "jChar": 11781
+                    "iChar": 11831,
+                    "jChar": 11845
                 },
                 {
                     "targets": [
                         "ts_firefly_util_function_scrollToView"
                     ],
-                    "iChar": 11785,
-                    "jChar": 11797
+                    "iChar": 11849,
+                    "jChar": 11861
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_property_GraphView_scrolling"
                     ],
-                    "iChar": 12035,
-                    "jChar": 12045
+                    "iChar": 12099,
+                    "jChar": 12109
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_method_GraphView_checkGroups"
                     ],
-                    "iChar": 14974,
-                    "jChar": 14986
+                    "iChar": 15038,
+                    "jChar": 15050
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_method_GraphView_moveGroupVertically"
                     ],
-                    "iChar": 15641,
-                    "jChar": 15661
+                    "iChar": 15705,
+                    "jChar": 15725
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_property_Node_yTarget"
                     ],
-                    "iChar": 15839,
-                    "jChar": 15847
+                    "iChar": 15903,
+                    "jChar": 15911
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_property_Node_column"
                     ],
-                    "iChar": 16101,
-                    "jChar": 16108
+                    "iChar": 16165,
+                    "jChar": 16172
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_method_Arrow_constructor"
                     ],
-                    "iChar": 16801,
-                    "jChar": 16807
+                    "iChar": 16865,
+                    "jChar": 16871
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_property_GraphView_arrowMap"
                     ],
-                    "iChar": 16850,
-                    "jChar": 16859
+                    "iChar": 16914,
+                    "jChar": 16923
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_method_Arrow_addToSVG"
                     ],
-                    "iChar": 16972,
-                    "jChar": 16981
+                    "iChar": 17036,
+                    "jChar": 17045
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_method_Arrow_removeFromSVG"
                     ],
-                    "iChar": 17363,
-                    "jChar": 17377
+                    "iChar": 17427,
+                    "jChar": 17441
                 }
             ],
             "dependents": [
@@ -725,8 +725,8 @@
                 {
                     "text": "// stores information about a div we're managing\nclass Node {\n    graph: GraphView;                       // the view we're a part of\n    userObj: any;                           // per-node user info\n    div: HTMLElement;                       // the div we're tracking\n    linkDiv: HTMLElement | null;            // the link that triggered this\n    parentDiv: HTMLElement | null;          // the parent div of the link div that opened this node\n    parentNode: Node | null = null;         // the parent node corresponding to parentDiv\n    column: number = 0;                     // column we're in (first one zero)\n    x: number = 0;                          // position right now\n    y: number = 0;                          // ..\n    xTarget: number = 0;                    // where we're trying to get to, to avoid others\n    yTarget: number = 0;                    // ..\n    width: number =0;                       // width on last frame, so we can react to animation\n    height: number =0;                      // ..\n    shadow: HTMLElement;                    // the shadow, all-important :-)\n    emphasize: boolean = false;             // if set, comes forward in the stack\n    linkIndex: string = \"\";                 // sort index for vertical ordering\n\n    constructor(view: GraphView, div: HTMLElement, linkDiv: HTMLElement | null, parentDiv: HTMLElement | null, userObj: any =null) {\n        this.graph = view;\n        this.userObj = userObj;\n        if (parentDiv === undefined) {\n            console.log(\"WARNING: parentDiv undefined!\");\n        }\n        this.div = div; this.linkDiv = linkDiv; this.parentDiv = parentDiv;\n        if (parentDiv) { \n            this.column = this.graph.get(parentDiv)!.column + 1;\n            this.parentNode = this.graph.get(parentDiv);\n            this.linkIndex = this.computeLinkIndex();\n        }\n        this.graph.addToColumnArray(this);\n\n        this.shadow = element(`<div class=\"shadow\"></div>`);\n        this.graph.container.appendChild(this.shadow);\n        this.width = div.clientWidth; this.height = div.clientHeight;\n    }\n\n    remove() {\n        this.graph.columns[this.column] = this.graph.columns[this.column].filter(item => item !== this);\n        this.shadow.remove();\n    }\n\n    setTargetPos(x: number, y: number) {\n        this.xTarget = x;\n        this.yTarget = y;\n    }\n\n    setPos(x: number, y: number) {\n        this.x = x; this.y = y;\n        this.div.style.left = `${x - this.graph.canvasRect.left}px`;\n        this.div.style.top = `${y - this.graph.canvasRect.top}px`;\n    }\n\n    targetRect() : Rect {\n        const r = rect(this.div);\n        return new Rect(this.xTarget, this.yTarget, this.xTarget + r.width(), this.yTarget + r.height());\n    }\n\n    sizeChanged() : boolean {\n        return (this.width != this.div.clientWidth ||\n                this.height != this.div.clientHeight);\n    }\n\n    moving() : boolean {\n        return (this.x != this.xTarget || this.y != this.yTarget);\n    }\n    \n    update() {\n        const dx = this.xTarget - this.x;\n        const dy = this.yTarget - this.y;\n        const x = (Math.abs(dx)<=1) ? this.xTarget : (this.x + dx*0.1);\n        const y = (Math.abs(dy)<=1) ? this.yTarget : (this.y + dy*0.1);\n        this.setPos(x, y);\n        this.updateShadow();\n        this.width = this.div.clientWidth; this.height = this.div.clientHeight;\n    }\n\n    computeLinkIndex() : string {\n        let result = \"\";\n        let digit = 1;\n        let node : Node | null = this;\n        while(node) {\n            if (node.linkDiv) {\n                let i = getChildNodeIndex(node.linkDiv).toString().padStart(3, '0');\n                result = (result==\"\") ? i : i + '.' + result;\n            }\n            node = node.parentNode;\n        }\n        return result;\n    }\n\n    updateShadow() {\n        const sr = rect(this.div);\n        const wh = window.innerHeight;\n        let sy = (this.emphasize) ? (sr.bottom + 150) : (sr.bottom + 50);\n        sy = Math.max(wh/2+20, sy);\n        this.shadow.style.left = `${sr.left}px`;\n        this.shadow.style.top = `${sy}px`;\n        this.shadow.style.width = `${sr.width()}px`;\n        this.shadow.style.height = `1px`;\n        this.shadow.style.zIndex = `-1`;\n    }\n\n    json() : any {\n        return { id: this.div.id,\n                 link: this.linkDiv?.id ?? \"null\",\n                 parent: this.parentDiv?.id ?? \"null\",\n                 emphasize: this.emphasize,\n                 userObj: this.userObj };\n    }\n}",
                     "language": "ts",
-                    "iLine": 513,
-                    "jLine": 624
+                    "iLine": 514,
+                    "jLine": 625
                 }
             ],
             "dependsOn": [
@@ -1168,8 +1168,8 @@
                 {
                     "text": "class Arrow {\n    linkDiv: HTMLElement;\n    parentDiv: HTMLElement;\n    div: HTMLElement;\n    drawRect: Rect = new Rect(0,0,0,0);\n    xVertical: number = 0;\n    path: SVGPathElement;\n    constructor(linkDiv: HTMLElement, parentDiv: HTMLElement, div: HTMLElement) {\n        this.linkDiv = linkDiv; this.parentDiv = parentDiv; this.div = div;\n        this.path = document.createElementNS('http://www.w3.org/2000/svg', 'path');\n        this.path.setAttribute('stroke', '#87bdb5');\n        this.path.setAttribute('stroke-width', '3');\n        this.path.setAttribute('stroke-opacity', '1');\n        this.path.setAttribute('fill', 'transparent');\n    }\n    addToSVG(svg: SVGSVGElement) {\n        svg.appendChild(this.path);\n    }\n    removeFromSVG() {\n        this.path.remove();\n    }\n    update() {\n        this.initDrawRect();\n        this.updatePath();\n    }\n    initDrawRect() {\n        const parentRect = rect(this.parentDiv);\n        const linkRect = rect(this.linkDiv);\n        const targetRect = rect(this.div);\n        const xFrom = parentRect.right + 2;\n        let yFrom = (linkRect.top + linkRect.bottom)/2;\n        yFrom = Math.max(yFrom, parentRect.top + 12);\n        yFrom = Math.min(yFrom, parentRect.bottom - 12);\n        const xTo = targetRect.left - 2;\n        let yTo = yFrom;\n        yTo = Math.max(yTo, targetRect.top + 12);\n        yTo = Math.min(yTo, targetRect.bottom - 12);\n        this.drawRect = new Rect(xFrom, yFrom, xTo, yTo);\n        this.xVertical = (xFrom + xTo)/2;\n    }\n    updatePath() {\n        /*if (!document.body.contains(this.linkDiv) || !document.body.contains(this.div)) {\n            this.removeFromSVG();\n            return;\n        }*/\n        const startX = this.drawRect.left;\n        const startY = this.drawRect.top;\n        const endX = this.drawRect.right;\n        const endY = this.drawRect.bottom;\n        const cornerRadius = Math.min(Math.abs(endY-startY)/2, 10);\n        const midX = this.xVertical;\n        const vs = (endY < startY) ? -1 : +1;\n\n        const d = [\n            `M ${startX} ${startY}`,\n            `H ${midX - cornerRadius}`,\n            `Q ${midX} ${startY} ${midX} ${startY + vs*cornerRadius}`,\n            `V ${endY - vs*cornerRadius}`,\n            `Q ${midX} ${endY} ${midX + cornerRadius} ${endY}`,\n            `H ${endX}`,\n        ].join(' ');\n\n        this.path.setAttribute('d', d);\n    }\n}",
                     "language": "ts",
-                    "iLine": 626,
-                    "jLine": 690
+                    "iLine": 627,
+                    "jLine": 691
                 }
             ],
             "dependsOn": [
@@ -1402,8 +1402,8 @@
                     "targets": [
                         "ts_firefly_graphview_method_GraphView_updateCanvas"
                     ],
-                    "iChar": 1308,
-                    "jChar": 1318
+                    "iChar": 1372,
+                    "jChar": 1382
                 },
                 {
                     "targets": [
@@ -1696,8 +1696,8 @@
                     "targets": [
                         "ts_firefly_graphview_method_GraphView_updateCanvas"
                     ],
-                    "iChar": 1622,
-                    "jChar": 1632
+                    "iChar": 1686,
+                    "jChar": 1696
                 },
                 {
                     "targets": [
@@ -1742,8 +1742,8 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 16850,
-                    "jChar": 16859
+                    "iChar": 16914,
+                    "jChar": 16923
                 },
                 {
                     "targets": [
@@ -1943,8 +1943,8 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 12035,
-                    "jChar": 12045
+                    "iChar": 12099,
+                    "jChar": 12109
                 },
                 {
                     "targets": [
@@ -2127,8 +2127,8 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 11747,
-                    "jChar": 11761
+                    "iChar": 11811,
+                    "jChar": 11825
                 },
                 {
                     "targets": [
@@ -2165,8 +2165,8 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 11767,
-                    "jChar": 11781
+                    "iChar": 11831,
+                    "jChar": 11845
                 },
                 {
                     "targets": [
@@ -3853,10 +3853,10 @@
             "outputs": "",
             "code": [
                 {
-                    "text": "    updateCanvas() {\n        let bounds = new Rect(0,0, window.innerWidth, window.innerHeight);\n        let padding = 10;\n        \n        // Calculate canvas rect based on node positions/sizes\n        // note: bounds may be negative, that's fine\n        for (const node of this.nodeMap.values()) {\n            const r = node.targetRect();\n            bounds.left = Math.min(bounds.left, r.left - padding);\n            bounds.top = Math.min(bounds.top, r.top - padding);\n            bounds.right = Math.max(bounds.right, r.right + padding);\n            bounds.bottom = Math.max(bounds.bottom, r.bottom + padding);\n        }\n        bounds.left = Math.floor(bounds.left);\n        bounds.top = Math.floor(bounds.top);\n        bounds.right = Math.ceil(bounds.right);\n        bounds.bottom = Math.ceil(bounds.bottom);\n        if (bounds.left == this.canvasRect.left &&\n            bounds.top == this.canvasRect.top &&\n            bounds.right == this.canvasRect.right &&\n            bounds.bottom == this.canvasRect.bottom) return;\n\n        const deltaX = bounds.left - this.canvasRect.left;\n        const deltaY = bounds.top - this.canvasRect.top;\n        \n        this.canvasRect = bounds;\n        const xSize = this.canvasRect.width();\n        const ySize = this.canvasRect.height();\n        if (xSize != this.container.offsetWidth ||\n            ySize != this.container.offsetHeight) {\n            this.container.style.width = `${xSize}px`;\n            this.container.style.height = `${ySize}px`;\n            document.body.style.width = `${xSize}px`;\n            document.body.style.height = `${ySize}px`;\n            this.arrowsSVG.setAttribute('viewBox', `0 0 ${xSize} ${ySize}`);\n            this.arrowsSVG.style.width = `${xSize}px`;\n            this.arrowsSVG.style.height = `${ySize}px`;\n        }\n\n        // If any code-container div has drifted upwards or left, adjust all divs\n        if (deltaX != 0 || deltaY != 0) {\n            for (let child of Array.from(this.container.children)) {\n                if (child instanceof HTMLElement) {\n                    let div = child as HTMLElement;\n                    div.style.left = `${div.offsetLeft - deltaX}px`;\n                    div.style.top = `${div.offsetTop - deltaY}px`;\n                }\n            }\n            window.scrollTo(window.scrollX - deltaX, window.scrollY - deltaY);\n        }\n    }",
+                    "text": "    updateCanvas() {\n        let bounds = new Rect(0,0, window.innerWidth, window.innerHeight);\n        let padding = 10;\n        \n        // Calculate canvas rect based on node positions/sizes\n        // note: bounds may be negative, that's fine\n        for (const node of this.nodeMap.values()) {\n            const r = node.targetRect();\n            bounds.left = Math.min(bounds.left, r.left - padding);\n            bounds.top = Math.min(bounds.top, r.top - padding);\n            bounds.right = Math.max(bounds.right, r.right + padding);\n            bounds.bottom = Math.max(bounds.bottom, r.bottom + padding);\n        }\n        bounds.left = Math.floor(bounds.left);\n        bounds.top = Math.floor(bounds.top);\n        bounds.right = Math.ceil(bounds.right);\n        bounds.bottom = Math.ceil(bounds.bottom);\n        if (bounds.left == this.canvasRect.left &&\n            bounds.top == this.canvasRect.top &&\n            bounds.right == this.canvasRect.right &&\n            bounds.bottom == this.canvasRect.bottom) return;\n\n        console.log(\"resize\", bounds.width(), bounds.height());\n        const deltaX = bounds.left - this.canvasRect.left;\n        const deltaY = bounds.top - this.canvasRect.top;\n        \n        this.canvasRect = bounds;\n        const xSize = this.canvasRect.width();\n        const ySize = this.canvasRect.height();\n        if (xSize != this.container.offsetWidth ||\n            ySize != this.container.offsetHeight) {\n            this.container.style.width = `${xSize}px`;\n            this.container.style.height = `${ySize}px`;\n            document.body.style.width = `${xSize}px`;\n            document.body.style.height = `${ySize}px`;\n            this.arrowsSVG.setAttribute('viewBox', `0 0 ${xSize} ${ySize}`);\n            this.arrowsSVG.style.width = `${xSize}px`;\n            this.arrowsSVG.style.height = `${ySize}px`;\n        }\n\n        // If any code-container div has drifted upwards or left, adjust all divs\n        if (deltaX != 0 || deltaY != 0) {\n            for (let child of Array.from(this.container.children)) {\n                if (child instanceof HTMLElement) {\n                    let div = child as HTMLElement;\n                    div.style.left = `${div.offsetLeft - deltaX}px`;\n                    div.style.top = `${div.offsetTop - deltaY}px`;\n                }\n            }\n            window.scrollTo(window.scrollX - deltaX, window.scrollY - deltaY);\n        }\n    }",
                     "language": "ts",
                     "iLine": 279,
-                    "jLine": 329
+                    "jLine": 330
                 }
             ],
             "dependsOn": [
@@ -3921,44 +3921,44 @@
                         "ts_firefly_graphview_property_Node_width",
                         "ts_firefly_util_method_Rect_width"
                     ],
-                    "iChar": 1225,
-                    "jChar": 1231
+                    "iChar": 1065,
+                    "jChar": 1071
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_property_Node_height",
                         "ts_firefly_util_method_Rect_height"
                     ],
-                    "iChar": 1272,
-                    "jChar": 1279
+                    "iChar": 1081,
+                    "jChar": 1088
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_property_GraphView_container"
                     ],
-                    "iChar": 1308,
-                    "jChar": 1318
+                    "iChar": 1372,
+                    "jChar": 1382
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_property_GraphView_arrowsSVG"
                     ],
-                    "iChar": 1622,
-                    "jChar": 1632
+                    "iChar": 1686,
+                    "jChar": 1696
                 },
                 {
                     "targets": [
                         "ts_firefly_firefly_property_Card_children"
                     ],
-                    "iChar": 1984,
-                    "jChar": 1993
+                    "iChar": 2048,
+                    "jChar": 2057
                 },
                 {
                     "targets": [
                         "ts_firefly_util_function_scrollTo"
                     ],
-                    "iChar": 2289,
-                    "jChar": 2297
+                    "iChar": 2353,
+                    "jChar": 2361
                 }
             ],
             "dependents": [
@@ -3994,8 +3994,8 @@
                 {
                     "text": "updateScroll() {\n    if (this.attentionNode && \n        (this.attentionNode.sizeChanged() ||\n         this.attentionNode.moving())) {\n            if (this.attentionNode.div.parentElement) {\n                [this.xScrollTarget, this.yScrollTarget] = scrollToView(this.attentionNode.div);\n            } else {\n                this.attentionNode = null;\n            }\n    }\n    if (window.scrollX == this.xScroll &&\n        window.scrollY == this.yScroll) {\n        if (this.scrolling && this.attentionNode) {\n            this.attentionNode = null;\n        }\n        this.scrolling = false;\n    } else {\n        this.scrolling = true;\n    }\n    this.xScroll = window.scrollX;\n    this.yScroll = window.scrollY;\n}",
                     "language": "ts",
-                    "iLine": 331,
-                    "jLine": 352
+                    "iLine": 332,
+                    "jLine": 353
                 }
             ],
             "dependsOn": [
@@ -4106,8 +4106,8 @@
                 {
                     "text": "// returns the Node associated with a top-level div\nget(div: HTMLElement) : Node | null {\n    let node = this.nodeMap.get(div);\n    return node ? node : null;\n}",
                     "language": "ts",
-                    "iLine": 356,
-                    "jLine": 360
+                    "iLine": 357,
+                    "jLine": 361
                 }
             ],
             "dependsOn": [
@@ -4229,8 +4229,8 @@
                 {
                     "text": "// find the top-level div that contains a link elemeent\nfindDivContainingLink(link: HTMLElement | null): HTMLElement | null {\n    if (!link) return null;\n    let parent = link.parentElement;\n    while (parent && parent.parentElement !== this.container) {\n        parent = parent.parentElement;\n    }\n    return (parent) ? parent : null;\n}",
                     "language": "ts",
-                    "iLine": 362,
-                    "jLine": 370
+                    "iLine": 363,
+                    "jLine": 371
                 }
             ],
             "dependsOn": [
@@ -4282,8 +4282,8 @@
                 {
                     "text": "anyNodeSizeChanged() : boolean {\n    for(let node of this.nodeMap.values()) {\n        if (node.sizeChanged())\n            return true;\n    }\n    return false;\n}",
                     "language": "ts",
-                    "iLine": 372,
-                    "jLine": 378
+                    "iLine": 373,
+                    "jLine": 379
                 }
             ],
             "dependsOn": [
@@ -4335,8 +4335,8 @@
                 {
                     "text": "splitColumnIntoGroups(i: number) : Node[][] {\n    let groups : Node[][] = [];\n    for(const p of this.columns[i-1]) {\n        let group : Node[] = [];\n        for(const node of this.columns[i]) {\n            if (node.parentDiv!.id === p.div.id) {\n                group.push(node);\n            }\n        }\n        if (group.length > 0) {\n            groups.push(group);\n        }\n    }\n    return groups;\n}",
                     "language": "ts",
-                    "iLine": 380,
-                    "jLine": 394
+                    "iLine": 381,
+                    "jLine": 395
                 }
             ],
             "dependsOn": [
@@ -4404,8 +4404,8 @@
                 {
                     "text": "    // within a group (nodes with same parent), space out around centerline\n    spaceNodesInGroup(group: Node[], xPos: number) {\n        // first find the total height of the group, plus padding\n        let sumHeight = (group.length-1) * this.padding;\n        for(const node of group) {\n            sumHeight += node.targetRect().height();\n        }\n\n        // then find the centerline of the group's parent\n        const parentDiv = group[0].parentDiv!;\n        const parentNode = this.get(parentDiv)!;\n        const parentRect = parentNode.targetRect();\n        const centerLine = (parentRect.top + parentRect.bottom)/2;\n\n        // now space group out vertically around the centerline\n        let yPos = Math.max(this.padding, centerLine - (sumHeight/2));\n        let pivot = (group.length-1)/2;\n        for (let i = 0; i < group.length; i++) {\n            let node = group[i];\n            let xOffset = (i < pivot) ? i : (pivot - (i - pivot));\n            node.setTargetPos(xPos + (xOffset * this.padding), yPos);\n            yPos += node.targetRect().height() + this.padding;\n        }\n    }",
                     "language": "ts",
-                    "iLine": 396,
-                    "jLine": 419
+                    "iLine": 397,
+                    "jLine": 420
                 }
             ],
             "dependsOn": [
@@ -4508,8 +4508,8 @@
                 {
                     "text": "// space groups out vertically so they don't overlap\nspaceGroupsVertically(groups: Node[][]) {\n    if (groups.length < 2) return;\n    const even = (groups.length % 2) == 0;\n    const iPivot = Math.floor((groups.length-1)/2);\n    if (even) {\n        this.checkGroups(groups[iPivot], groups[iPivot+1], 0.5);\n    }\n    for(let i=iPivot; i>0; i--) {\n        this.checkGroups(groups[i-1], groups[1], 0);\n    }\n    for(let i=iPivot; i < groups.length-1; i++) {\n        this.checkGroups(groups[i], groups[i+1], 1);\n    }\n}",
                     "language": "ts",
-                    "iLine": 421,
-                    "jLine": 435
+                    "iLine": 422,
+                    "jLine": 436
                 }
             ],
             "dependsOn": [
@@ -4561,8 +4561,8 @@
                 {
                     "text": "checkGroups(groupA: Node[], groupB: Node[], mix: number) {\n    const bottomA = groupA[groupA.length-1].targetRect().bottom;\n    const topB = groupB[0].targetRect().top;\n    const overlap =  (bottomA + (this.padding*2)) - topB;\n    if (overlap < 0) return;\n    const moveA = -(overlap * (1 - mix));\n    const moveB = overlap * mix;\n    this.moveGroupVertically(groupA, moveA);\n    this.moveGroupVertically(groupB, moveB);\n}",
                     "language": "ts",
-                    "iLine": 437,
-                    "jLine": 446
+                    "iLine": 438,
+                    "jLine": 447
                 }
             ],
             "dependsOn": [
@@ -4614,8 +4614,8 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 14974,
-                    "jChar": 14986
+                    "iChar": 15038,
+                    "jChar": 15050
                 },
                 {
                     "targets": [
@@ -4642,8 +4642,8 @@
                 {
                     "text": "moveGroupVertically(group: Node[], yMove: number) {\n    for(let node of group) {\n        node.yTarget += yMove;\n    }\n}",
                     "language": "ts",
-                    "iLine": 448,
-                    "jLine": 452
+                    "iLine": 449,
+                    "jLine": 453
                 }
             ],
             "dependsOn": [
@@ -4667,8 +4667,8 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 15641,
-                    "jChar": 15661
+                    "iChar": 15705,
+                    "jChar": 15725
                 },
                 {
                     "targets": [
@@ -4695,8 +4695,8 @@
                 {
                     "text": "// add a Node to the correct column, keep them sorted vertically\naddToColumnArray(node : Node) {\n    while (this.columns.length <= node.column) {\n        this.columns.push([]);\n    }\n    this.columns[node.column].push(node);\n}",
                     "language": "ts",
-                    "iLine": 456,
-                    "jLine": 462
+                    "iLine": 457,
+                    "jLine": 463
                 }
             ],
             "dependsOn": [
@@ -4748,8 +4748,8 @@
                 {
                     "text": "// set up the SVG arrow renderer\ninitArrows() : SVGSVGElement {\n    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');\n    svg.style.position = 'absolute';\n    svg.style.width = '100%';\n    svg.style.height = '100%';\n    svg.style.pointerEvents = 'none';\n    svg.style.zIndex = '1000';\n    this.container.appendChild(svg);\n    return svg;\n}",
                     "language": "ts",
-                    "iLine": 466,
-                    "jLine": 476
+                    "iLine": 467,
+                    "jLine": 477
                 }
             ],
             "dependsOn": [
@@ -4810,8 +4810,8 @@
                 {
                     "text": "addArrow(linkDiv: HTMLElement, parentDiv: HTMLElement, div: HTMLElement) {\n    let arrow = new Arrow(linkDiv, parentDiv, div);\n    if (!this.arrowMap.has(linkDiv)) { this.arrowMap.set(linkDiv, []); }\n    this.arrowMap.get(linkDiv)!.push(arrow);\n    arrow.addToSVG(this.arrowsSVG);\n}",
                     "language": "ts",
-                    "iLine": 478,
-                    "jLine": 483
+                    "iLine": 479,
+                    "jLine": 484
                 }
             ],
             "dependsOn": [
@@ -4884,8 +4884,8 @@
                 {
                     "text": "removeArrow(linkDiv: HTMLElement, div: HTMLElement) {\n    let arrows : Arrow[] | undefined = this.arrowMap.get(linkDiv);\n    if (arrows) {\n        const index = arrows.findIndex(a => a.div === div);\n        if (index >= 0) {\n            let arrow: Arrow = arrows[index];\n            arrows.splice(index, 1);\n            arrow.removeFromSVG();\n        }\n    }\n}",
                     "language": "ts",
-                    "iLine": 485,
-                    "jLine": 495
+                    "iLine": 486,
+                    "jLine": 496
                 }
             ],
             "dependsOn": [
@@ -4959,8 +4959,8 @@
                 {
                     "text": "updateArrows() {\n    for (let arrows of this.arrowMap.values()) {\n        for (let arrow of arrows) {\n            arrow.update();\n        }\n    }\n}",
                     "language": "ts",
-                    "iLine": 497,
-                    "jLine": 503
+                    "iLine": 498,
+                    "jLine": 504
                 }
             ],
             "dependsOn": [
@@ -5014,8 +5014,8 @@
                 {
                     "text": "json() : any {\n    let node : Node = this.columns[0][0];\n    let nodes: Node[] = this.allChildren(node);\n    return { xScroll: this.xScroll, yScroll: this.yScroll,\n             nodes:  nodes.map(node => node.json()),\n             closed: this.closedNodes };\n}",
                     "language": "ts",
-                    "iLine": 505,
-                    "jLine": 511
+                    "iLine": 506,
+                    "jLine": 512
                 }
             ],
             "dependsOn": [
@@ -5132,8 +5132,8 @@
                 {
                     "text": "}",
                     "language": "ts",
-                    "iLine": 512,
-                    "jLine": 512
+                    "iLine": 513,
+                    "jLine": 513
                 }
             ],
             "dependsOn": [],
@@ -5155,8 +5155,8 @@
                 {
                     "text": "graph: GraphView;                       // the view we're a part of",
                     "language": "ts",
-                    "iLine": 517,
-                    "jLine": 517
+                    "iLine": 518,
+                    "jLine": 518
                 }
             ],
             "dependsOn": [
@@ -5215,8 +5215,8 @@
                 {
                     "text": "userObj: any;                           // per-node user info",
                     "language": "ts",
-                    "iLine": 518,
-                    "jLine": 518
+                    "iLine": 519,
+                    "jLine": 519
                 }
             ],
             "dependsOn": [],
@@ -5288,8 +5288,8 @@
                 {
                     "text": "div: HTMLElement;                       // the div we're tracking",
                     "language": "ts",
-                    "iLine": 519,
-                    "jLine": 519
+                    "iLine": 520,
+                    "jLine": 520
                 }
             ],
             "dependsOn": [],
@@ -5438,8 +5438,8 @@
                 {
                     "text": "linkDiv: HTMLElement | null;            // the link that triggered this",
                     "language": "ts",
-                    "iLine": 520,
-                    "jLine": 520
+                    "iLine": 521,
+                    "jLine": 521
                 }
             ],
             "dependsOn": [],
@@ -5539,8 +5539,8 @@
                 {
                     "text": "parentDiv: HTMLElement | null;          // the parent div of the link div that opened this node",
                     "language": "ts",
-                    "iLine": 521,
-                    "jLine": 521
+                    "iLine": 522,
+                    "jLine": 522
                 }
             ],
             "dependsOn": [],
@@ -5633,8 +5633,8 @@
                 {
                     "text": "parentNode: Node | null = null;         // the parent node corresponding to parentDiv",
                     "language": "ts",
-                    "iLine": 522,
-                    "jLine": 522
+                    "iLine": 523,
+                    "jLine": 523
                 }
             ],
             "dependsOn": [
@@ -5686,8 +5686,8 @@
                 {
                     "text": "column: number = 0;                     // column we're in (first one zero)",
                     "language": "ts",
-                    "iLine": 523,
-                    "jLine": 523
+                    "iLine": 524,
+                    "jLine": 524
                 }
             ],
             "dependsOn": [],
@@ -5696,8 +5696,8 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 16101,
-                    "jChar": 16108
+                    "iChar": 16165,
+                    "jChar": 16172
                 },
                 {
                     "targets": [
@@ -5745,8 +5745,8 @@
                 {
                     "text": "x: number = 0;                          // position right now",
                     "language": "ts",
-                    "iLine": 524,
-                    "jLine": 524
+                    "iLine": 525,
+                    "jLine": 525
                 }
             ],
             "dependsOn": [],
@@ -5797,8 +5797,8 @@
                 {
                     "text": "y: number = 0;                          // ..",
                     "language": "ts",
-                    "iLine": 525,
-                    "jLine": 525
+                    "iLine": 526,
+                    "jLine": 526
                 }
             ],
             "dependsOn": [],
@@ -5849,8 +5849,8 @@
                 {
                     "text": "xTarget: number = 0;                    // where we're trying to get to, to avoid others",
                     "language": "ts",
-                    "iLine": 526,
-                    "jLine": 526
+                    "iLine": 527,
+                    "jLine": 527
                 }
             ],
             "dependsOn": [],
@@ -5908,8 +5908,8 @@
                 {
                     "text": "yTarget: number = 0;                    // ..",
                     "language": "ts",
-                    "iLine": 527,
-                    "jLine": 527
+                    "iLine": 528,
+                    "jLine": 528
                 }
             ],
             "dependsOn": [],
@@ -5918,8 +5918,8 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 15839,
-                    "jChar": 15847
+                    "iChar": 15903,
+                    "jChar": 15911
                 },
                 {
                     "targets": [
@@ -5981,8 +5981,8 @@
                 {
                     "text": "width: number =0;                       // width on last frame, so we can react to animation",
                     "language": "ts",
-                    "iLine": 528,
-                    "jLine": 528
+                    "iLine": 529,
+                    "jLine": 529
                 }
             ],
             "dependsOn": [],
@@ -6019,8 +6019,8 @@
                     "targets": [
                         "ts_firefly_graphview_method_GraphView_updateCanvas"
                     ],
-                    "iChar": 1225,
-                    "jChar": 1231
+                    "iChar": 1065,
+                    "jChar": 1071
                 },
                 {
                     "targets": [
@@ -6089,8 +6089,8 @@
                 {
                     "text": "height: number =0;                      // ..",
                     "language": "ts",
-                    "iLine": 529,
-                    "jLine": 529
+                    "iLine": 530,
+                    "jLine": 530
                 }
             ],
             "dependsOn": [],
@@ -6127,8 +6127,8 @@
                     "targets": [
                         "ts_firefly_graphview_method_GraphView_updateCanvas"
                     ],
-                    "iChar": 1272,
-                    "jChar": 1279
+                    "iChar": 1081,
+                    "jChar": 1088
                 },
                 {
                     "targets": [
@@ -6197,8 +6197,8 @@
                 {
                     "text": "shadow: HTMLElement;                    // the shadow, all-important :-)",
                     "language": "ts",
-                    "iLine": 530,
-                    "jLine": 530
+                    "iLine": 531,
+                    "jLine": 531
                 }
             ],
             "dependsOn": [],
@@ -6249,8 +6249,8 @@
                 {
                     "text": "emphasize: boolean = false;             // if set, comes forward in the stack",
                     "language": "ts",
-                    "iLine": 531,
-                    "jLine": 531
+                    "iLine": 532,
+                    "jLine": 532
                 }
             ],
             "dependsOn": [],
@@ -6322,8 +6322,8 @@
                 {
                     "text": "linkIndex: string = \"\";                 // sort index for vertical ordering",
                     "language": "ts",
-                    "iLine": 532,
-                    "jLine": 532
+                    "iLine": 533,
+                    "jLine": 533
                 }
             ],
             "dependsOn": [],
@@ -6374,8 +6374,8 @@
                 {
                     "text": "    constructor(view: GraphView, div: HTMLElement, linkDiv: HTMLElement | null, parentDiv: HTMLElement | null, userObj: any =null) {\n        this.graph = view;\n        this.userObj = userObj;\n        if (parentDiv === undefined) {\n            console.log(\"WARNING: parentDiv undefined!\");\n        }\n        this.div = div; this.linkDiv = linkDiv; this.parentDiv = parentDiv;\n        if (parentDiv) { \n            this.column = this.graph.get(parentDiv)!.column + 1;\n            this.parentNode = this.graph.get(parentDiv);\n            this.linkIndex = this.computeLinkIndex();\n        }\n        this.graph.addToColumnArray(this);\n\n        this.shadow = element(`<div class=\"shadow\"></div>`);\n        this.graph.container.appendChild(this.shadow);\n        this.width = div.clientWidth; this.height = div.clientHeight;\n    }",
                     "language": "ts",
-                    "iLine": 534,
-                    "jLine": 551
+                    "iLine": 535,
+                    "jLine": 552
                 }
             ],
             "dependsOn": [
@@ -6538,8 +6538,8 @@
                 {
                     "text": "remove() {\n    this.graph.columns[this.column] = this.graph.columns[this.column].filter(item => item !== this);\n    this.shadow.remove();\n}",
                     "language": "ts",
-                    "iLine": 553,
-                    "jLine": 556
+                    "iLine": 554,
+                    "jLine": 557
                 }
             ],
             "dependsOn": [
@@ -6640,8 +6640,8 @@
                 {
                     "text": "setTargetPos(x: number, y: number) {\n    this.xTarget = x;\n    this.yTarget = y;\n}",
                     "language": "ts",
-                    "iLine": 558,
-                    "jLine": 561
+                    "iLine": 559,
+                    "jLine": 562
                 }
             ],
             "dependsOn": [
@@ -6700,8 +6700,8 @@
                 {
                     "text": "setPos(x: number, y: number) {\n    this.x = x; this.y = y;\n    this.div.style.left = `${x - this.graph.canvasRect.left}px`;\n    this.div.style.top = `${y - this.graph.canvasRect.top}px`;\n}",
                     "language": "ts",
-                    "iLine": 563,
-                    "jLine": 567
+                    "iLine": 564,
+                    "jLine": 568
                 }
             ],
             "dependsOn": [
@@ -6803,8 +6803,8 @@
                 {
                     "text": "targetRect() : Rect {\n    const r = rect(this.div);\n    return new Rect(this.xTarget, this.yTarget, this.xTarget + r.width(), this.yTarget + r.height());\n}",
                     "language": "ts",
-                    "iLine": 569,
-                    "jLine": 572
+                    "iLine": 570,
+                    "jLine": 573
                 }
             ],
             "dependsOn": [
@@ -6922,8 +6922,8 @@
                 {
                     "text": "sizeChanged() : boolean {\n    return (this.width != this.div.clientWidth ||\n            this.height != this.div.clientHeight);\n}",
                     "language": "ts",
-                    "iLine": 574,
-                    "jLine": 577
+                    "iLine": 575,
+                    "jLine": 578
                 }
             ],
             "dependsOn": [
@@ -6957,8 +6957,8 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 11599,
-                    "jChar": 11611
+                    "iChar": 11663,
+                    "jChar": 11675
                 },
                 {
                     "targets": [
@@ -6992,8 +6992,8 @@
                 {
                     "text": "moving() : boolean {\n    return (this.x != this.xTarget || this.y != this.yTarget);\n}",
                     "language": "ts",
-                    "iLine": 579,
-                    "jLine": 581
+                    "iLine": 580,
+                    "jLine": 582
                 }
             ],
             "dependsOn": [
@@ -7031,8 +7031,8 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 11648,
-                    "jChar": 11655
+                    "iChar": 11712,
+                    "jChar": 11719
                 },
                 {
                     "targets": [
@@ -7059,8 +7059,8 @@
                 {
                     "text": "update() {\n    const dx = this.xTarget - this.x;\n    const dy = this.yTarget - this.y;\n    const x = (Math.abs(dx)<=1) ? this.xTarget : (this.x + dx*0.1);\n    const y = (Math.abs(dy)<=1) ? this.yTarget : (this.y + dy*0.1);\n    this.setPos(x, y);\n    this.updateShadow();\n    this.width = this.div.clientWidth; this.height = this.div.clientHeight;\n}",
                     "language": "ts",
-                    "iLine": 583,
-                    "jLine": 591
+                    "iLine": 584,
+                    "jLine": 592
                 }
             ],
             "dependsOn": [
@@ -7171,8 +7171,8 @@
                 {
                     "text": "computeLinkIndex() : string {\n    let result = \"\";\n    let digit = 1;\n    let node : Node | null = this;\n    while(node) {\n        if (node.linkDiv) {\n            let i = getChildNodeIndex(node.linkDiv).toString().padStart(3, '0');\n            result = (result==\"\") ? i : i + '.' + result;\n        }\n        node = node.parentNode;\n    }\n    return result;\n}",
                     "language": "ts",
-                    "iLine": 593,
-                    "jLine": 605
+                    "iLine": 594,
+                    "jLine": 606
                 }
             ],
             "dependsOn": [
@@ -7239,8 +7239,8 @@
                 {
                     "text": "updateShadow() {\n    const sr = rect(this.div);\n    const wh = window.innerHeight;\n    let sy = (this.emphasize) ? (sr.bottom + 150) : (sr.bottom + 50);\n    sy = Math.max(wh/2+20, sy);\n    this.shadow.style.left = `${sr.left}px`;\n    this.shadow.style.top = `${sy}px`;\n    this.shadow.style.width = `${sr.width()}px`;\n    this.shadow.style.height = `1px`;\n    this.shadow.style.zIndex = `-1`;\n}",
                     "language": "ts",
-                    "iLine": 607,
-                    "jLine": 617
+                    "iLine": 608,
+                    "jLine": 618
                 }
             ],
             "dependsOn": [
@@ -7359,8 +7359,8 @@
                 {
                     "text": "json() : any {\n    return { id: this.div.id,\n             link: this.linkDiv?.id ?? \"null\",\n             parent: this.parentDiv?.id ?? \"null\",\n             emphasize: this.emphasize,\n             userObj: this.userObj };\n}",
                     "language": "ts",
-                    "iLine": 619,
-                    "jLine": 625
+                    "iLine": 620,
+                    "jLine": 626
                 }
             ],
             "dependsOn": [
@@ -7473,8 +7473,8 @@
                 {
                     "text": "}",
                     "language": "ts",
-                    "iLine": 626,
-                    "jLine": 626
+                    "iLine": 627,
+                    "jLine": 627
                 }
             ],
             "dependsOn": [],
@@ -7496,8 +7496,8 @@
                 {
                     "text": "linkDiv: HTMLElement;",
                     "language": "ts",
-                    "iLine": 629,
-                    "jLine": 629
+                    "iLine": 630,
+                    "jLine": 630
                 }
             ],
             "dependsOn": [],
@@ -7597,8 +7597,8 @@
                 {
                     "text": "parentDiv: HTMLElement;",
                     "language": "ts",
-                    "iLine": 630,
-                    "jLine": 630
+                    "iLine": 631,
+                    "jLine": 631
                 }
             ],
             "dependsOn": [],
@@ -7691,8 +7691,8 @@
                 {
                     "text": "div: HTMLElement;",
                     "language": "ts",
-                    "iLine": 631,
-                    "jLine": 631
+                    "iLine": 632,
+                    "jLine": 632
                 }
             ],
             "dependsOn": [],
@@ -7841,8 +7841,8 @@
                 {
                     "text": "drawRect: Rect = new Rect(0,0,0,0);",
                     "language": "ts",
-                    "iLine": 632,
-                    "jLine": 632
+                    "iLine": 633,
+                    "jLine": 633
                 }
             ],
             "dependsOn": [
@@ -7901,8 +7901,8 @@
                 {
                     "text": "xVertical: number = 0;",
                     "language": "ts",
-                    "iLine": 633,
-                    "jLine": 633
+                    "iLine": 634,
+                    "jLine": 634
                 }
             ],
             "dependsOn": [],
@@ -7946,8 +7946,8 @@
                 {
                     "text": "path: SVGPathElement;",
                     "language": "ts",
-                    "iLine": 634,
-                    "jLine": 634
+                    "iLine": 635,
+                    "jLine": 635
                 }
             ],
             "dependsOn": [],
@@ -8005,8 +8005,8 @@
                 {
                     "text": "constructor(linkDiv: HTMLElement, parentDiv: HTMLElement, div: HTMLElement) {\n    this.linkDiv = linkDiv; this.parentDiv = parentDiv; this.div = div;\n    this.path = document.createElementNS('http://www.w3.org/2000/svg', 'path');\n    this.path.setAttribute('stroke', '#87bdb5');\n    this.path.setAttribute('stroke-width', '3');\n    this.path.setAttribute('stroke-opacity', '1');\n    this.path.setAttribute('fill', 'transparent');\n}",
                     "language": "ts",
-                    "iLine": 635,
-                    "jLine": 642
+                    "iLine": 636,
+                    "jLine": 643
                 }
             ],
             "dependsOn": [
@@ -8047,8 +8047,8 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 16801,
-                    "jChar": 16807
+                    "iChar": 16865,
+                    "jChar": 16871
                 },
                 {
                     "targets": [
@@ -8075,8 +8075,8 @@
                 {
                     "text": "addToSVG(svg: SVGSVGElement) {\n    svg.appendChild(this.path);\n}",
                     "language": "ts",
-                    "iLine": 643,
-                    "jLine": 645
+                    "iLine": 644,
+                    "jLine": 646
                 }
             ],
             "dependsOn": [
@@ -8093,8 +8093,8 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 16972,
-                    "jChar": 16981
+                    "iChar": 17036,
+                    "jChar": 17045
                 },
                 {
                     "targets": [
@@ -8121,8 +8121,8 @@
                 {
                     "text": "removeFromSVG() {\n    this.path.remove();\n}",
                     "language": "ts",
-                    "iLine": 646,
-                    "jLine": 648
+                    "iLine": 647,
+                    "jLine": 649
                 }
             ],
             "dependsOn": [
@@ -8146,8 +8146,8 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 17363,
-                    "jChar": 17377
+                    "iChar": 17427,
+                    "jChar": 17441
                 },
                 {
                     "targets": [
@@ -8188,8 +8188,8 @@
                 {
                     "text": "update() {\n    this.initDrawRect();\n    this.updatePath();\n}",
                     "language": "ts",
-                    "iLine": 649,
-                    "jLine": 652
+                    "iLine": 650,
+                    "jLine": 653
                 }
             ],
             "dependsOn": [
@@ -8248,8 +8248,8 @@
                 {
                     "text": "initDrawRect() {\n    const parentRect = rect(this.parentDiv);\n    const linkRect = rect(this.linkDiv);\n    const targetRect = rect(this.div);\n    const xFrom = parentRect.right + 2;\n    let yFrom = (linkRect.top + linkRect.bottom)/2;\n    yFrom = Math.max(yFrom, parentRect.top + 12);\n    yFrom = Math.min(yFrom, parentRect.bottom - 12);\n    const xTo = targetRect.left - 2;\n    let yTo = yFrom;\n    yTo = Math.max(yTo, targetRect.top + 12);\n    yTo = Math.min(yTo, targetRect.bottom - 12);\n    this.drawRect = new Rect(xFrom, yFrom, xTo, yTo);\n    this.xVertical = (xFrom + xTo)/2;\n}",
                     "language": "ts",
-                    "iLine": 653,
-                    "jLine": 667
+                    "iLine": 654,
+                    "jLine": 668
                 }
             ],
             "dependsOn": [
@@ -8367,8 +8367,8 @@
                 {
                     "text": "    updatePath() {\n        /*if (!document.body.contains(this.linkDiv) || !document.body.contains(this.div)) {\n            this.removeFromSVG();\n            return;\n        }*/\n        const startX = this.drawRect.left;\n        const startY = this.drawRect.top;\n        const endX = this.drawRect.right;\n        const endY = this.drawRect.bottom;\n        const cornerRadius = Math.min(Math.abs(endY-startY)/2, 10);\n        const midX = this.xVertical;\n        const vs = (endY < startY) ? -1 : +1;\n\n        const d = [\n            `M ${startX} ${startY}`,\n            `H ${midX - cornerRadius}`,\n            `Q ${midX} ${startY} ${midX} ${startY + vs*cornerRadius}`,\n            `V ${endY - vs*cornerRadius}`,\n            `Q ${midX} ${endY} ${midX + cornerRadius} ${endY}`,\n            `H ${endX}`,\n        ].join(' ');\n\n        this.path.setAttribute('d', d);\n    }",
                     "language": "ts",
-                    "iLine": 668,
-                    "jLine": 691
+                    "iLine": 669,
+                    "jLine": 692
                 }
             ],
             "dependsOn": [
@@ -8478,8 +8478,8 @@
                 {
                     "text": "}",
                     "language": "ts",
-                    "iLine": 692,
-                    "jLine": 692
+                    "iLine": 693,
+                    "jLine": 693
                 }
             ],
             "dependsOn": [],
@@ -8908,8 +8908,8 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 11785,
-                    "jChar": 11797
+                    "iChar": 11849,
+                    "jChar": 11861
                 },
                 {
                     "targets": [
@@ -8975,8 +8975,8 @@
                     "targets": [
                         "ts_firefly_graphview_method_GraphView_updateCanvas"
                     ],
-                    "iChar": 2289,
-                    "jChar": 2297
+                    "iChar": 2353,
+                    "jChar": 2361
                 },
                 {
                     "targets": [
@@ -9849,8 +9849,8 @@
                     "targets": [
                         "ts_firefly_graphview_method_GraphView_updateCanvas"
                     ],
-                    "iChar": 1225,
-                    "jChar": 1231
+                    "iChar": 1065,
+                    "jChar": 1071
                 },
                 {
                     "targets": [
@@ -9972,8 +9972,8 @@
                     "targets": [
                         "ts_firefly_graphview_method_GraphView_updateCanvas"
                     ],
-                    "iChar": 1272,
-                    "jChar": 1279
+                    "iChar": 1081,
+                    "jChar": 1088
                 },
                 {
                     "targets": [
@@ -10800,54 +10800,47 @@
             "outputs": "",
             "code": [
                 {
-                    "text": "async function run() {\n    logo();\n    graph();\n    await loadCards();\n    await animateLogoToLeft();\n    await openMain();\n    eventLoop();\n}",
+                    "text": "async function run() {\n    await init();\n    await loadCards();\n    await animateLogoToLeft();\n    await openMain();\n    eventLoop();\n}",
                     "language": "ts",
                     "iLine": 76,
-                    "jLine": 83
+                    "jLine": 82
                 }
             ],
             "dependsOn": [
                 {
                     "targets": [
-                        "ts_firefly_firefly_function_logo"
+                        "ts_firefly_firefly_function_init"
                     ],
-                    "iChar": 27,
-                    "jChar": 31
-                },
-                {
-                    "targets": [
-                        "ts_firefly_firefly_function_graph"
-                    ],
-                    "iChar": 39,
-                    "jChar": 44
+                    "iChar": 33,
+                    "jChar": 37
                 },
                 {
                     "targets": [
                         "ts_firefly_firefly_function_loadCards"
                     ],
-                    "iChar": 58,
-                    "jChar": 67
+                    "iChar": 51,
+                    "jChar": 60
                 },
                 {
                     "targets": [
                         "ts_firefly_firefly_function_animateLogoToLeft"
                     ],
-                    "iChar": 81,
-                    "jChar": 98
+                    "iChar": 74,
+                    "jChar": 91
                 },
                 {
                     "targets": [
                         "ts_firefly_firefly_function_openMain"
                     ],
-                    "iChar": 112,
-                    "jChar": 120
+                    "iChar": 105,
+                    "jChar": 113
                 },
                 {
                     "targets": [
                         "ts_firefly_firefly_function_eventLoop"
                     ],
-                    "iChar": 128,
-                    "jChar": 137
+                    "iChar": 121,
+                    "jChar": 130
                 }
             ],
             "dependents": [
@@ -10857,6 +10850,52 @@
                     ],
                     "iChar": 68,
                     "jChar": 71
+                }
+            ],
+            "children": [],
+            "parent": "null"
+        },
+        {
+            "uid": "ts_firefly_firefly_function_init",
+            "language": "ts",
+            "module": "firefly",
+            "kind": "function",
+            "name": "init",
+            "purpose": "",
+            "examples": "",
+            "inputs": "",
+            "outputs": "",
+            "code": [
+                {
+                    "text": "async function init() {\n    logo();\n    graph();\n}",
+                    "language": "ts",
+                    "iLine": 84,
+                    "jLine": 87
+                }
+            ],
+            "dependsOn": [
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_logo"
+                    ],
+                    "iChar": 28,
+                    "jChar": 32
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_graph"
+                    ],
+                    "iChar": 40,
+                    "jChar": 45
+                }
+            ],
+            "dependents": [
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_run"
+                    ],
+                    "iChar": 33,
+                    "jChar": 37
                 }
             ],
             "children": [],
@@ -10876,8 +10915,8 @@
                 {
                     "text": "function logo() {\n    const logo = document.getElementById('logo_and_shadow') as HTMLElement;\n    logo.style.left = '32px';\n    logo.style.top = `${(window.innerHeight/2)-40}px`;\n}",
                     "language": "ts",
-                    "iLine": 85,
-                    "jLine": 89
+                    "iLine": 89,
+                    "jLine": 93
                 }
             ],
             "dependsOn": [
@@ -10899,10 +10938,10 @@
             "dependents": [
                 {
                     "targets": [
-                        "ts_firefly_firefly_function_run"
+                        "ts_firefly_firefly_function_init"
                     ],
-                    "iChar": 27,
-                    "jChar": 31
+                    "iChar": 28,
+                    "jChar": 32
                 },
                 {
                     "targets": [
@@ -10929,8 +10968,8 @@
                 {
                     "text": "function graph() {\n    const container = document.getElementById('container') as HTMLElement;\n    s_graphView = new GraphView(container, cardToHTML, highlightLink);\n}",
                     "language": "ts",
-                    "iLine": 91,
-                    "jLine": 94
+                    "iLine": 95,
+                    "jLine": 98
                 }
             ],
             "dependsOn": [
@@ -10994,10 +11033,10 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_firefly_function_run"
+                        "ts_firefly_firefly_function_init"
                     ],
-                    "iChar": 39,
-                    "jChar": 44
+                    "iChar": 40,
+                    "jChar": 45
                 }
             ],
             "children": [],
@@ -11017,8 +11056,8 @@
                 {
                     "text": "function eventLoop() {\n    s_graphView.update();\n    requestAnimationFrame(eventLoop);\n}",
                     "language": "ts",
-                    "iLine": 96,
-                    "jLine": 99
+                    "iLine": 100,
+                    "jLine": 103
                 }
             ],
             "dependsOn": [
@@ -11044,8 +11083,8 @@
                     "targets": [
                         "ts_firefly_firefly_function_run"
                     ],
-                    "iChar": 128,
-                    "jChar": 137
+                    "iChar": 121,
+                    "jChar": 130
                 }
             ],
             "children": [],
@@ -11065,8 +11104,8 @@
                 {
                     "text": "async function loadCards() {\n    console.log(\"loadCards\");\n    if (s_useLocalFiles) {\n        await importLocalFolder();\n    } \n    const jsonObj = await importFolders(\"firefly\", [\"ts\", \"py\"]);\n    s_allCards = jsonObj.cards as Card[];\n    console.log(\"nCards:\", s_allCards.length);\n    let uids: string[] = [];\n    for(const card of s_allCards) {\n        uids.push(card.uid);\n    }\n    //console.log(uids);\n}",
                     "language": "ts",
-                    "iLine": 101,
-                    "jLine": 114
+                    "iLine": 105,
+                    "jLine": 118
                 }
             ],
             "dependsOn": [
@@ -11118,8 +11157,8 @@
                     "targets": [
                         "ts_firefly_firefly_function_run"
                     ],
-                    "iChar": 58,
-                    "jChar": 67
+                    "iChar": 51,
+                    "jChar": 60
                 }
             ],
             "children": [],
@@ -11139,8 +11178,8 @@
                 {
                     "text": "async function openMain() {\n    let json = await load(\"session/test.json\");\n    if (json.error) {\n        console.log(\"failed to load session:\", json.error);\n        openCard(\"ts_firefly_firefly_function_main\", null);\n    } else {\n        s_graphView.openJson(json);\n    }\n}",
                     "language": "ts",
-                    "iLine": 116,
-                    "jLine": 124
+                    "iLine": 120,
+                    "jLine": 128
                 }
             ],
             "dependsOn": [
@@ -11186,8 +11225,8 @@
                     "targets": [
                         "ts_firefly_firefly_function_run"
                     ],
-                    "iChar": 112,
-                    "jChar": 120
+                    "iChar": 105,
+                    "jChar": 113
                 }
             ],
             "children": [],
@@ -11207,8 +11246,8 @@
                 {
                     "text": "async function importLocalFolder() {\n    let logo: HTMLButtonElement = document.getElementById('logo_and_shadow') as HTMLButtonElement;\n    let button = element(`<button id=\"openDirectory\" class=\"transparent-button\" style=\"display: inline-block;\">\n                            <h3 style=\"display: inline-block;\">\u25b6\ufe0e</h3></button>`);\n    logo.insertBefore(button, logo.children[1]);\n    button.addEventListener('click', async () => {\n        if (!(window as any).showDirectoryPicker) {\n            console.log(\"showDirectoryPicker is null\");\n            return;\n        }\n        dirHandle = await (window as any).showDirectoryPicker!();\n        button.remove();\n        await importLocalFile();\n    });\n}",
                     "language": "ts",
-                    "iLine": 126,
-                    "jLine": 140
+                    "iLine": 130,
+                    "jLine": 144
                 }
             ],
             "dependsOn": [
@@ -11282,8 +11321,8 @@
                 {
                     "text": "// test-reads the first file and sets text in browser\nasync function importLocalFile() {\n    console.log(\"importLocalFile\");\n    // Assuming we are just reading the first file we find.\n    console.log(\"values...\");\n    for await (const entry of dirHandle.values()) {\n        if (entry.kind === 'file') {\n            console.log(\"getFile...\");\n            const file = await (entry as any).getFile();\n            const filename : string = file.name; // Assuming 'file' has a 'name' property with the filename.\n            if (filename.startsWith(\".\")) continue;\n            const parts = filename.split('.');\n            const ext = parts.length > 1 ? '.' + parts.pop() : '';\n            console.log(\"readFileAsText...\");\n            console.log(`ext = '${ext}'`);\n            const fullText = await readFileAsText(file);\n            console.log(\"NOT IMPLEMENTED YET\"); // todo: implement by reading files, horking them over to the server, then following the normal channels\n            break;\n        }\n    }\n}",
                     "language": "ts",
-                    "iLine": 142,
-                    "jLine": 162
+                    "iLine": 146,
+                    "jLine": 166
                 }
             ],
             "dependsOn": [
@@ -11336,8 +11375,8 @@
                 {
                     "text": "// Read file on client machine in folder\nfunction readFileAsText(file: File): Promise<string> {\n    return new Promise((resolve, reject) => {\n        const reader = new FileReader();\n        reader.onload = event => resolve(event.target!.result as string);\n        reader.onerror = error => reject(error);\n        reader.readAsText(file);\n    });\n}",
                     "language": "ts",
-                    "iLine": 164,
-                    "jLine": 172
+                    "iLine": 168,
+                    "jLine": 176
                 }
             ],
             "dependsOn": [],
@@ -11367,8 +11406,8 @@
                 {
                     "text": "// move the logo and shadow to the left of the window\nasync function animateLogoToLeft(): Promise<void> {\n    return new Promise((resolve, reject) => {\n        const logoAndShadow = document.getElementById(\"logo_and_shadow\")!;\n\n        // Set animation properties\n        logoAndShadow.style.animationName = \"moveToLeft\";\n        logoAndShadow.style.animationDuration = \"0.25s\";\n        logoAndShadow.style.animationTimingFunction = \"ease-in-out\";\n        logoAndShadow.style.animationFillMode = \"forwards\"; \n\n        // Attach the animationend event listener\n        logoAndShadow.addEventListener('animationend', function onAnimationEnd() {\n            // Remove the event listener to prevent memory leaks\n            logoAndShadow.removeEventListener('animationend', onAnimationEnd);\n            resolve();\n        });\n\n        // Start the animation\n        logoAndShadow.style.left = \"0\";\n    });\n}",
                     "language": "ts",
-                    "iLine": 174,
-                    "jLine": 195
+                    "iLine": 178,
+                    "jLine": 199
                 }
             ],
             "dependsOn": [
@@ -11385,8 +11424,8 @@
                     "targets": [
                         "ts_firefly_firefly_function_run"
                     ],
-                    "iChar": 81,
-                    "jChar": 98
+                    "iChar": 74,
+                    "jChar": 91
                 }
             ],
             "children": [],
@@ -11406,8 +11445,8 @@
                 {
                     "text": "async function importFolders(project: string, folders: string[]) {\n    return await remote(\"@firefly.importFolders\", { project: project, folders: folders });\n}",
                     "language": "ts",
-                    "iLine": 197,
-                    "jLine": 199
+                    "iLine": 201,
+                    "jLine": 203
                 }
             ],
             "dependsOn": [
@@ -11452,8 +11491,8 @@
                 {
                     "text": "// finds the card with the given UID, or null if doesn't exist\nfunction findCard(uid: string) : Card | null {\n    let index = s_allCards.findIndex((card : any ) => card.uid === uid);\n    if (index < 0) return null;\n    return s_allCards[index];\n}",
                     "language": "ts",
-                    "iLine": 201,
-                    "jLine": 206
+                    "iLine": 205,
+                    "jLine": 210
                 }
             ],
             "dependsOn": [
@@ -11519,8 +11558,8 @@
                 {
                     "text": "// generates HTML for card, but doesn't connect it yet\nfunction cardToHTML(id: string, view: CardView) : HTMLElement {\n    let card : Card | null = findCard(id);\n    if (!card) { return element(`<div></div>`); }\n    let style = \"code\"; if (view.state == CardViewState.Fullsize) { style += \" code-expanded\"; }\n    let elem : HTMLElement = element(`<div id=\"code_${card.uid}\" class=\"${style}\" spellcheck=\"false\" contenteditable=\"false\"></div>`);\n    let text : string = card.code[0].text;\n    if (card.dependsOn.length==0) {\n        elem.innerText = text;\n    } else {\n        let iChar : number = 0;\n        for(const dep of card.dependsOn) {\n            // add text-node going from (iChar) to (dep.iChar)\n            if (dep.iChar > iChar) {\n                elem.appendChild(document.createTextNode(text.slice(iChar, dep.iChar)));\n            }\n            // add span containing the link\n            const link = text.slice(dep.iChar, dep.jChar);\n            let linkId = \"linkto_\" + dep.targets[0];\n            for(let i = 1; i < dep.targets.length; i++) {\n                linkId += \"__\" + dep.targets[i];\n            }\n            const child = element(`<span class=\"tag\" id=\"${linkId}\">${link}</span>`);\n            listen(child, 'click', async function(event: any) {\n                onLinkButtonPress(child);\n            });\n            elem.appendChild(child);\n            // step\n            iChar = dep.jChar;\n        }\n        // add text-node for the remaining bit of text\n        if (iChar < text.length) {\n            elem.appendChild(document.createTextNode(text.slice(iChar, text.length)));\n        }\n    }\n    setTimeout(() => { elem.scrollLeft = view.xScroll; elem.scrollTop = view.yScroll;}, 0);\n    listen(elem, 'click', function() { expandOrContract(elem); });\n    listen(elem, 'scroll', function(event: any) { getScrollPos(elem); });\n    let container = codeContainer(elem, shortName(card));\n    container.id = card.uid;\n    return container;\n}",
                     "language": "ts",
-                    "iLine": 208,
-                    "jLine": 249
+                    "iLine": 212,
+                    "jLine": 253
                 }
             ],
             "dependsOn": [
@@ -11686,8 +11725,8 @@
                 {
                     "text": "function codeContainer(codeDiv: HTMLElement, title: string) : HTMLElement {\n    const containerDiv = document.createElement('div');\n    containerDiv.className = 'code-container';\n\n    // Create the title div\n    const titleDiv = document.createElement('div');\n    titleDiv.className = 'code-title';\n    titleDiv.textContent = title;\n\n    // Append the title and the code div to the container\n    containerDiv.appendChild(titleDiv);\n    containerDiv.appendChild(codeDiv);\n\n    return containerDiv;\n}",
                     "language": "ts",
-                    "iLine": 251,
-                    "jLine": 265
+                    "iLine": 255,
+                    "jLine": 269
                 }
             ],
             "dependsOn": [],
@@ -11717,8 +11756,8 @@
                 {
                     "text": "function shortName(card: Card) : string {\n    let result: string = \"\";\n    if (card.parent != \"null\") { result += findCard(card.parent)!.name + \".\"; }\n    result += card.name;\n    if (card.kind==\"method\" || card.kind==\"function\") result += \"()\";\n    return result;\n}",
                     "language": "ts",
-                    "iLine": 267,
-                    "jLine": 273
+                    "iLine": 271,
+                    "jLine": 277
                 }
             ],
             "dependsOn": [
@@ -11777,8 +11816,8 @@
                 {
                     "text": "function highlightLink(linkDiv: HTMLElement, highlight: boolean) {\n    if (highlight) linkDiv.className = \"tag-highlight\"; else linkDiv.className = \"tag\";\n}",
                     "language": "ts",
-                    "iLine": 275,
-                    "jLine": 277
+                    "iLine": 279,
+                    "jLine": 281
                 }
             ],
             "dependsOn": [],
@@ -11822,8 +11861,8 @@
                 {
                     "text": "function listen(elem: HTMLElement, type: string, func: Function) {\n    elem.addEventListener(type, async (event) => {\n        //console.log(`${type}: ${elem.id}`);\n        await func(event);  // Assuming func is synchronous. If it's async, use await func(event);\n        event.stopPropagation();\n        debouncedSaveAll();\n    });\n}",
                     "language": "ts",
-                    "iLine": 279,
-                    "jLine": 286
+                    "iLine": 283,
+                    "jLine": 290
                 }
             ],
             "dependsOn": [
@@ -11861,8 +11900,8 @@
                 {
                     "text": "function expandOrContract(elem : HTMLElement) {\n    let div = elem.parentElement!;\n    let view = s_graphView.userObj(div);\n    if (view.state == CardViewState.Compact) {\n        elem.classList.add(\"code-expanded\");\n        view.state = CardViewState.Fullsize;\n\n    } else if (view.state == CardViewState.Fullsize) {\n         elem.classList.remove(\"code-expanded\");\n         view.state = CardViewState.Compact;\n         elem.scrollLeft = view.xScroll;\n         elem.scrollTop = view.yScroll;\n    }\n    s_graphView.emphasize(div, elem.classList.contains(\"code-expanded\"));\n    s_graphView.attention(div);\n}",
                     "language": "ts",
-                    "iLine": 288,
-                    "jLine": 303
+                    "iLine": 292,
+                    "jLine": 307
                 }
             ],
             "dependsOn": [
@@ -11960,8 +11999,8 @@
                 {
                     "text": "function getScrollPos(elem: HTMLElement) {\n    let div = elem.parentElement!;\n    let view = s_graphView.userObj(div);\n    if (view.state == CardViewState.Compact) {\n        view.xScroll = div.scrollLeft;\n        view.yScroll = div.scrollTop;\n    }\n}",
                     "language": "ts",
-                    "iLine": 305,
-                    "jLine": 312
+                    "iLine": 309,
+                    "jLine": 316
                 }
             ],
             "dependsOn": [
@@ -12030,8 +12069,8 @@
                 {
                     "text": "const debouncedSaveAll = debounce(() => { saveAll() }, 300);",
                     "language": "ts",
-                    "iLine": 314,
-                    "jLine": 314
+                    "iLine": 318,
+                    "jLine": 318
                 }
             ],
             "dependsOn": [
@@ -12076,8 +12115,8 @@
                 {
                     "text": "async function saveAll() {\n    //console.log(\"saveAll\");\n    const json = s_graphView.json();\n    await save(json, \"sessions/test.json\");\n}",
                     "language": "ts",
-                    "iLine": 316,
-                    "jLine": 320
+                    "iLine": 320,
+                    "jLine": 324
                 }
             ],
             "dependsOn": [
@@ -12130,8 +12169,8 @@
                 {
                     "text": "async function save(json: any, path: string) {\n    await remote(\"@firefly.save\", { path: \"sessions/test.json\", json: json });\n}",
                     "language": "ts",
-                    "iLine": 322,
-                    "jLine": 324
+                    "iLine": 326,
+                    "jLine": 328
                 }
             ],
             "dependsOn": [
@@ -12184,8 +12223,8 @@
                 {
                     "text": "async function load(path: string) : Promise<any> {\n    return await remote(\"@firefly.load\", { path: \"sessions/test.json\"});\n}",
                     "language": "ts",
-                    "iLine": 326,
-                    "jLine": 328
+                    "iLine": 330,
+                    "jLine": 332
                 }
             ],
             "dependsOn": [
@@ -12238,8 +12277,8 @@
                 {
                     "text": "// link button pressed\nfunction onLinkButtonPress(button: HTMLElement) {\n    const id = button.id.slice(\"linkto_\".length);\n    const linkIDs = id.split(\"__\");\n    for(const linkID of linkIDs) {\n        openOrCloseCard(linkID, button);\n    }\n}",
                     "language": "ts",
-                    "iLine": 330,
-                    "jLine": 337
+                    "iLine": 334,
+                    "jLine": 341
                 }
             ],
             "dependsOn": [
@@ -12277,8 +12316,8 @@
                 {
                     "text": "// if a card view is closed, opens it; otherwise closes it\nfunction openOrCloseCard(uid: string, button: HTMLElement) {\n    const card : Card | null = findCard(uid);\n    if (!card) return;\n    let existing = s_graphView.find(uid);\n    if (existing) {\n        closeCard(existing);\n    } else {\n        openCard(uid, button);\n    }\n}",
                     "language": "ts",
-                    "iLine": 339,
-                    "jLine": 349
+                    "iLine": 343,
+                    "jLine": 353
                 }
             ],
             "dependsOn": [
@@ -12351,8 +12390,8 @@
                 {
                     "text": "// opens a card, optionally connected to a button element\nfunction openCard(uid: string, button: HTMLElement | null){\n    console.log(\"openCard\", uid);\n    let linkID = \"\";\n    let parentID = \"\";\n    if (button) {\n        linkID = button.id;\n        let parent = s_graphView.findDivContainingLink(button);\n        if (parent) parentID = parent.id;\n    }\n    s_graphView.reopen(uid, linkID, parentID, new CardView(CardViewState.Compact));\n    if (button) {\n        highlightLink(button, true);\n    }\n}",
                     "language": "ts",
-                    "iLine": 351,
-                    "jLine": 365
+                    "iLine": 355,
+                    "jLine": 369
                 }
             ],
             "dependsOn": [
@@ -12425,8 +12464,8 @@
                 {
                     "text": "// closes a card\nfunction closeCard(cardDiv: HTMLElement) {\n    let button = s_graphView.findLink(cardDiv);\n    if (button) {\n        highlightLink(button, false);\n    }\n    s_graphView.close(cardDiv);\n}",
                     "language": "ts",
-                    "iLine": 367,
-                    "jLine": 374
+                    "iLine": 371,
+                    "jLine": 378
                 }
             ],
             "dependsOn": [
@@ -13169,15 +13208,15 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 11130,
-                    "jChar": 11139
+                    "iChar": 11194,
+                    "jChar": 11203
                 },
                 {
                     "targets": [
                         "ts_firefly_graphview_method_GraphView_updateCanvas"
                     ],
-                    "iChar": 1984,
-                    "jChar": 1993
+                    "iChar": 2048,
+                    "jChar": 2057
                 },
                 {
                     "targets": [
