@@ -231,7 +231,7 @@ export class GraphView {
     // sort nodes within each column by link order
     sortColumns() {
         for (let col of this.columns) {
-            col.sort((a, b) => (a.linkIndex - b.linkIndex));
+            col.sort((a, b) => ((a.linkIndex > b.linkIndex) ? 1 : ((a.linkIndex < b.linkIndex) ? -1 : 0)));
         }
     }
     // right edge of column
@@ -484,7 +484,7 @@ class Node {
         this.width = 0; // width on last frame, so we can react to animation
         this.height = 0; // ..
         this.emphasize = false; // if set, comes forward in the stack
-        this.linkIndex = 0; // sort index for vertical ordering
+        this.linkIndex = ""; // sort index for vertical ordering
         this.graph = view;
         this.userObj = userObj;
         if (parentDiv === undefined) {
@@ -540,14 +540,13 @@ class Node {
         this.height = this.div.clientHeight;
     }
     computeLinkIndex() {
-        let result = 0;
+        let result = "";
         let digit = 1;
         let node = this;
         while (node) {
             if (node.linkDiv) {
-                let i = getChildNodeIndex(node.linkDiv);
-                result += (i * digit);
-                digit *= 1000; // max 1000 links per page!
+                let i = getChildNodeIndex(node.linkDiv).toString().padStart(3, '0');
+                result = (result == "") ? i : i + '.' + result;
             }
             node = node.parentNode;
         }
