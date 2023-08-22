@@ -78,6 +78,7 @@ async function run() {
     await loadCards();
     await animateLogoToLeft();
     await openMain();
+    testVectors();
     eventLoop();
 }
 
@@ -88,7 +89,7 @@ async function init() {
 
 function logo() {
     const logo = document.getElementById('logo_and_shadow') as HTMLElement;
-    logo.style.left = '32px';
+    logo.style.left = `${(window.innerWidth - logo.offsetWidth)/2}px`;
     logo.style.top = `${(window.innerHeight/2)-40}px`;
 }
 
@@ -110,11 +111,6 @@ async function loadCards() {
     const jsonObj = await importFolders("firefly", ["ts", "py"]);
     s_allCards = jsonObj.cards as Card[];
     console.log("nCards:", s_allCards.length);
-    let uids: string[] = [];
-    for(const card of s_allCards) {
-        uids.push(card.uid);
-    }
-    //console.log(uids);
 }
 
 async function openMain() {
@@ -125,6 +121,21 @@ async function openMain() {
     } else {
         s_graphView.openJson(json);
     }
+}
+
+async function testVectors() {
+    console.log("testVectors");
+    const query = "animate logo to left";
+    console.log(query);
+    let tNow = performance.now();
+    const results = await search(query);
+    let tElapsed = performance.now() - tNow;
+    console.log(`result:\n${JSON.stringify(results)}`);
+    console.log(`took ${tElapsed} msec`);
+}
+
+async function search(query: string) : Promise<any> {
+    return await remote("@firefly.search", { query });
 }
 
 async function importLocalFolder() {

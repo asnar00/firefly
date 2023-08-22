@@ -20,6 +20,11 @@ from typing import Tuple
 import re
 import select
 import inspect
+import sys
+import time
+import signal
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
 
 global listen_port, app_name, public, root
 listen_port = 0
@@ -37,9 +42,24 @@ def register(func):
 
 def call(func, args):
     print(f"calling {func} with {args}")
-    return (functions[func])['call'](**args)
+    result = (functions[func])['call'](**args)
+    print(f"result: {result}")
+    return result  
 
-build_process = None
+class RestartHandler(FileSystemEventHandler):
+    def __init__(self, observer, script_to_run):
+        self.observer = observer
+        self.script_to_run = script_to_run
+
+    def on_modified(self, event):
+        if event.src_path.endswith('.py'):
+            print('Detected changes in:', event.src_path)
+            self.restart_script()
+
+    def restart_script(self):
+        self.observer.stop()
+        os.execv(sys.executable, ['python'] + [self.script_to_run])
+
 
 class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
@@ -112,7 +132,20 @@ def start(name, port, rootFolder):
     listen_port = port
     root = rootFolder
     public = root + "/public"
-    print(f"starting webserver listening on port {listen_port}...")
+
+    observer = Observer()
+    event_handler = RestartHandler(observer, sys.argv[0])
+    observer.schedule(event_handler, path='.', recursive=True)
+    try:
+        observer.start()
+        runServer()
+    except KeyboardInterrupt:
+        observer.stop()
+    observer.join()
+
+def runServer():
+    global listen_port, app_name, public, root
+    print(f"starting service '{app_name}' listening on port {listen_port}...")
     Handler = CustomHTTPRequestHandler
     with socketserver.TCPServer(("", listen_port), Handler) as httpd:
         print(f"Serving on port {listen_port}")

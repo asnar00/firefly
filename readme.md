@@ -63,6 +63,12 @@ As seductive as it is to interface with vscode and other APIs, I think I want to
 3- understanding
 4- control
 
+In general, we should keep up forward movement speed, rather than polishing for the sake of polishing.
+I think it would be good to create a generic parser that can extract symbols and types, and particularly resolve Class.method properly.
+But it's also totally fine to resolve ambiguity in other ways.
+The key thing is to get capability with vector search, embeddings, document understanding, and the agent.
+Now let's do service registry.
+
 
 TODAY:
 - titles DONE
@@ -197,9 +203,16 @@ So now let's think about the situation where we want to "call" a python function
     }
 
     function myFunc(a: int) {
-        remote("@firefly_server", "myFunc", { a: 2 });          // endpoint, function, args
+        remote("@firefly").call("myFunc", { a: 2 });          // endpoint, function, args
     }
 
+    remote("@firefly").myFunc(2);       => ideally, fully type-checked.
+    And this works because we DYNAMICALLY INCLUDE IT? Or do we read it from the header file?
+    
+    embeddings.set(key, value) { generate vec(key); store(value); }
+    embeddings.get(query) => [ {value, confidence} ]
+
+    We need to really consider this architecture properly.
     ---------------------
 
     // firefly.py

@@ -90,6 +90,7 @@ function run() {
         yield loadCards();
         yield animateLogoToLeft();
         yield openMain();
+        testVectors();
         eventLoop();
     });
 }
@@ -101,7 +102,7 @@ function init() {
 }
 function logo() {
     const logo = document.getElementById('logo_and_shadow');
-    logo.style.left = '32px';
+    logo.style.left = `${(window.innerWidth - logo.offsetWidth) / 2}px`;
     logo.style.top = `${(window.innerHeight / 2) - 40}px`;
 }
 function graph() {
@@ -121,11 +122,6 @@ function loadCards() {
         const jsonObj = yield importFolders("firefly", ["ts", "py"]);
         s_allCards = jsonObj.cards;
         console.log("nCards:", s_allCards.length);
-        let uids = [];
-        for (const card of s_allCards) {
-            uids.push(card.uid);
-        }
-        //console.log(uids);
     });
 }
 function openMain() {
@@ -138,6 +134,23 @@ function openMain() {
         else {
             s_graphView.openJson(json);
         }
+    });
+}
+function testVectors() {
+    return __awaiter(this, void 0, void 0, function* () {
+        console.log("testVectors");
+        const query = "animate logo to left";
+        console.log(query);
+        let tNow = performance.now();
+        const results = yield search(query);
+        let tElapsed = performance.now() - tNow;
+        console.log(`result:\n${JSON.stringify(results)}`);
+        console.log(`took ${tElapsed} msec`);
+    });
+}
+function search(query) {
+    return __awaiter(this, void 0, void 0, function* () {
+        return yield remote("@firefly.search", { query });
     });
 }
 function importLocalFolder() {

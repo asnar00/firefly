@@ -18,10 +18,12 @@ import subprocess
 import service
 from typing import List
 import random
+import vectors
 
+
+print("---------------------------------------------------------------------------")
+print("firely.ps ᕦ(ツ)ᕤ")
 root = "/Users/asnaroo/desktop/experiments/firefly"
-
-print("service: firefly")
 
 @service.register
 def importFolders(project, folders):
@@ -41,12 +43,14 @@ def load(path):
     print("path:", path)
     if os.path.exists(path):
         json = readJsonFromFile(path)
-        print("found!", json)
         return json
     else:
-        print("notfound!")
         return { "error" : f"{path.replace(root, '')} not found" }
     
+@service.register
+def search(query):
+    return vectors.search(query, 4)
+
 def writeJsonToFile(obj, path: str):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w') as file:
@@ -68,7 +72,34 @@ def importAllCards(project, folders) -> dict:
     cards = list(filter(lambda c: not c.uid().endswith("_"), cards))
     computeDependencies(cards)
     #computeLevels(cards)
+    saveEmbeddings(cards)
     return cardsToJsonDict(cards)
+
+def saveEmbeddings(cards):
+    print("saving embeddings")
+    for card in cards:
+        key = separateWords(card.shortName())
+        vectors.add(key, card.uid())
+
+def separateWords(name): # convert "camelCaseHTTP" and "camel_case_HTTP" to "camel case HTTP", 
+    symbols = "!@#$%^&*()+-={}[]:\";\',.<>/?\`~_"
+    result = ""
+    for i in range(0, len(name)):
+        pc = ' ' if i == 0 else name[i-1]
+        nc = ' ' if i == len(name)-1 else name[i+1]
+        c = name[i]
+        if c.isupper():
+            if pc.isupper():        # part of an acronym
+                result += c         # so don't change it
+            else:
+                if nc.isupper():    # also part of an acronym, but lead with a space
+                    result += ' ' + c
+                else:               # not part of an acronym
+                    result += ' ' + c.lower()
+        else:
+            if c in symbols: c = ' '
+            result += c
+    return result
 
 class Language:
     def name(self) -> str:
@@ -107,9 +138,15 @@ class Card:
         self.parent = None      # if we're a method or property, points to parent
         self.rankFromBottom = 0 # 1 means depends on nothing; x means depends on things with rank < x
         self.rankFromTop = 0    # 1 means nothing calls this; x means called by things with rank < x 
-    def fullName(self):
-        if self.parent: return self.parent.name + "." + self.name
-        else: return self.name
+
+    def shortName(self):
+        s = ""
+        if self.parent: s= self.parent.name + "."
+        s += self.name
+        if self.kind == 'function' or self.kind == 'method':
+            s += "()"
+        return s
+    
     def uid(self):
         u = self.language + "_" + self.project + "_" + self.module + "_" + self.kind + "_"
         if self.parent: u += self.parent.name + "_"
@@ -215,7 +252,7 @@ class Typescript(Language):
             line = lines[iLine]
             if indent >= minIndent: # only consider lines above the min indent level
                 # should we start a new card?
-                # YES if current line has indent = minIndent, and previous line is not a comment
+                # YES if current line has indent = minIndent, line is not blank and previous line is not a comment
                 if indent == minIndent and not prevLine.strip().startswith("//"):
                     card = Card(project, module, line, self, iLine+1)
                     cards.append(card)
@@ -376,7 +413,7 @@ def computeLevels(cards: List[Card]):
     level = 1
     while len(queue) > 0 and level < 100:
         rp = f"level {level}: "
-        for c in queue: rp += c.fullName() + " "
+        for c in queue: rp += c.shortName() + " "
         #print(rp)
         nextQueue = []
         for c in queue:
@@ -403,7 +440,7 @@ def computeLevels(cards: List[Card]):
     level = 1
     while len(queue) > 0 and level < 100:
         rp = f"level {level}: "
-        for c in queue: rp += c.fullName() + " "
+        for c in queue: rp += c.shortName() + " "
         #print(rp)
         nextQueue = []
         for c in queue:
@@ -422,8 +459,7 @@ def computeLevels(cards: List[Card]):
         # if card.level > maxLevel:
         #     print("level", card.level, "--------------------")
         #     maxLevel = card.level
-        # print(card.fullName())
-
+        # print(card.shortName())
 
 def writeTextToFile(text: str, path: str):
     folder = os.path.dirname(path)
@@ -495,5 +531,7 @@ def findAllFiles(directory, extension):
 
     return matched_files
 
+
 if __name__ == "__main__":
+    vectors.load()
     service.start("firefly", 8003, root)
