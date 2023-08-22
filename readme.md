@@ -45,6 +45,24 @@ The actual code will of course have to call the glue boilerplate;
 but the *link* can be made direct, as long as the editor understands the boilerplate.
 Most likely, we can actually just use a comment or decoration, or something clever with the function names.
 
+NEXT STEPS:
+- had a good chat with Evan + Dean - lots of food for thought. 
+- Key observation is that we can use firefly as a sort of "platform" : to view line-number-led console readout data in situ, within a graph, and visualise any kind of data.
+- Idea came up of interfacing with the Cody system (steered by Steve Yegge, quite mature, but very IDE centric - but it seems like they have some good stuff). Might be a quick way of doing this, but actually I think I want to build that part myself.
+- Same with interfacing with vscode - we could use vscode as the editor within each card. 
+- I think other people could come along and do those later, if I make it open enough.
+
+So my forward direction is: 
+- code querying is job 1, which means microservice infrastructure is first.
+- then we implement vector search, openAI embedding, API, all that
+- then eventually language server is the way to go
+
+As seductive as it is to interface with vscode and other APIs, I think I want to keep things super local and build things myself. The key reasons are: 
+1- simplicity
+2- freedom of movement
+3- understanding
+4- control
+
 
 TODAY:
 - titles DONE
@@ -202,4 +220,6 @@ So we could just modify the dependency a *little bit* to allow cross-language co
 This would actually be a pretty good place to get to, I think. 
 
 
-
+So let's create something called service.py.
+How do we do that?
+Let's look into generators.

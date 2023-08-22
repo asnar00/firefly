@@ -324,7 +324,7 @@ async function saveAll() {
 }
 
 async function save(json: any, path: string) {
-    await remote("@firefly.save", { path: "sessions/test.json", json: json });
+    await remote("@firefly.save", { path: "sessions/test.json", obj: json });
 }
 
 async function load(path: string) : Promise<any> {

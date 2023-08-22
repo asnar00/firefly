@@ -354,7 +354,7 @@ function saveAll() {
 }
 function save(json, path) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield remote("@firefly.save", { path: "sessions/test.json", json: json });
+        yield remote("@firefly.save", { path: "sessions/test.json", obj: json });
     });
 }
 function load(path) {

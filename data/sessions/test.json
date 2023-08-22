@@ -1,5 +1,5 @@
 {
-    "xScroll": 55.5,
+    "xScroll": 0,
     "yScroll": 0,
     "nodes": [
         {
@@ -12,11 +12,13 @@
                 "xScroll": 0,
                 "yScroll": 0
             }
-        },
+        }
+    ],
+    "closed": [
         {
-            "id": "ts_firefly_firefly_function_run",
-            "link": "linkto_ts_firefly_firefly_function_run",
-            "parent": "ts_firefly_firefly_function_main",
+            "id": "ts_firefly_firefly_function_graph",
+            "link": "linkto_ts_firefly_firefly_function_graph",
+            "parent": "ts_firefly_firefly_function_init",
             "emphasize": false,
             "userObj": {
                 "state": 1,
@@ -25,12 +27,34 @@
             }
         },
         {
-            "id": "ts_firefly_firefly_function_eventLoop",
-            "link": "linkto_ts_firefly_firefly_function_eventLoop",
-            "parent": "ts_firefly_firefly_function_run",
+            "id": "ts_firefly_firefly_global_s_graphView",
+            "link": "linkto_ts_firefly_firefly_global_s_graphView",
+            "parent": "ts_firefly_firefly_function_graph",
             "emphasize": false,
             "userObj": {
                 "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_class_GraphView",
+            "link": "linkto_ts_firefly_graphview_class_GraphView",
+            "parent": "ts_firefly_firefly_global_s_graphView",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_cardToHTML",
+            "link": "linkto_ts_firefly_firefly_function_cardToHTML",
+            "parent": "ts_firefly_firefly_function_graph",
+            "emphasize": true,
+            "userObj": {
+                "state": 2,
                 "xScroll": 0,
                 "yScroll": 0
             }
@@ -61,41 +85,6 @@
             "id": "ts_firefly_graphview_method_Arrow_update",
             "link": "linkto_ts_firefly_graphview_method_GraphView_update__ts_firefly_graphview_method_Node_update__ts_firefly_graphview_method_Arrow_update",
             "parent": "ts_firefly_firefly_function_eventLoop",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        }
-    ],
-    "closed": [
-        {
-            "id": "py_firefly_cards_function_card_serialiser",
-            "link": "linkto_py_firefly_cards_function_card_serialiser",
-            "parent": "py_firefly_cards_function_cardsToJsonDict",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "py_firefly_cards_function_writeTextToFile",
-            "link": "linkto_py_firefly_cards_function_writeTextToFile",
-            "parent": "py_firefly_cards_function_cardsToJsonDict",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_graphview_method_GraphView_initArrows",
-            "link": "linkto_ts_firefly_graphview_method_GraphView_initArrows",
-            "parent": "ts_firefly_graphview_method_GraphView_constructor",
             "emphasize": false,
             "userObj": {
                 "state": 1,
@@ -137,53 +126,9 @@
             }
         },
         {
-            "id": "ts_firefly_firefly_function_openCard",
-            "link": "linkto_ts_firefly_firefly_function_openCard",
-            "parent": "ts_firefly_firefly_function_openMain",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_graphview_method_GraphView_reopen",
-            "link": "linkto_ts_firefly_graphview_method_GraphView_reopen",
-            "parent": "ts_firefly_firefly_function_openCard",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_graphview_method_GraphView_openJson",
-            "link": "linkto_ts_firefly_graphview_method_GraphView_openJson",
-            "parent": "ts_firefly_firefly_function_openMain",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_graphview_method_GraphView_openJsonNodeList",
-            "link": "linkto_ts_firefly_graphview_method_GraphView_openJsonNodeList",
-            "parent": "ts_firefly_graphview_method_GraphView_openJson",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_graphview_method_GraphView_open",
-            "link": "linkto_ts_firefly_graphview_method_GraphView_open",
-            "parent": "ts_firefly_graphview_method_GraphView_openJsonNodeList",
+            "id": "ts_firefly_util_function_remote",
+            "link": "linkto_ts_firefly_util_function_remote",
+            "parent": "ts_firefly_firefly_function_load",
             "emphasize": false,
             "userObj": {
                 "state": 1,
@@ -283,28 +228,6 @@
             "id": "py_firefly_cards_method_Typescript_importCards",
             "link": "linkto_py_firefly_cards_method_Language_importCards__py_firefly_cards_method_Python_importCards__py_firefly_cards_method_Typescript_importCards",
             "parent": "py_firefly_cards_function_importCardsFromText",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "py_firefly_cards_class_Card",
-            "link": "linkto_py_firefly_cards_class_Card",
-            "parent": "py_firefly_cards_method_Typescript_importCards",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "py_firefly_cards_function_findLanguage",
-            "link": "linkto_py_firefly_cards_function_findLanguage",
-            "parent": "py_firefly_cards_function_importCards",
             "emphasize": false,
             "userObj": {
                 "state": 1,
