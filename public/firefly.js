@@ -21,6 +21,7 @@ import { GraphView } from "./graphview.js";
 import { element } from "./util.js";
 import { debounce } from "./util.js";
 import { remote } from "./util.js";
+import { rect } from "./util.js";
 window.onload = () => { main(); };
 const s_useLocalFiles = false; // change this to true to enable local file access
 let dirHandle = null;
@@ -89,8 +90,8 @@ function run() {
         yield init();
         yield loadCards();
         yield animateLogoToLeft();
-        yield openMain();
-        testVectors();
+        yield openSession();
+        testSearch("animate logo to left");
         eventLoop();
     });
 }
@@ -98,6 +99,7 @@ function init() {
     return __awaiter(this, void 0, void 0, function* () {
         logo();
         graph();
+        searchBox();
     });
 }
 function logo() {
@@ -124,29 +126,154 @@ function loadCards() {
         console.log("nCards:", s_allCards.length);
     });
 }
-function openMain() {
+function openSession() {
     return __awaiter(this, void 0, void 0, function* () {
         let json = yield load("session/test.json");
         if (json.error) {
             console.log("failed to load session:", json.error);
-            openCard("ts_firefly_firefly_function_main", null);
+            openMain();
         }
         else {
             s_graphView.openJson(json);
         }
     });
 }
-function testVectors() {
+function openMain() {
+    openCard("ts_firefly_firefly_function_main", null);
+}
+function reset() {
+    s_graphView.reset();
+}
+function searchBox() {
+    const searchFieldHTML = `<div class="search-field" id="search-field" contenteditable="true" spellcheck="false"></div>`;
+    const iconHTML = `<i class="icon-search" style="padding-top: 6px;"></i>`;
+    const searchResultsHTML = `<div class="search-results" id="search-results"></div>`;
+    const searchDivHTML = `<div class="search-box" id="search-box">${iconHTML}${searchFieldHTML}${searchResultsHTML}</div>`;
+    const shadow = element(`<div class="shadow"></div>`);
+    let searchDiv = element(searchDivHTML);
+    document.body.append(searchDiv);
+    searchDiv.style.top = `${window.innerHeight - 64}px`;
+    let searchField = document.getElementById("search-field");
+    searchField.addEventListener('keydown', (event) => __awaiter(this, void 0, void 0, function* () {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            const results = yield testSearch(searchField.innerText);
+            showSearchResults(results);
+        }
+    }));
+    document.body.append(shadow);
+    const sr = rect(searchDiv);
+    shadow.style.position = `absolute`;
+    shadow.style.left = `${sr.left - 8}px`;
+    shadow.style.top = `${sr.bottom + 16}px`;
+    shadow.style.width = `${sr.width() + 16}px`;
+}
+function testSearch(query) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("testVectors");
-        const query = "animate logo to left";
+        console.log("testSearch");
         console.log(query);
         let tNow = performance.now();
         const results = yield search(query);
         let tElapsed = performance.now() - tNow;
-        console.log(`result:\n${JSON.stringify(results)}`);
-        console.log(`took ${tElapsed} msec`);
+        //console.log(`result:\n${JSON.stringify(results)}`);
+        //console.log(`took ${tElapsed} msec`);
+        return results;
     });
+}
+function showSearchResults(results) {
+    console.log("search results:");
+    let searchResultsDiv = document.getElementById("search-results");
+    clearSearchResults(searchResultsDiv);
+    const array = results.results;
+    for (const item of array) {
+        const id = item.value;
+        const card = findCard(id);
+        if (!card) {
+            console.log("  unknown:", id);
+        }
+        else {
+            const name = shortName(card);
+            console.log("  ", name);
+            if (card.kind == "function" || card.kind == "method" || card.kind == "class") {
+                let searchResultDiv = element(`<div class="search-result">${name}</div>`);
+                listen(searchResultDiv, 'click', () => { jumpToCard(card); });
+                searchResultsDiv.append(searchResultDiv);
+            }
+        }
+    }
+}
+class Link {
+    constructor(iDep, card) {
+        this.iDep = -1; // dependency index in caller
+        this.card = null; // card to open
+        this.iDep = iDep;
+        this.card = card;
+    }
+}
+function jumpToCard(target) {
+    console.log("jumpToCard", target.uid);
+    let mainCard = findCard("ts_firefly_firefly_function_main");
+    if (!mainCard)
+        return;
+    let chain = callChain(mainCard, target);
+    console.log(chain);
+    if (chain.length == 0)
+        return;
+    //reset();
+    let card = mainCard;
+    for (let link of chain) {
+        const cardID = link.card.uid;
+        console.log("open", cardID, `linkto_${cardID}`, card.uid);
+        s_graphView.open(cardID, `linkto_${cardID}`, card.uid, new CardView(CardViewState.Compact), false);
+        card = link.card;
+    }
+    s_graphView.attention(s_graphView.find(card.uid));
+}
+function callChain(from, to) {
+    newVisitPass();
+    return callChainRec(from, to).slice(1);
+}
+// returns a list of { dep, card } to get from a to b
+function callChainRec(from, to, iDepFrom = -1) {
+    if (visited(from))
+        return [];
+    if (from === to)
+        return [new Link(iDepFrom, from)];
+    let iDep = findDependency(from, to);
+    if (iDep >= 0)
+        return [new Link(iDepFrom, from), new Link(iDep, to)];
+    visit(from); // prevent us from going down this path again
+    for (let iDep = 0; iDep < from.dependsOn.length; iDep++) {
+        const dep = from.dependsOn[iDep];
+        for (const t of dep.targets) {
+            const chain = callChainRec(findCard(t), to, iDep);
+            if (chain.length != 0) {
+                return [new Link(iDepFrom, from), ...chain];
+            }
+        }
+    }
+    return [];
+}
+let s_visit = 0;
+let s_visitCount = new Map();
+function newVisitPass() { s_visit++; }
+function visited(card) {
+    let vc = s_visitCount.get(card);
+    return (vc && vc == s_visit) ? true : false;
+}
+function visit(card) {
+    s_visitCount.set(card, s_visit);
+}
+// given (card) and (target), checks card.dependsOn and returns index of dependency that matches
+function findDependency(card, target) {
+    return card.dependsOn.findIndex(d => (d.targets.indexOf(target.uid) >= 0));
+}
+function clearSearchResults(searchDiv) {
+    if (searchDiv) {
+        while (searchDiv.children.length > 0) {
+            searchDiv.removeChild(searchDiv.lastChild);
+        }
+    }
 }
 function search(query) {
     return __awaiter(this, void 0, void 0, function* () {

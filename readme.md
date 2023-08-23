@@ -236,3 +236,7 @@ This would actually be a pretty good place to get to, I think.
 So let's create something called service.py.
 How do we do that?
 Let's look into generators.
+
+OK so: microservices is a no-go, because the request/forward/response thing is about 6ms per request.
+Which is crazy, but there we go.
+So firefly.py just calls into vectors.py and all is good.

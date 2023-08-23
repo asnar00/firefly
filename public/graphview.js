@@ -145,6 +145,8 @@ export class GraphView {
     }
     // opens a new node, generates the HTML
     open(id, linkID, parentID, userObj, emphasize = false) {
+        if (this.find(id))
+            return; // don't make one if exists already
         let div = this.htmlFunction(id, userObj);
         div.style.transition = 'max-width 0.5s, max-height 0.5s, background-color 0.5s';
         let linkDiv = null;
@@ -162,6 +164,15 @@ export class GraphView {
         if (emphasize) {
             node.emphasize = true;
         }
+    }
+    reset() {
+        for (let i = 1; i < this.columns.length; i++) {
+            for (let node of this.columns[i]) {
+                this.closeSingleNode(node);
+            }
+        }
+        this.columns.splice(1, this.columns.length - 1);
+        this.closedNodes = [];
     }
     openJson(obj) {
         this.openJsonNodeList(obj.nodes);

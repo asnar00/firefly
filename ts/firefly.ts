@@ -77,14 +77,15 @@ async function run() {
     await init();
     await loadCards();
     await animateLogoToLeft();
-    await openMain();
-    testVectors();
+    await openSession();
+    testSearch("animate logo to left");
     eventLoop();
 }
 
 async function init() {
     logo();
     graph();
+    searchBox();
 }
 
 function logo() {
@@ -113,25 +114,159 @@ async function loadCards() {
     console.log("nCards:", s_allCards.length);
 }
 
-async function openMain() {
+async function openSession() {
     let json = await load("session/test.json");
     if (json.error) {
         console.log("failed to load session:", json.error);
-        openCard("ts_firefly_firefly_function_main", null);
+        openMain();
     } else {
         s_graphView.openJson(json);
     }
 }
 
-async function testVectors() {
-    console.log("testVectors");
-    const query = "animate logo to left";
+function openMain() {
+    openCard("ts_firefly_firefly_function_main", null);
+}
+
+function reset() {
+    s_graphView.reset();
+}
+
+function searchBox() {
+    const searchFieldHTML = `<div class="search-field" id="search-field" contenteditable="true" spellcheck="false"></div>`;
+    const iconHTML = `<i class="icon-search" style="padding-top: 6px;"></i>`;
+    const searchResultsHTML = `<div class="search-results" id="search-results"></div>`;
+    const searchDivHTML = `<div class="search-box" id="search-box">${iconHTML}${searchFieldHTML}${searchResultsHTML}</div>`;
+    const shadow = element(`<div class="shadow"></div>`);
+    let searchDiv = element(searchDivHTML);
+    document.body.append(searchDiv);
+    searchDiv.style.top = `${window.innerHeight -  64}px`;
+    let searchField = document.getElementById("search-field")!;
+    searchField.addEventListener('keydown', async (event) => {
+        if (event.key ==="Enter") {
+            event.preventDefault();
+            const results = await testSearch(searchField!.innerText);
+            showSearchResults(results);
+        }
+    });
+
+    document.body.append(shadow);
+    const sr = rect(searchDiv);
+    shadow.style.position = `absolute`;
+    shadow.style.left = `${sr.left-8}px`;
+    shadow.style.top = `${sr.bottom + 16}px`;
+    shadow.style.width = `${sr.width()+16}px`;
+}
+
+
+async function testSearch(query: string) : Promise<any>{
+    console.log("testSearch");
     console.log(query);
     let tNow = performance.now();
     const results = await search(query);
     let tElapsed = performance.now() - tNow;
-    console.log(`result:\n${JSON.stringify(results)}`);
-    console.log(`took ${tElapsed} msec`);
+    //console.log(`result:\n${JSON.stringify(results)}`);
+    //console.log(`took ${tElapsed} msec`);
+    return results;
+}
+
+function showSearchResults(results: any) {
+    console.log("search results:");
+    let searchResultsDiv = document.getElementById("search-results")!;
+    clearSearchResults(searchResultsDiv);
+    const array = results.results;
+    for(const item of array) {
+        const id = item.value;
+        const card = findCard(id);
+        if (!card) {
+            console.log("  unknown:", id);
+        } else {
+            const name = shortName(card);
+            console.log("  ", name);
+            if (card.kind == "function" || card.kind == "method" || card.kind == "class") {
+                let searchResultDiv = element(`<div class="search-result">${name}</div>`);
+                listen(searchResultDiv, 'click', () => { jumpToCard(card)});
+                searchResultsDiv.append(searchResultDiv);
+            }
+        }
+    }
+}
+
+class Link {
+    iDep: number =-1;               // dependency index in caller
+    card: Card | null = null;       // card to open
+    constructor(iDep: number, card: Card) {
+        this.iDep = iDep; this.card = card;
+    }
+}
+
+function jumpToCard(target: Card) {
+    console.log("jumpToCard", target.uid);
+    let mainCard = findCard("ts_firefly_firefly_function_main");
+    if (!mainCard) return;
+    let chain : Link[] = callChain(mainCard, target);
+    console.log(chain);
+    if (chain.length==0) return;
+    //reset();
+    let card : Card = mainCard;
+    for(let link of chain) {
+        const cardID = link.card!.uid;
+        console.log("open", cardID, `linkto_${cardID}`, card.uid);
+        s_graphView.open(cardID, `linkto_${cardID}`, card.uid, new CardView(CardViewState.Compact), false);
+        card = link.card!;
+    }
+    s_graphView.attention(s_graphView.find(card.uid)!);
+}
+
+
+function callChain(from: Card, to: Card) : Link[] {
+    newVisitPass();
+    return callChainRec(from, to).slice(1);
+}
+
+// returns a list of { dep, card } to get from a to b
+function callChainRec(from: Card, to: Card, iDepFrom: number=-1) : Link[]  {
+    if (visited(from)) return [];
+    if (from === to) return [ new Link(iDepFrom, from) ];
+    let iDep = findDependency(from, to);
+    if (iDep >= 0) return [ new Link(iDepFrom, from), new Link(iDep, to) ];
+    visit(from);        // prevent us from going down this path again
+    for(let iDep = 0; iDep < from.dependsOn.length; iDep++) {
+        const dep = from.dependsOn[iDep];
+        for(const t of dep.targets) {
+            const chain = callChainRec(findCard(t)!, to, iDep);
+            if (chain.length != 0) {
+                return [ new Link(iDepFrom, from), ...chain ];
+            }
+        }
+    }
+    return [];
+}
+
+let s_visit: number = 0;
+let s_visitCount: Map<Card, number> = new Map();
+
+function newVisitPass() { s_visit ++; }
+function visited(card: Card) : boolean {
+    let vc = s_visitCount.get(card);
+    return (vc && vc == s_visit) ? true : false;
+}
+function visit(card: Card) {
+    s_visitCount.set(card, s_visit);
+}
+
+// given (card) and (target), checks card.dependsOn and returns index of dependency that matches
+function findDependency(card: Card, target: Card) : number {
+    return card.dependsOn.findIndex(d => (d.targets.indexOf(target.uid) >= 0));
+}
+
+
+function clearSearchResults(searchDiv: HTMLElement) {
+    if (searchDiv) {
+        while (searchDiv.children.length > 0) {
+            searchDiv.removeChild(searchDiv.lastChild!);
+        }
+    }
 }
 
 async function search(query: string) : Promise<any> {

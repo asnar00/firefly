@@ -41,9 +41,10 @@ def register(func):
     return func
 
 def call(func, args):
-    print(f"calling {func} with {args}")
+    print(f"calling {func}")
+    #print(f"calling {func} with {args}")
     result = (functions[func])['call'](**args)
-    print(f"result: {result}")
+    #print(f"result: {result}")
     return result  
 
 class RestartHandler(FileSystemEventHandler):
@@ -106,16 +107,15 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         global listen_port, app_name, public, root
         print("requested:", path)
         path = urlparse(path).path
-        #print("after urlparse", path)
+        print("after urlparse", path)
         path = os.path.normpath(path)
+        print("after normpath", path)
 
         _, ext = os.path.splitext(path)
         if (path==f"/{app_name}"):
             path = public + "/index.html"
-        elif ext == ".css" or ext == ".js" or ext == ".ico":
+        elif path.startswith(f"/{app_name}/"):
             path = public + path.replace(f"{app_name}/", "", 1)
-        elif ext == ".md" or ext == ".hpp" or ext == ".cpp" or ext == ".ts":
-            path = root + path
         else:
             return None
 

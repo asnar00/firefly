@@ -22,7 +22,7 @@ import vectors
 
 
 print("---------------------------------------------------------------------------")
-print("firely.ps ᕦ(ツ)ᕤ")
+print("firefly.ps ᕦ(ツ)ᕤ")
 root = "/Users/asnaroo/desktop/experiments/firefly"
 
 @service.register
@@ -49,7 +49,7 @@ def load(path):
     
 @service.register
 def search(query):
-    return vectors.search(query, 4)
+    return vectors.search(query, 8)
 
 def writeJsonToFile(obj, path: str):
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -99,7 +99,7 @@ def separateWords(name): # convert "camelCaseHTTP" and "camel_case_HTTP" to "cam
         else:
             if c in symbols: c = ' '
             result += c
-    return result
+    return result.replace("\n", " ").strip()
 
 class Language:
     def name(self) -> str:
@@ -253,7 +253,9 @@ class Typescript(Language):
             if indent >= minIndent: # only consider lines above the min indent level
                 # should we start a new card?
                 # YES if current line has indent = minIndent, line is not blank and previous line is not a comment
-                if indent == minIndent and not prevLine.strip().startswith("//"):
+                # NO if the line is just "}"
+                isSingleCloseBrace = (line.strip() == "}")
+                if indent == minIndent and (not prevLine.strip().startswith("//")) and (not isSingleCloseBrace):
                     card = Card(project, module, line, self, iLine+1)
                     cards.append(card)
                 else:

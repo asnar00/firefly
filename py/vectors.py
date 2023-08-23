@@ -12,7 +12,6 @@ import os
 import json
 
 global sbertModel
-print("loading sbert model")
 sbertModel = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 global embeddings
 embeddings = {} # key => { value, vector }
@@ -47,6 +46,9 @@ def search(query: str, nResults: int):
 def save(key: str, data):
     filename = root + "/" + stringToHash(key) + ".json"
     print("saving", filename)
+    folder = os.path.dirname(filename)
+    if folder != '':
+        os.makedirs(folder, exist_ok=True)
     value = data['value']
     list = (data['vector']).tolist()        # stored as numpy array in memory
     obj = { 'key' : key, 'data' : { 'value' : value, 'vector' : list } }
@@ -88,7 +90,7 @@ def stringToHash(input_string):
     hash_obj = hashlib.sha256()
     hash_obj.update(input_string.encode('utf-8'))
     hash_hex = hash_obj.hexdigest()
-    return hash_hex[0:16]
+    return hash_hex[0:32]
 
 if __name__ == "__main__":
     load()
