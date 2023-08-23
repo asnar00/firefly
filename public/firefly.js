@@ -121,7 +121,6 @@ function moveLogo() {
     let xScroll = window.scrollX;
     let logo = document.getElementById("logo_and_shadow");
     let yMax = s_graphView.yMax(xScroll + 100);
-    console.log("logo.style.left", logo.style.left);
     if (yMax) {
         logo.style.top = `${yMax + 64}px`;
     }
