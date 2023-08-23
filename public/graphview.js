@@ -253,6 +253,24 @@ export class GraphView {
         }
         return x;
     }
+    // bottom edge of colum at xPos, or null if none intersect
+    yMax(xPos) {
+        for (let i = 0; i < this.columns.length; i++) {
+            let xMin = Infinity;
+            let xMax = -1;
+            let yBottom = 0;
+            for (let node of this.columns[i]) {
+                const r = rect(node.div);
+                xMin = Math.min(r.left, xMin);
+                xMax = Math.max(r.right + this.padding * 2, xMax);
+                yBottom = Math.max(r.bottom, yBottom);
+            }
+            if (xMin <= xPos && xMax >= xPos) {
+                return yBottom;
+            }
+        }
+        return null;
+    }
     // update
     update() {
         if (this.anyNodeSizeChanged()) {

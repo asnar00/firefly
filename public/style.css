@@ -9,7 +9,7 @@ body {
 }
 
 .logo {
-    position: absolute;
+    position: fixed;
 }
 
 .container {

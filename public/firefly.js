@@ -106,6 +106,7 @@ function logo() {
     const logo = document.getElementById('logo_and_shadow');
     logo.style.left = `${(window.innerWidth - logo.offsetWidth) / 2}px`;
     logo.style.top = `${(window.innerHeight / 2) - 40}px`;
+    logo.style.transition = `top 0.25s`;
 }
 function graph() {
     const container = document.getElementById('container');
@@ -113,7 +114,20 @@ function graph() {
 }
 function eventLoop() {
     s_graphView.update();
+    moveLogo();
     requestAnimationFrame(eventLoop);
+}
+function moveLogo() {
+    let xScroll = window.scrollX;
+    let logo = document.getElementById("logo_and_shadow");
+    let yMax = s_graphView.yMax(xScroll + 100);
+    console.log("logo.style.left", logo.style.left);
+    if (yMax) {
+        logo.style.top = `${yMax + 64}px`;
+    }
+    else {
+        logo.style.top = `${(window.innerHeight / 2) - 40}px`;
+    }
 }
 function loadCards() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -235,6 +249,8 @@ function callChain(from, to) {
 }
 // returns a list of { dep, card } to get from a to b
 function callChainRec(from, to, iDepFrom = -1) {
+    if (from.kind != "method" && from.kind != "function")
+        return []; // only callables
     if (visited(from))
         return [];
     if (from === to)
