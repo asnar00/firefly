@@ -11491,10 +11491,10 @@
             "outputs": "",
             "code": [
                 {
-                    "text": "function moveLogo() {\n    let xScroll = window.scrollX;\n    let logo = document.getElementById(\"logo_and_shadow\")!;\n    let shadow = document.getElementById(\"logo_shadow\")!;\n    let [yMin, yMax] = s_graphView.yRange(xScroll + rect(logo).width() + 50);\n    if (yMin && yMax) {\n        logo.style.top = `${yMin - 80}px`;\n        shadow.style.top = `${document.body.clientHeight - yMin - 100}px`;\n    } else {\n        logo.style.top = `${(window.innerHeight/2)-40}px`;\n    }\n}",
+                    "text": "function moveLogo() {\n    let xScroll = window.scrollX;\n    let logo = document.getElementById(\"logo_and_shadow\")!;\n    let shadow = document.getElementById(\"logo_shadow\")!;\n    let [yMin, yMax] = s_graphView.yRange(xScroll + rect(logo).width() + 50);\n    if (yMin && yMax) {\n        logo.style.top = `${yMin - 80}px`;\n        shadow.style.top = `${document.body.clientHeight - yMin - 100}px`;\n    } else {\n        logo.style.top = `${(window.innerHeight/2)-40}px`;\n        shadow.style.top = `${45}px`;\n    }\n}",
                     "language": "ts",
                     "iLine": 111,
-                    "jLine": 122
+                    "jLine": 123
                 }
             ],
             "dependsOn": [
@@ -11568,8 +11568,8 @@
                 {
                     "text": "async function loadCards() {\n    console.log(\"loadCards\");\n    if (s_useLocalFiles) {\n        await importLocalFolder();\n    } \n    const jsonObj = await importFolders(\"firefly\", [\"ts\", \"py\"]);\n    s_allCards = jsonObj.cards as Card[];\n    console.log(\"nCards:\", s_allCards.length);\n}",
                     "language": "ts",
-                    "iLine": 124,
-                    "jLine": 132
+                    "iLine": 125,
+                    "jLine": 133
                 }
             ],
             "dependsOn": [
@@ -11635,8 +11635,8 @@
                 {
                     "text": "async function openSession() {\n    let json = await load(\"session/test.json\");\n    if (json.error) {\n        console.log(\"failed to load session:\", json.error);\n        openMain();\n    } else {\n        s_graphView.openJson(json);\n    }\n}",
                     "language": "ts",
-                    "iLine": 134,
-                    "jLine": 142
+                    "iLine": 135,
+                    "jLine": 143
                 }
             ],
             "dependsOn": [
@@ -11703,8 +11703,8 @@
                 {
                     "text": "function openMain() {\n    openCard(\"ts_firefly_firefly_function_main\", null);\n}",
                     "language": "ts",
-                    "iLine": 144,
-                    "jLine": 146
+                    "iLine": 145,
+                    "jLine": 147
                 }
             ],
             "dependsOn": [
@@ -11742,8 +11742,8 @@
                 {
                     "text": "function reset() {\n    s_graphView.reset();\n}",
                     "language": "ts",
-                    "iLine": 148,
-                    "jLine": 150
+                    "iLine": 149,
+                    "jLine": 151
                 }
             ],
             "dependsOn": [
@@ -11781,8 +11781,8 @@
                 {
                     "text": "function searchBox() {\n    const searchFieldHTML = `<div class=\"search-field\" id=\"search-field\" contenteditable=\"true\" spellcheck=\"false\"></div>`;\n    const iconHTML = `<i class=\"icon-search\" style=\"padding-top: 6px;\"></i>`;\n    const searchResultsHTML = `<div class=\"search-results\" id=\"search-results\"></div>`;\n    const searchDivHTML = `<div class=\"search-box\" id=\"search-box\">${iconHTML}${searchFieldHTML}${searchResultsHTML}</div>`;\n    const shadow = element(`<div class=\"shadow\"></div>`);\n    let searchDiv = element(searchDivHTML);\n    document.body.append(searchDiv);\n    searchDiv.style.top = `${window.innerHeight -  64}px`;\n    let searchField = document.getElementById(\"search-field\")!;\n    searchField.addEventListener('keydown', async (event) => {\n        if (event.key ===\"Enter\") {\n            event.preventDefault();\n            const results = await testSearch(searchField!.innerText);\n            showSearchResults(results);\n        }\n    });\n\n    document.body.append(shadow);\n    const sr = rect(searchDiv);\n    shadow.style.position = `absolute`;\n    shadow.style.left = `${sr.left-8}px`;\n    shadow.style.top = `${sr.bottom + 16}px`;\n    shadow.style.width = `${sr.width()+16}px`;\n}",
                     "language": "ts",
-                    "iLine": 152,
-                    "jLine": 176
+                    "iLine": 153,
+                    "jLine": 177
                 }
             ],
             "dependsOn": [
@@ -11877,8 +11877,8 @@
                 {
                     "text": "async function testSearch(query: string) : Promise<any>{\n    console.log(\"testSearch\");\n    console.log(query);\n    let tNow = performance.now();\n    const results = await search(query);\n    let tElapsed = performance.now() - tNow;\n    //console.log(`result:\\n${JSON.stringify(results)}`);\n    //console.log(`took ${tElapsed} msec`);\n    return results;\n}",
                     "language": "ts",
-                    "iLine": 179,
-                    "jLine": 188
+                    "iLine": 180,
+                    "jLine": 189
                 }
             ],
             "dependsOn": [
@@ -11923,8 +11923,8 @@
                 {
                     "text": "function showSearchResults(results: any) {\n    console.log(\"search results:\");\n    let searchResultsDiv = document.getElementById(\"search-results\")!;\n    clearSearchResults(searchResultsDiv);\n    const array = results.results;\n    for(const item of array) {\n        const id = item.value;\n        const card = findCard(id);\n        if (!card) {\n            console.log(\"  unknown:\", id);\n        } else {\n            const name = shortName(card);\n            console.log(\"  \", name);\n            if (card.kind == \"function\" || card.kind == \"method\" || card.kind == \"class\") {\n                let searchResultDiv = element(`<div class=\"search-result\">${name}</div>`);\n                listen(searchResultDiv, 'click', () => { jumpToCard(card)});\n                searchResultsDiv.append(searchResultDiv);\n            }\n        }\n    }\n}",
                     "language": "ts",
-                    "iLine": 190,
-                    "jLine": 210
+                    "iLine": 191,
+                    "jLine": 211
                 }
             ],
             "dependsOn": [
@@ -12011,8 +12011,8 @@
                 {
                     "text": "class Link {\n    iDep: number =-1;               // dependency index in caller\n    card: Card | null = null;       // card to open\n    constructor(iDep: number, card: Card) {\n        this.iDep = iDep; this.card = card;\n    }\n}",
                     "language": "ts",
-                    "iLine": 212,
-                    "jLine": 218
+                    "iLine": 213,
+                    "jLine": 219
                 }
             ],
             "dependsOn": [
@@ -12082,8 +12082,8 @@
                 {
                     "text": "function jumpToCard(target: Card) {\n    console.log(\"jumpToCard\", target.uid);\n    let mainCard = findCard(\"ts_firefly_firefly_function_main\");\n    if (!mainCard) return;\n    let chain : Link[] = callChain(mainCard, target);\n    console.log(chain);\n    if (chain.length==0) return;\n    //reset();\n    let card : Card = mainCard;\n    for(let link of chain) {\n        const cardID = link.card!.uid;\n        console.log(\"open\", cardID, `linkto_${cardID}`, card.uid);\n        s_graphView.open(cardID, `linkto_${cardID}`, card.uid, new CardView(CardViewState.Compact), false);\n        card = link.card!;\n    }\n    s_graphView.attention(s_graphView.find(card.uid)!);\n}",
                     "language": "ts",
-                    "iLine": 220,
-                    "jLine": 236
+                    "iLine": 221,
+                    "jLine": 237
                 }
             ],
             "dependsOn": [
@@ -12191,8 +12191,8 @@
                 {
                     "text": "function callChain(from: Card, to: Card) : Link[] {\n    newVisitPass();\n    return callChainRec(from, to).slice(1);\n}",
                     "language": "ts",
-                    "iLine": 239,
-                    "jLine": 242
+                    "iLine": 240,
+                    "jLine": 243
                 }
             ],
             "dependsOn": [
@@ -12251,8 +12251,8 @@
                 {
                     "text": "// returns a list of { dep, card } to get from a to b\nfunction callChainRec(from: Card, to: Card, iDepFrom: number=-1) : Link[]  {\n    if (from.kind != \"method\" && from.kind != \"function\") return []; // only callables\n    if (visited(from)) return [];\n    if (from === to) return [ new Link(iDepFrom, from) ];\n    let iDep = findDependency(from, to);\n    if (iDep >= 0) return [ new Link(iDepFrom, from), new Link(iDep, to) ];\n    visit(from);        // prevent us from going down this path again\n    for(let iDep = 0; iDep < from.dependsOn.length; iDep++) {\n        const dep = from.dependsOn[iDep];\n        for(const t of dep.targets) {\n            const chain = callChainRec(findCard(t)!, to, iDep);\n            if (chain.length != 0) {\n                return [ new Link(iDepFrom, from), ...chain ];\n            }\n        }\n    }\n    return [];\n}",
                     "language": "ts",
-                    "iLine": 244,
-                    "jLine": 262
+                    "iLine": 245,
+                    "jLine": 263
                 }
             ],
             "dependsOn": [
@@ -12353,8 +12353,8 @@
                 {
                     "text": "let s_visit: number = 0;",
                     "language": "ts",
-                    "iLine": 264,
-                    "jLine": 264
+                    "iLine": 265,
+                    "jLine": 265
                 }
             ],
             "dependsOn": [],
@@ -12398,8 +12398,8 @@
                 {
                     "text": "let s_visitCount: Map<Card, number> = new Map();",
                     "language": "ts",
-                    "iLine": 265,
-                    "jLine": 265
+                    "iLine": 266,
+                    "jLine": 266
                 }
             ],
             "dependsOn": [
@@ -12444,8 +12444,8 @@
                 {
                     "text": "function newVisitPass() { s_visit ++; }",
                     "language": "ts",
-                    "iLine": 267,
-                    "jLine": 267
+                    "iLine": 268,
+                    "jLine": 268
                 }
             ],
             "dependsOn": [
@@ -12483,8 +12483,8 @@
                 {
                     "text": "function visited(card: Card) : boolean {\n    let vc = s_visitCount.get(card);\n    return (vc && vc == s_visit) ? true : false;\n}",
                     "language": "ts",
-                    "iLine": 268,
-                    "jLine": 271
+                    "iLine": 269,
+                    "jLine": 272
                 }
             ],
             "dependsOn": [
@@ -12543,8 +12543,8 @@
                 {
                     "text": "function visit(card: Card) {\n    s_visitCount.set(card, s_visit);\n}",
                     "language": "ts",
-                    "iLine": 272,
-                    "jLine": 274
+                    "iLine": 273,
+                    "jLine": 275
                 }
             ],
             "dependsOn": [
@@ -12596,8 +12596,8 @@
                 {
                     "text": "// given (card) and (target), checks card.dependsOn and returns index of dependency that matches\nfunction findDependency(card: Card, target: Card) : number {\n    return card.dependsOn.findIndex(d => (d.targets.indexOf(target.uid) >= 0));\n}",
                     "language": "ts",
-                    "iLine": 276,
-                    "jLine": 279
+                    "iLine": 277,
+                    "jLine": 280
                 }
             ],
             "dependsOn": [
@@ -12649,8 +12649,8 @@
                 {
                     "text": "function clearSearchResults(searchDiv: HTMLElement) {\n    if (searchDiv) {\n        while (searchDiv.children.length > 0) {\n            searchDiv.removeChild(searchDiv.lastChild!);\n        }\n    }\n}",
                     "language": "ts",
-                    "iLine": 282,
-                    "jLine": 288
+                    "iLine": 283,
+                    "jLine": 289
                 }
             ],
             "dependsOn": [
@@ -12688,8 +12688,8 @@
                 {
                     "text": "async function search(query: string) : Promise<any> {\n    return await remote(\"@firefly.search\", { query });\n}",
                     "language": "ts",
-                    "iLine": 290,
-                    "jLine": 292
+                    "iLine": 291,
+                    "jLine": 293
                 }
             ],
             "dependsOn": [
@@ -12749,8 +12749,8 @@
                 {
                     "text": "async function importLocalFolder() {\n    let logo: HTMLButtonElement = document.getElementById('logo_and_shadow') as HTMLButtonElement;\n    let button = element(`<button id=\"openDirectory\" class=\"transparent-button\" style=\"display: inline-block;\">\n                            <h3 style=\"display: inline-block;\">\u25b6\ufe0e</h3></button>`);\n    logo.insertBefore(button, logo.children[1]);\n    button.addEventListener('click', async () => {\n        if (!(window as any).showDirectoryPicker) {\n            console.log(\"showDirectoryPicker is null\");\n            return;\n        }\n        dirHandle = await (window as any).showDirectoryPicker!();\n        button.remove();\n        await importLocalFile();\n    });\n}",
                     "language": "ts",
-                    "iLine": 294,
-                    "jLine": 308
+                    "iLine": 295,
+                    "jLine": 309
                 }
             ],
             "dependsOn": [
@@ -12824,8 +12824,8 @@
                 {
                     "text": "// test-reads the first file and sets text in browser\nasync function importLocalFile() {\n    console.log(\"importLocalFile\");\n    // Assuming we are just reading the first file we find.\n    console.log(\"values...\");\n    for await (const entry of dirHandle.values()) {\n        if (entry.kind === 'file') {\n            console.log(\"getFile...\");\n            const file = await (entry as any).getFile();\n            const filename : string = file.name; // Assuming 'file' has a 'name' property with the filename.\n            if (filename.startsWith(\".\")) continue;\n            const parts = filename.split('.');\n            const ext = parts.length > 1 ? '.' + parts.pop() : '';\n            console.log(\"readFileAsText...\");\n            console.log(`ext = '${ext}'`);\n            const fullText = await readFileAsText(file);\n            console.log(\"NOT IMPLEMENTED YET\"); // todo: implement by reading files, horking them over to the server, then following the normal channels\n            break;\n        }\n    }\n}",
                     "language": "ts",
-                    "iLine": 310,
-                    "jLine": 330
+                    "iLine": 311,
+                    "jLine": 331
                 }
             ],
             "dependsOn": [
@@ -12878,8 +12878,8 @@
                 {
                     "text": "// Read file on client machine in folder\nfunction readFileAsText(file: File): Promise<string> {\n    return new Promise((resolve, reject) => {\n        const reader = new FileReader();\n        reader.onload = event => resolve(event.target!.result as string);\n        reader.onerror = error => reject(error);\n        reader.readAsText(file);\n    });\n}",
                     "language": "ts",
-                    "iLine": 332,
-                    "jLine": 340
+                    "iLine": 333,
+                    "jLine": 341
                 }
             ],
             "dependsOn": [],
@@ -12909,8 +12909,8 @@
                 {
                     "text": "// move the logo and shadow to the left of the window\nasync function animateLogoToLeft(): Promise<void> {\n    return new Promise((resolve, reject) => {\n        const logoAndShadow = document.getElementById(\"logo_and_shadow\")!;\n\n        // Set animation properties\n        logoAndShadow.style.animationName = \"moveToLeft\";\n        logoAndShadow.style.animationDuration = \"0.25s\";\n        logoAndShadow.style.animationTimingFunction = \"ease-in-out\";\n        logoAndShadow.style.animationFillMode = \"forwards\"; \n\n        // Attach the animationend event listener\n        logoAndShadow.addEventListener('animationend', function onAnimationEnd() {\n            // Remove the event listener to prevent memory leaks\n            logoAndShadow.removeEventListener('animationend', onAnimationEnd);\n            resolve();\n        });\n\n        // Start the animation\n        logoAndShadow.style.left = \"0\";\n    });\n}",
                     "language": "ts",
-                    "iLine": 342,
-                    "jLine": 363
+                    "iLine": 343,
+                    "jLine": 364
                 }
             ],
             "dependsOn": [
@@ -12948,8 +12948,8 @@
                 {
                     "text": "async function importFolders(project: string, folders: string[]) {\n    return await remote(\"@firefly.importFolders\", { project: project, folders: folders });\n}",
                     "language": "ts",
-                    "iLine": 365,
-                    "jLine": 367
+                    "iLine": 366,
+                    "jLine": 368
                 }
             ],
             "dependsOn": [
@@ -12994,8 +12994,8 @@
                 {
                     "text": "// finds the card with the given UID, or null if doesn't exist\nfunction findCard(uid: string) : Card | null {\n    let index = s_allCards.findIndex((card : any ) => card.uid === uid);\n    if (index < 0) return null;\n    return s_allCards[index];\n}",
                     "language": "ts",
-                    "iLine": 369,
-                    "jLine": 374
+                    "iLine": 370,
+                    "jLine": 375
                 }
             ],
             "dependsOn": [
@@ -13082,8 +13082,8 @@
                 {
                     "text": "// generates HTML for card, but doesn't connect it yet\nfunction cardToHTML(id: string, view: CardView) : HTMLElement {\n    let card : Card | null = findCard(id);\n    if (!card) { return element(`<div></div>`); }\n    let style = \"code\"; if (view.state == CardViewState.Fullsize) { style += \" code-expanded\"; }\n    let elem : HTMLElement = element(`<div id=\"code_${card.uid}\" class=\"${style}\" spellcheck=\"false\" contenteditable=\"false\"></div>`);\n    let text : string = card.code[0].text;\n    if (card.dependsOn.length==0) {\n        elem.innerText = text;\n    } else {\n        let iChar : number = 0;\n        for(const dep of card.dependsOn) {\n            // add text-node going from (iChar) to (dep.iChar)\n            if (dep.iChar > iChar) {\n                elem.appendChild(document.createTextNode(text.slice(iChar, dep.iChar)));\n            }\n            // add span containing the link\n            const link = text.slice(dep.iChar, dep.jChar);\n            let linkId = \"linkto_\" + dep.targets[0];\n            for(let i = 1; i < dep.targets.length; i++) {\n                linkId += \"__\" + dep.targets[i];\n            }\n            const child = element(`<span class=\"tag\" id=\"${linkId}\">${link}</span>`);\n            listen(child, 'click', async function(event: any) {\n                onLinkButtonPress(child);\n            });\n            elem.appendChild(child);\n            // step\n            iChar = dep.jChar;\n        }\n        // add text-node for the remaining bit of text\n        if (iChar < text.length) {\n            elem.appendChild(document.createTextNode(text.slice(iChar, text.length)));\n        }\n    }\n    setTimeout(() => { elem.scrollLeft = view.xScroll; elem.scrollTop = view.yScroll;}, 0);\n    listen(elem, 'click', function() { expandOrContract(elem); });\n    listen(elem, 'scroll', function(event: any) { getScrollPos(elem); });\n    let container = codeContainer(elem, shortName(card));\n    container.id = card.uid;\n    return container;\n}",
                     "language": "ts",
-                    "iLine": 376,
-                    "jLine": 417
+                    "iLine": 377,
+                    "jLine": 418
                 }
             ],
             "dependsOn": [
@@ -13249,8 +13249,8 @@
                 {
                     "text": "function codeContainer(codeDiv: HTMLElement, title: string) : HTMLElement {\n    const containerDiv = document.createElement('div');\n    containerDiv.className = 'code-container';\n\n    // Create the title div\n    const titleDiv = document.createElement('div');\n    titleDiv.className = 'code-title';\n    titleDiv.textContent = title;\n\n    // Append the title and the code div to the container\n    containerDiv.appendChild(titleDiv);\n    containerDiv.appendChild(codeDiv);\n\n    return containerDiv;\n}",
                     "language": "ts",
-                    "iLine": 419,
-                    "jLine": 433
+                    "iLine": 420,
+                    "jLine": 434
                 }
             ],
             "dependsOn": [],
@@ -13280,8 +13280,8 @@
                 {
                     "text": "function shortName(card: Card) : string {\n    let result: string = \"\";\n    if (card.parent != \"null\") { result += findCard(card.parent)!.name + \".\"; }\n    result += card.name;\n    if (card.kind==\"method\" || card.kind==\"function\") result += \"()\";\n    return result;\n}",
                     "language": "ts",
-                    "iLine": 435,
-                    "jLine": 441
+                    "iLine": 436,
+                    "jLine": 442
                 }
             ],
             "dependsOn": [
@@ -13347,8 +13347,8 @@
                 {
                     "text": "function highlightLink(linkDiv: HTMLElement, highlight: boolean) {\n    if (highlight) linkDiv.className = \"tag-highlight\"; else linkDiv.className = \"tag\";\n}",
                     "language": "ts",
-                    "iLine": 443,
-                    "jLine": 445
+                    "iLine": 444,
+                    "jLine": 446
                 }
             ],
             "dependsOn": [],
@@ -13392,8 +13392,8 @@
                 {
                     "text": "function listen(elem: HTMLElement, type: string, func: Function) {\n    elem.addEventListener(type, async (event) => {\n        //console.log(`${type}: ${elem.id}`);\n        await func(event);  // Assuming func is synchronous. If it's async, use await func(event);\n        event.stopPropagation();\n        debouncedSaveAll();\n    });\n}",
                     "language": "ts",
-                    "iLine": 447,
-                    "jLine": 454
+                    "iLine": 448,
+                    "jLine": 455
                 }
             ],
             "dependsOn": [
@@ -13438,8 +13438,8 @@
                 {
                     "text": "function expandOrContract(elem : HTMLElement) {\n    let div = elem.parentElement!;\n    let view = s_graphView.userObj(div);\n    if (view.state == CardViewState.Compact) {\n        elem.classList.add(\"code-expanded\");\n        view.state = CardViewState.Fullsize;\n\n    } else if (view.state == CardViewState.Fullsize) {\n         elem.classList.remove(\"code-expanded\");\n         view.state = CardViewState.Compact;\n         elem.scrollLeft = view.xScroll;\n         elem.scrollTop = view.yScroll;\n    }\n    s_graphView.emphasize(div, elem.classList.contains(\"code-expanded\"));\n    s_graphView.attention(div);\n}",
                     "language": "ts",
-                    "iLine": 456,
-                    "jLine": 471
+                    "iLine": 457,
+                    "jLine": 472
                 }
             ],
             "dependsOn": [
@@ -13537,8 +13537,8 @@
                 {
                     "text": "function getScrollPos(elem: HTMLElement) {\n    let div = elem.parentElement!;\n    let view = s_graphView.userObj(div);\n    if (view.state == CardViewState.Compact) {\n        view.xScroll = div.scrollLeft;\n        view.yScroll = div.scrollTop;\n    }\n}",
                     "language": "ts",
-                    "iLine": 473,
-                    "jLine": 480
+                    "iLine": 474,
+                    "jLine": 481
                 }
             ],
             "dependsOn": [
@@ -13607,8 +13607,8 @@
                 {
                     "text": "const debouncedSaveAll = debounce(() => { saveAll() }, 300);",
                     "language": "ts",
-                    "iLine": 482,
-                    "jLine": 482
+                    "iLine": 483,
+                    "jLine": 483
                 }
             ],
             "dependsOn": [
@@ -13653,8 +13653,8 @@
                 {
                     "text": "async function saveAll() {\n    //console.log(\"saveAll\");\n    const json = s_graphView.json();\n    await save(json, \"sessions/test.json\");\n}",
                     "language": "ts",
-                    "iLine": 484,
-                    "jLine": 488
+                    "iLine": 485,
+                    "jLine": 489
                 }
             ],
             "dependsOn": [
@@ -13707,8 +13707,8 @@
                 {
                     "text": "async function save(json: any, path: string) {\n    await remote(\"@firefly.save\", { path: \"sessions/test.json\", obj: json });\n}",
                     "language": "ts",
-                    "iLine": 490,
-                    "jLine": 492
+                    "iLine": 491,
+                    "jLine": 493
                 }
             ],
             "dependsOn": [
@@ -13762,8 +13762,8 @@
                 {
                     "text": "async function load(path: string) : Promise<any> {\n    return await remote(\"@firefly.load\", { path: \"sessions/test.json\"});\n}",
                     "language": "ts",
-                    "iLine": 494,
-                    "jLine": 496
+                    "iLine": 495,
+                    "jLine": 497
                 }
             ],
             "dependsOn": [
@@ -13817,8 +13817,8 @@
                 {
                     "text": "// link button pressed\nfunction onLinkButtonPress(button: HTMLElement) {\n    const id = button.id.slice(\"linkto_\".length);\n    const linkIDs = id.split(\"__\");\n    for(const linkID of linkIDs) {\n        openOrCloseCard(linkID, button);\n    }\n}",
                     "language": "ts",
-                    "iLine": 498,
-                    "jLine": 505
+                    "iLine": 499,
+                    "jLine": 506
                 }
             ],
             "dependsOn": [
@@ -13856,8 +13856,8 @@
                 {
                     "text": "// if a card view is closed, opens it; otherwise closes it\nfunction openOrCloseCard(uid: string, button: HTMLElement) {\n    const card : Card | null = findCard(uid);\n    if (!card) return;\n    let existing = s_graphView.find(uid);\n    if (existing) {\n        closeCard(existing);\n    } else {\n        openCard(uid, button);\n    }\n}",
                     "language": "ts",
-                    "iLine": 507,
-                    "jLine": 517
+                    "iLine": 508,
+                    "jLine": 518
                 }
             ],
             "dependsOn": [
@@ -13930,8 +13930,8 @@
                 {
                     "text": "// opens a card, optionally connected to a button element\nfunction openCard(uid: string, button: HTMLElement | null){\n    let linkID = \"\";\n    let parentID = \"\";\n    if (button) {\n        linkID = button.id;\n        let parent = s_graphView.findDivContainingLink(button);\n        if (parent) parentID = parent.id;\n    }\n    s_graphView.reopen(uid, linkID, parentID, new CardView(CardViewState.Compact));\n    if (button) {\n        highlightLink(button, true);\n    }\n}",
                     "language": "ts",
-                    "iLine": 519,
-                    "jLine": 532
+                    "iLine": 520,
+                    "jLine": 533
                 }
             ],
             "dependsOn": [
@@ -14004,8 +14004,8 @@
                 {
                     "text": "// closes a card\nfunction closeCard(cardDiv: HTMLElement) {\n    let button = s_graphView.findLink(cardDiv);\n    if (button) {\n        highlightLink(button, false);\n    }\n    s_graphView.close(cardDiv);\n}",
                     "language": "ts",
-                    "iLine": 534,
-                    "jLine": 541
+                    "iLine": 535,
+                    "jLine": 542
                 }
             ],
             "dependsOn": [
@@ -15165,8 +15165,8 @@
                 {
                     "text": "iDep: number =-1;               // dependency index in caller",
                     "language": "ts",
-                    "iLine": 215,
-                    "jLine": 215
+                    "iLine": 216,
+                    "jLine": 216
                 }
             ],
             "dependsOn": [],
@@ -15203,8 +15203,8 @@
                 {
                     "text": "card: Card | null = null;       // card to open",
                     "language": "ts",
-                    "iLine": 216,
-                    "jLine": 216
+                    "iLine": 217,
+                    "jLine": 217
                 }
             ],
             "dependsOn": [
@@ -15256,8 +15256,8 @@
                 {
                     "text": "    constructor(iDep: number, card: Card) {\n        this.iDep = iDep; this.card = card;\n    }\n}",
                     "language": "ts",
-                    "iLine": 217,
-                    "jLine": 220
+                    "iLine": 218,
+                    "jLine": 221
                 }
             ],
             "dependsOn": [

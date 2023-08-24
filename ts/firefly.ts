@@ -118,6 +118,7 @@ function moveLogo() {
         shadow.style.top = `${document.body.clientHeight - yMin - 100}px`;
     } else {
         logo.style.top = `${(window.innerHeight/2)-40}px`;
+        shadow.style.top = `${45}px`;
     }
 }
 

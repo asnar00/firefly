@@ -130,6 +130,7 @@ function moveLogo() {
     }
     else {
         logo.style.top = `${(window.innerHeight / 2) - 40}px`;
+        shadow.style.top = `${45}px`;
     }
 }
 function loadCards() {
