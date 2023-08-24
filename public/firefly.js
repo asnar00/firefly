@@ -104,9 +104,11 @@ function init() {
 }
 function logo() {
     const logo = document.getElementById('logo_and_shadow');
+    let shadow = document.getElementById("logo_shadow");
     logo.style.left = `${(window.innerWidth - logo.offsetWidth) / 2}px`;
     logo.style.top = `${(window.innerHeight / 2) - 40}px`;
     logo.style.transition = `top 0.25s`;
+    shadow.style.transition = `top 0.25s`;
 }
 function graph() {
     const container = document.getElementById('container');
@@ -120,9 +122,11 @@ function eventLoop() {
 function moveLogo() {
     let xScroll = window.scrollX;
     let logo = document.getElementById("logo_and_shadow");
-    let yMax = s_graphView.yMax(xScroll + 100);
-    if (yMax) {
-        logo.style.top = `${yMax + 64}px`;
+    let shadow = document.getElementById("logo_shadow");
+    let [yMin, yMax] = s_graphView.yRange(xScroll + rect(logo).width() + 50);
+    if (yMin && yMax) {
+        logo.style.top = `${yMin - 80}px`;
+        shadow.style.top = `${document.body.clientHeight - yMin - 100}px`;
     }
     else {
         logo.style.top = `${(window.innerHeight / 2) - 40}px`;

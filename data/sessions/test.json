@@ -1,5 +1,5 @@
 {
-    "xScroll": 694,
+    "xScroll": 1199,
     "yScroll": 0,
     "nodes": [
         {
@@ -25,12 +25,146 @@
             }
         },
         {
-            "id": "ts_firefly_firefly_function_init",
-            "link": "linkto_ts_firefly_firefly_function_init",
+            "id": "ts_firefly_firefly_function_openSession",
+            "link": "linkto_ts_firefly_firefly_function_openSession",
             "parent": "ts_firefly_firefly_function_run",
+            "emphasize": true,
+            "userObj": {
+                "state": 2,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_method_GraphView_openJson",
+            "link": "linkto_ts_firefly_graphview_method_GraphView_openJson",
+            "parent": "ts_firefly_firefly_function_openSession",
             "emphasize": false,
             "userObj": {
                 "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_method_GraphView_openJsonNodeList",
+            "link": "linkto_ts_firefly_graphview_method_GraphView_openJsonNodeList",
+            "parent": "ts_firefly_graphview_method_GraphView_openJson",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_property_Card_parent",
+            "link": "linkto_ts_firefly_firefly_property_Card_parent",
+            "parent": "ts_firefly_graphview_method_GraphView_openJsonNodeList",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_method_GraphView_open",
+            "link": "linkto_ts_firefly_graphview_method_GraphView_open",
+            "parent": "ts_firefly_graphview_method_GraphView_openJsonNodeList",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_property_GraphView_htmlFunction",
+            "link": "linkto_ts_firefly_graphview_property_GraphView_htmlFunction",
+            "parent": "ts_firefly_graphview_method_GraphView_open",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        }
+    ],
+    "closed": [
+        {
+            "id": "ts_firefly_firefly_function_moveLogo",
+            "link": "linkto_ts_firefly_firefly_function_moveLogo",
+            "parent": "ts_firefly_firefly_function_eventLoop",
+            "emphasize": true,
+            "userObj": {
+                "state": 2,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_method_GraphView_yMax",
+            "link": "linkto_ts_firefly_graphview_method_GraphView_yMax",
+            "parent": "ts_firefly_firefly_function_moveLogo",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_property_GraphView_columns",
+            "link": "linkto_ts_firefly_graphview_property_GraphView_columns",
+            "parent": "ts_firefly_graphview_method_GraphView_yMax",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_firefly_function_importFolders",
+            "link": "linkto_py_firefly_firefly_function_importFolders",
+            "parent": "ts_firefly_firefly_function_importFolders",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_firefly_function_importAllCards",
+            "link": "linkto_py_firefly_firefly_function_importAllCards",
+            "parent": "py_firefly_firefly_function_importFolders",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_firefly_function_importCardsFromFile",
+            "link": "linkto_py_firefly_firefly_function_importCardsFromFile",
+            "parent": "py_firefly_firefly_function_importAllCards",
+            "emphasize": false,
+            "userObj": {
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_firefly_function_importCards",
+            "link": "linkto_py_firefly_firefly_function_importCards",
+            "parent": "py_firefly_firefly_function_importCardsFromFile",
+            "emphasize": true,
+            "userObj": {
+                "state": 2,
                 "xScroll": 0,
                 "yScroll": 0
             }
@@ -166,68 +300,11 @@
                 "xScroll": 0,
                 "yScroll": 0
             }
-        }
-    ],
-    "closed": [
-        {
-            "id": "ts_firefly_graphview_method_GraphView_openJson",
-            "link": "linkto_ts_firefly_graphview_method_GraphView_openJson",
-            "parent": "ts_firefly_firefly_function_openSession",
-            "emphasize": true,
-            "userObj": {
-                "state": 2,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_graphview_method_GraphView_openJsonNodeList",
-            "link": "linkto_ts_firefly_graphview_method_GraphView_openJsonNodeList",
-            "parent": "ts_firefly_graphview_method_GraphView_openJson",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
         },
         {
             "id": "ts_firefly_firefly_function_openMain",
             "link": "linkto_ts_firefly_firefly_function_openMain",
             "parent": "ts_firefly_firefly_function_openSession",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_firefly_function_moveLogo",
-            "link": "linkto_ts_firefly_firefly_function_moveLogo",
-            "parent": "ts_firefly_firefly_function_eventLoop",
-            "emphasize": true,
-            "userObj": {
-                "state": 2,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_graphview_method_GraphView_yMax",
-            "link": "linkto_ts_firefly_graphview_method_GraphView_yMax",
-            "parent": "ts_firefly_firefly_function_moveLogo",
-            "emphasize": false,
-            "userObj": {
-                "state": 1,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "ts_firefly_graphview_property_GraphView_columns",
-            "link": "linkto_ts_firefly_graphview_property_GraphView_columns",
-            "parent": "ts_firefly_graphview_method_GraphView_yMax",
             "emphasize": false,
             "userObj": {
                 "state": 1,
