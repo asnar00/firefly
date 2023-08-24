@@ -15,6 +15,8 @@ const s_useLocalFiles = false;              // change this to true to enable loc
 let dirHandle: any | null = null;
 var s_allCards: Card[];
 var s_graphView : GraphView;
+let s_mainIcon = "icon-search";
+let s_mainOption = "search";
 
 class CodeBlock {
     text: string = "";                  // actual code text
@@ -153,8 +155,8 @@ function reset() {
 
 function searchBox() {
     const searchFieldHTML = `<div class="search-field" id="search-field" contenteditable="true" spellcheck="false"></div>`;
-    const iconHTML = `<i class="icon-search" style="padding-top: 6px;"></i>`;
-    const icon2HTML = `<i class="icon-right-open" style="padding-top: 6px; padding-right:3px"></i>`;
+    const iconHTML = `<i class="${s_mainIcon}" style="padding-top: 6px;" id="search-button"></i>`;
+    const icon2HTML = `<i class="icon-right-big" style="padding-top: 6px; padding-right:3px"></i>`;
     const searchResultsHTML = `<div class="search-results" id="search-results"></div>`;
     const searchDivHTML = `<div class="search-box" id="search-box">${iconHTML}${searchFieldHTML}${icon2HTML}${searchResultsHTML}</div>`;
     const shadow = element(`<div class="shadow"></div>`);
@@ -163,24 +165,50 @@ function searchBox() {
     searchDiv.style.top = `${window.innerHeight -  64}px`;
     let searchField = document.getElementById("search-field")!;
     searchField.addEventListener('keydown', async (event) => {
-        searchField.style.width = '128px';
-        if (searchField.scrollWidth < 512) {
-            searchField.style.width = `${searchField.scrollWidth}px`;
-        } else {
-            searchField.style.width = '512px';
-        }
-        setTimeout(async () => {
-            const results = await testSearch(searchField!.innerText);
-            showSearchResults(results);
-        }, 0);
+        await updateSearch(searchField);
     });
+    let searchButton = document.getElementById("search-button")!;
+    searchButton.style.cursor = 'pointer';
+    listen(searchButton, 'click', searchOptions);
+}
 
-    document.body.append(shadow);
-    const sr = rect(searchDiv);
-    shadow.style.position = `absolute`;
-    shadow.style.left = `${sr.left-8}px`;
-    shadow.style.top = `${sr.bottom + 16}px`;
-    shadow.style.width = `${sr.width()+16}px`;
+async function updateSearch(searchField: HTMLElement) {
+    searchField.style.width = '128px';
+    if (searchField.scrollWidth < 512) {
+        searchField.style.width = `${searchField.scrollWidth}px`;
+    } else {
+        searchField.style.width = '512px';
+    }
+    setTimeout(async () => {
+        const results = await testSearch(searchField!.innerText);
+        showSearchResults(results);
+    }, 0);
+}
+
+function searchOptions() {
+    console.log("searchOptions");
+    let palette = element(`<div class="icon-palette"></div>`);
+    let iconNames = [ "icon-search", "icon-wrench", "icon-right-open", "icon-user-plus", "icon-cog", "icon-logout"];
+    let optionNames = ["search", "edit-code", "execute-code", "collaborate", "settings", "logout"];
+    for(let i=0; i < iconNames.length; i++) {
+        const iconName = iconNames[i];
+        const optionName = optionNames[i];
+        let icon = element(`<i class="${iconName}" id="option-${optionName}" style="margin-left: 4px; margin-right: 4px;"></i>`)!;
+        icon.style.cursor = "pointer";
+        palette.appendChild(icon);
+        listen(icon, 'click', () => { palette.remove(); changeSearchOption(optionName, iconName); });
+    }
+    document.body.append(palette);
+    palette.style.top = `${window.innerHeight -  64}px`;
+}
+
+function changeSearchOption(optionName: string, iconName: string) {
+    console.log("changeSearchOption", optionName, iconName);
+    s_mainIcon = iconName;
+    s_mainOption = optionName;
+    let searchDiv = document.getElementById("search-box")!;
+    searchDiv.remove();
+    searchBox();
 }
 
 async function keyboard() {

@@ -19,7 +19,15 @@
                 }
             ],
             "dependsOn": [],
-            "dependents": [],
+            "dependents": [
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_searchOptions"
+                    ],
+                    "iChar": 201,
+                    "jChar": 205
+                }
+            ],
             "children": [],
             "parent": "null"
         },
@@ -6255,10 +6263,10 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_firefly_function_searchBox"
+                        "ts_firefly_firefly_function_updateSearch"
                     ],
-                    "iChar": 901,
-                    "jChar": 907
+                    "iChar": 77,
+                    "jChar": 83
                 }
             ],
             "children": [],
@@ -6796,6 +6804,20 @@
                     ],
                     "iChar": 31,
                     "jChar": 38
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_searchOptions"
+                    ],
+                    "iChar": 719,
+                    "jChar": 726
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_changeSearchOption"
+                    ],
+                    "iChar": 260,
+                    "jChar": 267
                 },
                 {
                     "targets": [
@@ -8813,8 +8835,15 @@
                     "targets": [
                         "ts_firefly_firefly_function_searchBox"
                     ],
-                    "iChar": 570,
-                    "jChar": 577
+                    "iChar": 590,
+                    "jChar": 597
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_searchOptions"
+                    ],
+                    "iChar": 79,
+                    "jChar": 86
                 },
                 {
                     "targets": [
@@ -8966,13 +8995,6 @@
                     ],
                     "iChar": 226,
                     "jChar": 230
-                },
-                {
-                    "targets": [
-                        "ts_firefly_firefly_function_searchBox"
-                    ],
-                    "iChar": 1324,
-                    "jChar": 1328
                 }
             ],
             "children": [],
@@ -9482,13 +9504,6 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_firefly_function_searchBox"
-                    ],
-                    "iChar": 1397,
-                    "jChar": 1402
-                },
-                {
-                    "targets": [
                         "ts_firefly_firefly_function_animateLogoToLeft"
                     ],
                     "iChar": 881,
@@ -9662,8 +9677,15 @@
                     "targets": [
                         "ts_firefly_firefly_function_searchBox"
                     ],
-                    "iChar": 709,
-                    "jChar": 713
+                    "iChar": 729,
+                    "jChar": 733
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_searchOptions"
+                    ],
+                    "iChar": 834,
+                    "jChar": 838
                 }
             ],
             "children": [],
@@ -9908,13 +9930,6 @@
                     ],
                     "iChar": 35,
                     "jChar": 42
-                },
-                {
-                    "targets": [
-                        "ts_firefly_firefly_function_searchBox"
-                    ],
-                    "iChar": 1451,
-                    "jChar": 1458
                 }
             ],
             "children": [],
@@ -10157,10 +10172,10 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_firefly_function_searchBox"
+                        "ts_firefly_firefly_function_updateSearch"
                     ],
-                    "iChar": 901,
-                    "jChar": 907
+                    "iChar": 77,
+                    "jChar": 83
                 }
             ],
             "children": [],
@@ -10741,6 +10756,91 @@
             "parent": "null"
         },
         {
+            "uid": "ts_firefly_firefly_global_s_mainIcon",
+            "language": "ts",
+            "module": "firefly",
+            "kind": "global",
+            "name": "s_mainIcon",
+            "purpose": "",
+            "examples": "",
+            "inputs": "",
+            "outputs": "",
+            "code": [
+                {
+                    "text": "let s_mainIcon = \"icon-search\";",
+                    "language": "ts",
+                    "iLine": 18,
+                    "jLine": 18
+                }
+            ],
+            "dependsOn": [
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_search"
+                    ],
+                    "iChar": 23,
+                    "jChar": 29
+                }
+            ],
+            "dependents": [
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_searchBox"
+                    ],
+                    "iChar": 181,
+                    "jChar": 191
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_changeSearchOption"
+                    ],
+                    "iChar": 133,
+                    "jChar": 143
+                }
+            ],
+            "children": [],
+            "parent": "null"
+        },
+        {
+            "uid": "ts_firefly_firefly_global_s_mainOption",
+            "language": "ts",
+            "module": "firefly",
+            "kind": "global",
+            "name": "s_mainOption",
+            "purpose": "",
+            "examples": "",
+            "inputs": "",
+            "outputs": "",
+            "code": [
+                {
+                    "text": "let s_mainOption = \"search\";",
+                    "language": "ts",
+                    "iLine": 19,
+                    "jLine": 19
+                }
+            ],
+            "dependsOn": [
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_search"
+                    ],
+                    "iChar": 20,
+                    "jChar": 26
+                }
+            ],
+            "dependents": [
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_changeSearchOption"
+                    ],
+                    "iChar": 160,
+                    "jChar": 172
+                }
+            ],
+            "children": [],
+            "parent": "null"
+        },
+        {
             "uid": "ts_firefly_firefly_class_CodeBlock",
             "language": "ts",
             "module": "firefly",
@@ -10754,8 +10854,8 @@
                 {
                     "text": "class CodeBlock {\n    text: string = \"\";                  // actual code text\n    language: string;                   // \".ts\", \".py\", \".cpp\", \".hpp\", etc.\n    iLine: number = 0;                  // 1-based line index in original code file\n    constructor(code: string, language: string, iLine: number) {\n        this.text = code; this.language = language; this.iLine = iLine;\n    }\n}",
                     "language": "ts",
-                    "iLine": 19,
-                    "jLine": 26
+                    "iLine": 21,
+                    "jLine": 28
                 }
             ],
             "dependsOn": [
@@ -10820,8 +10920,8 @@
                 {
                     "text": "class Dependency {\n    iChar: number = 0;                  // character index in code of start of symbol\n    jChar: number = 0;                  // character index in code after symbol\n    targets: string[] = [];             // card uids we link to\n};",
                     "language": "ts",
-                    "iLine": 28,
-                    "jLine": 32
+                    "iLine": 30,
+                    "jLine": 34
                 }
             ],
             "dependsOn": [],
@@ -10870,8 +10970,8 @@
                 {
                     "text": "class Card {\n    uid: string = \"\";                   // uid; something like lang_module_kind_name, but maybe other decorators too\n    language: string = \"\";              // language shortname of original code\n    module: string = \"\";                // module: eg. firefly or graphview\n    kind: string = \"\";                  // \"class\" or \"function\" or \"other\"\n    name: string = \"\";                  // name of function or class being defined\n    purpose: string = \"\";               // purpose\n    examples: string = \"\";              // examples\n    inputs: string = \"\";                // inputs\n    outputs: string = \"\";               // outputs\n    code: CodeBlock[] = [];             // actual text from code file\n    dependsOn: Dependency[] = [];       // cards we depend on\n    dependents: Dependency[] =[];       // cards that depend on us\n    children: Card[] =[];               // if we're a class, cards for methods\n    parent: string = \"\";                // if we're a method or property, points to parent\n    rankFromBottom: number = 0;         // 1 means depends on nothing; x means depends on things with rank < x\n    rankFromTop: number = 0;            // 1 means nothing calls this; x means called by things with rank < x\n\n}",
                     "language": "ts",
-                    "iLine": 34,
-                    "jLine": 52
+                    "iLine": 36,
+                    "jLine": 54
                 }
             ],
             "dependsOn": [
@@ -11046,8 +11146,8 @@
                 {
                     "text": "class CardView {\n    state: CardViewState = CardViewState.Compact;\n    xScroll: number =0;\n    yScroll: number =0;\n    constructor(state: CardViewState) {\n        this.state = state;\n    }\n}",
                     "language": "ts",
-                    "iLine": 61,
-                    "jLine": 68
+                    "iLine": 63,
+                    "jLine": 70
                 }
             ],
             "dependsOn": [
@@ -11104,8 +11204,8 @@
                 {
                     "text": "async function main() {\n    console.log(\"firefly \u1566(\u30c4)\u1564\");\n    await run();\n}",
                     "language": "ts",
-                    "iLine": 70,
-                    "jLine": 73
+                    "iLine": 72,
+                    "jLine": 75
                 }
             ],
             "dependsOn": [
@@ -11135,8 +11235,8 @@
                 {
                     "text": "async function run() {\n    await init();\n    await loadCards();\n    await animateLogoToLeft();\n    await openSession();\n    testSearch(\"animate logo to left\");\n    eventLoop();\n}",
                     "language": "ts",
-                    "iLine": 76,
-                    "jLine": 83
+                    "iLine": 78,
+                    "jLine": 85
                 }
             ],
             "dependsOn": [
@@ -11216,8 +11316,8 @@
                 {
                     "text": "async function init() {\n    logo();\n    graph();\n    searchBox();\n    keyboard();\n}",
                     "language": "ts",
-                    "iLine": 85,
-                    "jLine": 90
+                    "iLine": 87,
+                    "jLine": 92
                 }
             ],
             "dependsOn": [
@@ -11276,8 +11376,8 @@
                 {
                     "text": "function logo() {\n    const logo = document.getElementById('logo_and_shadow') as HTMLElement;\n    let shadow = document.getElementById(\"logo_shadow\")!;\n    logo.style.left = `${(window.innerWidth - logo.offsetWidth)/2}px`;\n    logo.style.top = `${(window.innerHeight/2)-40}px`;\n    logo.style.transition = `top 0.25s`;\n    shadow.style.transition = `top 0.25s`;\n}",
                     "language": "ts",
-                    "iLine": 92,
-                    "jLine": 99
+                    "iLine": 94,
+                    "jLine": 101
                 }
             ],
             "dependsOn": [
@@ -11343,8 +11443,8 @@
                 {
                     "text": "function graph() {\n    const container = document.getElementById('container') as HTMLElement;\n    s_graphView = new GraphView(container, cardToHTML, highlightLink);\n}",
                     "language": "ts",
-                    "iLine": 101,
-                    "jLine": 104
+                    "iLine": 103,
+                    "jLine": 106
                 }
             ],
             "dependsOn": [
@@ -11431,8 +11531,8 @@
                 {
                     "text": "function eventLoop() {\n    s_graphView.update();\n    moveLogo();\n    requestAnimationFrame(eventLoop);\n}",
                     "language": "ts",
-                    "iLine": 106,
-                    "jLine": 110
+                    "iLine": 108,
+                    "jLine": 112
                 }
             ],
             "dependsOn": [
@@ -11486,8 +11586,8 @@
                 {
                     "text": "function moveLogo() {\n    let xScroll = window.scrollX;\n    let logo = document.getElementById(\"logo_and_shadow\")!;\n    let shadow = document.getElementById(\"logo_shadow\")!;\n    let [yMin, yMax] = s_graphView.yRange(xScroll + rect(logo).width() + 50);\n    if (yMin && yMax) {\n        logo.style.top = `${window.innerHeight -  60}px`;\n        shadow.style.top = `${document.body.clientHeight - yMin - 100}px`;\n    } else {\n        logo.style.top = `${(window.innerHeight/2)-40}px`;\n        shadow.style.top = `${45}px`;\n    }\n}",
                     "language": "ts",
-                    "iLine": 112,
-                    "jLine": 124
+                    "iLine": 114,
+                    "jLine": 126
                 }
             ],
             "dependsOn": [
@@ -11561,8 +11661,8 @@
                 {
                     "text": "async function loadCards() {\n    console.log(\"loadCards\");\n    if (s_useLocalFiles) {\n        await importLocalFolder();\n    } \n    const jsonObj = await importFolders(\"firefly\", [\"ts\", \"py\"]);\n    s_allCards = jsonObj.cards as Card[];\n    console.log(\"nCards:\", s_allCards.length);\n}",
                     "language": "ts",
-                    "iLine": 126,
-                    "jLine": 134
+                    "iLine": 128,
+                    "jLine": 136
                 }
             ],
             "dependsOn": [
@@ -11628,8 +11728,8 @@
                 {
                     "text": "async function openSession() {\n    let json = await load(\"session/test.json\");\n    if (json.error) {\n        console.log(\"failed to load session:\", json.error);\n        openMain();\n    } else {\n        s_graphView.openJson(json);\n    }\n}",
                     "language": "ts",
-                    "iLine": 136,
-                    "jLine": 144
+                    "iLine": 138,
+                    "jLine": 146
                 }
             ],
             "dependsOn": [
@@ -11696,8 +11796,8 @@
                 {
                     "text": "function openMain() {\n    openCard(\"ts_firefly_firefly_function_main\", null);\n}",
                     "language": "ts",
-                    "iLine": 146,
-                    "jLine": 148
+                    "iLine": 148,
+                    "jLine": 150
                 }
             ],
             "dependsOn": [
@@ -11735,8 +11835,8 @@
                 {
                     "text": "function reset() {\n    s_graphView.reset();\n}",
                     "language": "ts",
-                    "iLine": 150,
-                    "jLine": 152
+                    "iLine": 152,
+                    "jLine": 154
                 }
             ],
             "dependsOn": [
@@ -11772,10 +11872,10 @@
             "outputs": "",
             "code": [
                 {
-                    "text": "function searchBox() {\n    const searchFieldHTML = `<div class=\"search-field\" id=\"search-field\" contenteditable=\"true\" spellcheck=\"false\"></div>`;\n    const iconHTML = `<i class=\"icon-search\" style=\"padding-top: 6px;\"></i>`;\n    const icon2HTML = `<i class=\"icon-right-open\" style=\"padding-top: 6px; padding-right:3px\"></i>`;\n    const searchResultsHTML = `<div class=\"search-results\" id=\"search-results\"></div>`;\n    const searchDivHTML = `<div class=\"search-box\" id=\"search-box\">${iconHTML}${searchFieldHTML}${icon2HTML}${searchResultsHTML}</div>`;\n    const shadow = element(`<div class=\"shadow\"></div>`);\n    let searchDiv = element(searchDivHTML);\n    document.body.append(searchDiv);\n    searchDiv.style.top = `${window.innerHeight -  64}px`;\n    let searchField = document.getElementById(\"search-field\")!;\n    searchField.addEventListener('keydown', async (event) => {\n        searchField.style.width = '128px';\n        if (searchField.scrollWidth < 512) {\n            searchField.style.width = `${searchField.scrollWidth}px`;\n        } else {\n            searchField.style.width = '512px';\n        }\n        setTimeout(async () => {\n            const results = await testSearch(searchField!.innerText);\n            showSearchResults(results);\n        }, 0);\n    });\n\n    document.body.append(shadow);\n    const sr = rect(searchDiv);\n    shadow.style.position = `absolute`;\n    shadow.style.left = `${sr.left-8}px`;\n    shadow.style.top = `${sr.bottom + 16}px`;\n    shadow.style.width = `${sr.width()+16}px`;\n}",
+                    "text": "function searchBox() {\n    const searchFieldHTML = `<div class=\"search-field\" id=\"search-field\" contenteditable=\"true\" spellcheck=\"false\"></div>`;\n    const iconHTML = `<i class=\"${s_mainIcon}\" style=\"padding-top: 6px;\" id=\"search-button\"></i>`;\n    const icon2HTML = `<i class=\"icon-right-big\" style=\"padding-top: 6px; padding-right:3px\"></i>`;\n    const searchResultsHTML = `<div class=\"search-results\" id=\"search-results\"></div>`;\n    const searchDivHTML = `<div class=\"search-box\" id=\"search-box\">${iconHTML}${searchFieldHTML}${icon2HTML}${searchResultsHTML}</div>`;\n    const shadow = element(`<div class=\"shadow\"></div>`);\n    let searchDiv = element(searchDivHTML);\n    document.body.append(searchDiv);\n    searchDiv.style.top = `${window.innerHeight -  64}px`;\n    let searchField = document.getElementById(\"search-field\")!;\n    searchField.addEventListener('keydown', async (event) => {\n        await updateSearch(searchField);\n    });\n    let searchButton = document.getElementById(\"search-button\")!;\n    searchButton.style.cursor = 'pointer';\n    listen(searchButton, 'click', searchOptions);\n}",
                     "language": "ts",
-                    "iLine": 154,
-                    "jLine": 184
+                    "iLine": 156,
+                    "jLine": 173
                 }
             ],
             "dependsOn": [
@@ -11788,60 +11888,45 @@
                 },
                 {
                     "targets": [
+                        "ts_firefly_firefly_global_s_mainIcon"
+                    ],
+                    "iChar": 181,
+                    "jChar": 191
+                },
+                {
+                    "targets": [
                         "ts_firefly_util_function_element"
                     ],
-                    "iChar": 570,
-                    "jChar": 577
+                    "iChar": 590,
+                    "jChar": 597
                 },
                 {
                     "targets": [
                         "ts_firefly_util_property_Rect_top"
                     ],
-                    "iChar": 709,
-                    "jChar": 713
+                    "iChar": 729,
+                    "jChar": 733
                 },
                 {
                     "targets": [
-                        "ts_firefly_graphview_property_Node_width",
-                        "ts_firefly_util_method_Rect_width"
+                        "ts_firefly_firefly_function_updateSearch"
                     ],
-                    "iChar": 901,
-                    "jChar": 907
+                    "iChar": 910,
+                    "jChar": 922
                 },
                 {
                     "targets": [
-                        "ts_firefly_firefly_function_testSearch"
+                        "ts_firefly_firefly_function_listen"
                     ],
-                    "iChar": 1175,
-                    "jChar": 1185
+                    "iChar": 1058,
+                    "jChar": 1064
                 },
                 {
                     "targets": [
-                        "ts_firefly_firefly_function_showSearchResults"
+                        "ts_firefly_firefly_function_searchOptions"
                     ],
-                    "iChar": 1223,
-                    "jChar": 1240
-                },
-                {
-                    "targets": [
-                        "ts_firefly_util_function_rect"
-                    ],
-                    "iChar": 1324,
-                    "jChar": 1328
-                },
-                {
-                    "targets": [
-                        "ts_firefly_util_property_Rect_left"
-                    ],
-                    "iChar": 1397,
-                    "jChar": 1402
-                },
-                {
-                    "targets": [
-                        "ts_firefly_util_property_Rect_bottom"
-                    ],
-                    "iChar": 1451,
-                    "jChar": 1458
+                    "iChar": 1088,
+                    "jChar": 1101
                 }
             ],
             "dependents": [
@@ -11851,6 +11936,215 @@
                     ],
                     "iChar": 53,
                     "jChar": 62
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_changeSearchOption"
+                    ],
+                    "iChar": 275,
+                    "jChar": 284
+                }
+            ],
+            "children": [],
+            "parent": "null"
+        },
+        {
+            "uid": "ts_firefly_firefly_function_updateSearch",
+            "language": "ts",
+            "module": "firefly",
+            "kind": "function",
+            "name": "updateSearch",
+            "purpose": "",
+            "examples": "",
+            "inputs": "",
+            "outputs": "",
+            "code": [
+                {
+                    "text": "async function updateSearch(searchField: HTMLElement) {\n    searchField.style.width = '128px';\n    if (searchField.scrollWidth < 512) {\n        searchField.style.width = `${searchField.scrollWidth}px`;\n    } else {\n        searchField.style.width = '512px';\n    }\n    setTimeout(async () => {\n        const results = await testSearch(searchField!.innerText);\n        showSearchResults(results);\n    }, 0);\n}",
+                    "language": "ts",
+                    "iLine": 175,
+                    "jLine": 186
+                }
+            ],
+            "dependsOn": [
+                {
+                    "targets": [
+                        "ts_firefly_graphview_property_Node_width",
+                        "ts_firefly_util_method_Rect_width"
+                    ],
+                    "iChar": 77,
+                    "jChar": 83
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_testSearch"
+                    ],
+                    "iChar": 323,
+                    "jChar": 333
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_showSearchResults"
+                    ],
+                    "iChar": 367,
+                    "jChar": 384
+                }
+            ],
+            "dependents": [
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_searchBox"
+                    ],
+                    "iChar": 910,
+                    "jChar": 922
+                }
+            ],
+            "children": [],
+            "parent": "null"
+        },
+        {
+            "uid": "ts_firefly_firefly_function_searchOptions",
+            "language": "ts",
+            "module": "firefly",
+            "kind": "function",
+            "name": "searchOptions",
+            "purpose": "",
+            "examples": "",
+            "inputs": "",
+            "outputs": "",
+            "code": [
+                {
+                    "text": "function searchOptions() {\n    console.log(\"searchOptions\");\n    let palette = element(`<div class=\"icon-palette\"></div>`);\n    let iconNames = [ \"icon-search\", \"icon-wrench\", \"icon-right-open\", \"icon-user-plus\", \"icon-cog\", \"icon-logout\"];\n    let optionNames = [\"search\", \"edit-code\", \"execute-code\", \"collaborate\", \"settings\", \"logout\"];\n    for(let i=0; i < iconNames.length; i++) {\n        const iconName = iconNames[i];\n        const optionName = optionNames[i];\n        let icon = element(`<i class=\"${iconName}\" id=\"option-${optionName}\" style=\"margin-left: 4px; margin-right: 4px;\"></i>`)!;\n        icon.style.cursor = \"pointer\";\n        palette.appendChild(icon);\n        listen(icon, 'click', () => { palette.remove(); changeSearchOption(optionName, iconName); });\n    }\n    document.body.append(palette);\n    palette.style.top = `${window.innerHeight -  64}px`;\n}",
+                    "language": "ts",
+                    "iLine": 188,
+                    "jLine": 203
+                }
+            ],
+            "dependsOn": [
+                {
+                    "targets": [
+                        "ts_firefly_util_function_element"
+                    ],
+                    "iChar": 79,
+                    "jChar": 86
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_search"
+                    ],
+                    "iChar": 152,
+                    "jChar": 158
+                },
+                {
+                    "targets": [
+                        "ts_firefly_graphview_function_user"
+                    ],
+                    "iChar": 201,
+                    "jChar": 205
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_listen"
+                    ],
+                    "iChar": 682,
+                    "jChar": 688
+                },
+                {
+                    "targets": [
+                        "ts_firefly_graphview_method_Node_remove"
+                    ],
+                    "iChar": 719,
+                    "jChar": 726
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_changeSearchOption"
+                    ],
+                    "iChar": 730,
+                    "jChar": 748
+                },
+                {
+                    "targets": [
+                        "ts_firefly_util_property_Rect_top"
+                    ],
+                    "iChar": 834,
+                    "jChar": 838
+                }
+            ],
+            "dependents": [
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_searchBox"
+                    ],
+                    "iChar": 1088,
+                    "jChar": 1101
+                }
+            ],
+            "children": [],
+            "parent": "null"
+        },
+        {
+            "uid": "ts_firefly_firefly_function_changeSearchOption",
+            "language": "ts",
+            "module": "firefly",
+            "kind": "function",
+            "name": "changeSearchOption",
+            "purpose": "",
+            "examples": "",
+            "inputs": "",
+            "outputs": "",
+            "code": [
+                {
+                    "text": "function changeSearchOption(optionName: string, iconName: string) {\n    console.log(\"changeSearchOption\", optionName, iconName);\n    s_mainIcon = iconName;\n    s_mainOption = optionName;\n    let searchDiv = document.getElementById(\"search-box\")!;\n    searchDiv.remove();\n    searchBox();\n}",
+                    "language": "ts",
+                    "iLine": 205,
+                    "jLine": 212
+                }
+            ],
+            "dependsOn": [
+                {
+                    "targets": [
+                        "ts_firefly_firefly_global_s_mainIcon"
+                    ],
+                    "iChar": 133,
+                    "jChar": 143
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_global_s_mainOption"
+                    ],
+                    "iChar": 160,
+                    "jChar": 172
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_search"
+                    ],
+                    "iChar": 232,
+                    "jChar": 238
+                },
+                {
+                    "targets": [
+                        "ts_firefly_graphview_method_Node_remove"
+                    ],
+                    "iChar": 260,
+                    "jChar": 267
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_searchBox"
+                    ],
+                    "iChar": 275,
+                    "jChar": 284
+                }
+            ],
+            "dependents": [
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_searchOptions"
+                    ],
+                    "iChar": 730,
+                    "jChar": 748
                 }
             ],
             "children": [],
@@ -11870,8 +12164,8 @@
                 {
                     "text": "async function keyboard() {\n    listen(document.body, 'keydown', async (event: KeyboardEvent) => {\n        console.log(event.key);\n        if (event.metaKey && event.key == 'f') {\n            event.preventDefault();\n            await onCommandKey();\n        }\n    });\n}",
                     "language": "ts",
-                    "iLine": 186,
-                    "jLine": 194
+                    "iLine": 214,
+                    "jLine": 222
                 }
             ],
             "dependsOn": [
@@ -11916,8 +12210,8 @@
                 {
                     "text": "async function onCommandKey() {\n    let searchField = document.getElementById(\"search-field\")!;\n    searchField.innerText = \"\";\n    searchField.focus();\n}",
                     "language": "ts",
-                    "iLine": 196,
-                    "jLine": 200
+                    "iLine": 224,
+                    "jLine": 228
                 }
             ],
             "dependsOn": [
@@ -11955,8 +12249,8 @@
                 {
                     "text": "async function testSearch(query: string) : Promise<any>{\n    console.log(\"testSearch\");\n    console.log(query);\n    let tNow = performance.now();\n    const results = await search(query);\n    let tElapsed = performance.now() - tNow;\n    //console.log(`result:\\n${JSON.stringify(results)}`);\n    //console.log(`took ${tElapsed} msec`);\n    return results;\n}",
                     "language": "ts",
-                    "iLine": 202,
-                    "jLine": 211
+                    "iLine": 230,
+                    "jLine": 239
                 }
             ],
             "dependsOn": [
@@ -11978,10 +12272,10 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_firefly_function_searchBox"
+                        "ts_firefly_firefly_function_updateSearch"
                     ],
-                    "iChar": 1175,
-                    "jChar": 1185
+                    "iChar": 323,
+                    "jChar": 333
                 }
             ],
             "children": [],
@@ -12001,8 +12295,8 @@
                 {
                     "text": "function showSearchResults(results: any) {\n    console.log(\"search results:\");\n    let searchResultsDiv = document.getElementById(\"search-results\")!;\n    clearSearchResults(searchResultsDiv);\n    const array = results.results;\n    for(const item of array) {\n        const id = item.value;\n        const card = findCard(id);\n        if (!card) {\n            console.log(\"  unknown:\", id);\n        } else {\n            const name = shortName(card);\n            console.log(\"  \", name);\n            if (card.kind == \"function\" || card.kind == \"method\" || card.kind == \"class\") {\n                let searchResultDiv = element(`<div class=\"search-result\">${name}</div>`);\n                listen(searchResultDiv, 'click', () => { jumpToCard(card)});\n                searchResultsDiv.append(searchResultDiv);\n            }\n        }\n    }\n}",
                     "language": "ts",
-                    "iLine": 213,
-                    "jLine": 233
+                    "iLine": 241,
+                    "jLine": 261
                 }
             ],
             "dependsOn": [
@@ -12066,10 +12360,10 @@
             "dependents": [
                 {
                     "targets": [
-                        "ts_firefly_firefly_function_searchBox"
+                        "ts_firefly_firefly_function_updateSearch"
                     ],
-                    "iChar": 1223,
-                    "jChar": 1240
+                    "iChar": 367,
+                    "jChar": 384
                 }
             ],
             "children": [],
@@ -12089,8 +12383,8 @@
                 {
                     "text": "class Link {\n    iDep: number =-1;               // dependency index in caller\n    card: Card | null = null;       // card to open\n    constructor(iDep: number, card: Card) {\n        this.iDep = iDep; this.card = card;\n    }\n}",
                     "language": "ts",
-                    "iLine": 235,
-                    "jLine": 241
+                    "iLine": 263,
+                    "jLine": 269
                 }
             ],
             "dependsOn": [
@@ -12160,8 +12454,8 @@
                 {
                     "text": "function jumpToCard(target: Card) {\n    console.log(\"jumpToCard\", target.uid);\n    let mainCard = findCard(\"ts_firefly_firefly_function_main\");\n    if (!mainCard) return;\n    let chain : Link[] = callChain(mainCard, target);\n    console.log(chain);\n    if (chain.length==0) return;\n    //reset();\n    let card : Card = mainCard;\n    for(let link of chain) {\n        const cardID = link.card!.uid;\n        console.log(\"open\", cardID, `linkto_${cardID}`, card.uid);\n        s_graphView.open(cardID, `linkto_${cardID}`, card.uid, new CardView(CardViewState.Compact), false);\n        card = link.card!;\n    }\n    let lastId = chain[chain.length-1].card!.uid;\n    //setTimeout(() => { expandOrContract(s_graphView.find(lastId)!); }, 0);\n}",
                     "language": "ts",
-                    "iLine": 243,
-                    "jLine": 260
+                    "iLine": 271,
+                    "jLine": 288
                 }
             ],
             "dependsOn": [
@@ -12255,8 +12549,8 @@
                 {
                     "text": "function callChain(from: Card, to: Card) : Link[] {\n    newVisitPass();\n    return callChainRec(from, to).slice(1);\n}",
                     "language": "ts",
-                    "iLine": 263,
-                    "jLine": 266
+                    "iLine": 291,
+                    "jLine": 294
                 }
             ],
             "dependsOn": [
@@ -12315,8 +12609,8 @@
                 {
                     "text": "// returns a list of { dep, card } to get from a to b\nfunction callChainRec(from: Card, to: Card, iDepFrom: number=-1) : Link[]  {\n    if (from.kind != \"method\" && from.kind != \"function\") return []; // only callables\n    if (visited(from)) return [];\n    if (from === to) return [ new Link(iDepFrom, from) ];\n    let iDep = findDependency(from, to);\n    if (iDep >= 0) return [ new Link(iDepFrom, from), new Link(iDep, to) ];\n    visit(from);        // prevent us from going down this path again\n    for(let iDep = 0; iDep < from.dependsOn.length; iDep++) {\n        const dep = from.dependsOn[iDep];\n        for(const t of dep.targets) {\n            const chain = callChainRec(findCard(t)!, to, iDep);\n            if (chain.length != 0) {\n                return [ new Link(iDepFrom, from), ...chain ];\n            }\n        }\n    }\n    return [];\n}",
                     "language": "ts",
-                    "iLine": 268,
-                    "jLine": 286
+                    "iLine": 296,
+                    "jLine": 314
                 }
             ],
             "dependsOn": [
@@ -12417,8 +12711,8 @@
                 {
                     "text": "let s_visit: number = 0;",
                     "language": "ts",
-                    "iLine": 288,
-                    "jLine": 288
+                    "iLine": 316,
+                    "jLine": 316
                 }
             ],
             "dependsOn": [],
@@ -12462,8 +12756,8 @@
                 {
                     "text": "let s_visitCount: Map<Card, number> = new Map();",
                     "language": "ts",
-                    "iLine": 289,
-                    "jLine": 289
+                    "iLine": 317,
+                    "jLine": 317
                 }
             ],
             "dependsOn": [
@@ -12508,8 +12802,8 @@
                 {
                     "text": "function newVisitPass() { s_visit ++; }",
                     "language": "ts",
-                    "iLine": 291,
-                    "jLine": 291
+                    "iLine": 319,
+                    "jLine": 319
                 }
             ],
             "dependsOn": [
@@ -12547,8 +12841,8 @@
                 {
                     "text": "function visited(card: Card) : boolean {\n    let vc = s_visitCount.get(card);\n    return (vc && vc == s_visit) ? true : false;\n}",
                     "language": "ts",
-                    "iLine": 292,
-                    "jLine": 295
+                    "iLine": 320,
+                    "jLine": 323
                 }
             ],
             "dependsOn": [
@@ -12607,8 +12901,8 @@
                 {
                     "text": "function visit(card: Card) {\n    s_visitCount.set(card, s_visit);\n}",
                     "language": "ts",
-                    "iLine": 296,
-                    "jLine": 298
+                    "iLine": 324,
+                    "jLine": 326
                 }
             ],
             "dependsOn": [
@@ -12660,8 +12954,8 @@
                 {
                     "text": "// given (card) and (target), checks card.dependsOn and returns index of dependency that matches\nfunction findDependency(card: Card, target: Card) : number {\n    return card.dependsOn.findIndex(d => (d.targets.indexOf(target.uid) >= 0));\n}",
                     "language": "ts",
-                    "iLine": 300,
-                    "jLine": 303
+                    "iLine": 328,
+                    "jLine": 331
                 }
             ],
             "dependsOn": [
@@ -12713,8 +13007,8 @@
                 {
                     "text": "function clearSearchResults(searchDiv: HTMLElement) {\n    if (searchDiv) {\n        while (searchDiv.children.length > 0) {\n            searchDiv.removeChild(searchDiv.lastChild!);\n        }\n    }\n}",
                     "language": "ts",
-                    "iLine": 306,
-                    "jLine": 312
+                    "iLine": 334,
+                    "jLine": 340
                 }
             ],
             "dependsOn": [
@@ -12752,8 +13046,8 @@
                 {
                     "text": "async function search(query: string) : Promise<any> {\n    return await remote(\"@firefly.search\", { query });\n}",
                     "language": "ts",
-                    "iLine": 314,
-                    "jLine": 316
+                    "iLine": 342,
+                    "jLine": 344
                 }
             ],
             "dependsOn": [
@@ -12776,10 +13070,38 @@
             "dependents": [
                 {
                     "targets": [
+                        "ts_firefly_firefly_global_s_mainIcon"
+                    ],
+                    "iChar": 23,
+                    "jChar": 29
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_global_s_mainOption"
+                    ],
+                    "iChar": 20,
+                    "jChar": 26
+                },
+                {
+                    "targets": [
                         "ts_firefly_firefly_function_searchBox"
                     ],
                     "iChar": 64,
                     "jChar": 70
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_searchOptions"
+                    ],
+                    "iChar": 152,
+                    "jChar": 158
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_changeSearchOption"
+                    ],
+                    "iChar": 232,
+                    "jChar": 238
                 },
                 {
                     "targets": [
@@ -12820,8 +13142,8 @@
                 {
                     "text": "async function importLocalFolder() {\n    let logo: HTMLButtonElement = document.getElementById('logo_and_shadow') as HTMLButtonElement;\n    let button = element(`<button id=\"openDirectory\" class=\"transparent-button\" style=\"display: inline-block;\">\n                            <h3 style=\"display: inline-block;\">\u25b6\ufe0e</h3></button>`);\n    logo.insertBefore(button, logo.children[1]);\n    button.addEventListener('click', async () => {\n        if (!(window as any).showDirectoryPicker) {\n            console.log(\"showDirectoryPicker is null\");\n            return;\n        }\n        dirHandle = await (window as any).showDirectoryPicker!();\n        button.remove();\n        await importLocalFile();\n    });\n}",
                     "language": "ts",
-                    "iLine": 318,
-                    "jLine": 332
+                    "iLine": 346,
+                    "jLine": 360
                 }
             ],
             "dependsOn": [
@@ -12895,8 +13217,8 @@
                 {
                     "text": "// test-reads the first file and sets text in browser\nasync function importLocalFile() {\n    console.log(\"importLocalFile\");\n    // Assuming we are just reading the first file we find.\n    console.log(\"values...\");\n    for await (const entry of dirHandle.values()) {\n        if (entry.kind === 'file') {\n            console.log(\"getFile...\");\n            const file = await (entry as any).getFile();\n            const filename : string = file.name; // Assuming 'file' has a 'name' property with the filename.\n            if (filename.startsWith(\".\")) continue;\n            const parts = filename.split('.');\n            const ext = parts.length > 1 ? '.' + parts.pop() : '';\n            console.log(\"readFileAsText...\");\n            console.log(`ext = '${ext}'`);\n            const fullText = await readFileAsText(file);\n            console.log(\"NOT IMPLEMENTED YET\"); // todo: implement by reading files, horking them over to the server, then following the normal channels\n            break;\n        }\n    }\n}",
                     "language": "ts",
-                    "iLine": 334,
-                    "jLine": 354
+                    "iLine": 362,
+                    "jLine": 382
                 }
             ],
             "dependsOn": [
@@ -12949,8 +13271,8 @@
                 {
                     "text": "// Read file on client machine in folder\nfunction readFileAsText(file: File): Promise<string> {\n    return new Promise((resolve, reject) => {\n        const reader = new FileReader();\n        reader.onload = event => resolve(event.target!.result as string);\n        reader.onerror = error => reject(error);\n        reader.readAsText(file);\n    });\n}",
                     "language": "ts",
-                    "iLine": 356,
-                    "jLine": 364
+                    "iLine": 384,
+                    "jLine": 392
                 }
             ],
             "dependsOn": [],
@@ -12980,8 +13302,8 @@
                 {
                     "text": "// move the logo and shadow to the left of the window\nasync function animateLogoToLeft(): Promise<void> {\n    return new Promise((resolve, reject) => {\n        const logoAndShadow = document.getElementById(\"logo_and_shadow\")!;\n\n        // Set animation properties\n        logoAndShadow.style.animationName = \"moveToLeft\";\n        logoAndShadow.style.animationDuration = \"0.25s\";\n        logoAndShadow.style.animationTimingFunction = \"ease-in-out\";\n        logoAndShadow.style.animationFillMode = \"forwards\"; \n\n        // Attach the animationend event listener\n        logoAndShadow.addEventListener('animationend', function onAnimationEnd() {\n            // Remove the event listener to prevent memory leaks\n            logoAndShadow.removeEventListener('animationend', onAnimationEnd);\n            resolve();\n        });\n\n        // Start the animation\n        logoAndShadow.style.left = \"0\";\n    });\n}",
                     "language": "ts",
-                    "iLine": 366,
-                    "jLine": 387
+                    "iLine": 394,
+                    "jLine": 415
                 }
             ],
             "dependsOn": [
@@ -13019,8 +13341,8 @@
                 {
                     "text": "async function importFolders(project: string, folders: string[]) {\n    return await remote(\"@firefly.importFolders\", { project: project, folders: folders });\n}",
                     "language": "ts",
-                    "iLine": 389,
-                    "jLine": 391
+                    "iLine": 417,
+                    "jLine": 419
                 }
             ],
             "dependsOn": [
@@ -13065,8 +13387,8 @@
                 {
                     "text": "// finds the card with the given UID, or null if doesn't exist\nfunction findCard(uid: string) : Card | null {\n    let index = s_allCards.findIndex((card : any ) => card.uid === uid);\n    if (index < 0) return null;\n    return s_allCards[index];\n}",
                     "language": "ts",
-                    "iLine": 393,
-                    "jLine": 398
+                    "iLine": 421,
+                    "jLine": 426
                 }
             ],
             "dependsOn": [
@@ -13153,8 +13475,8 @@
                 {
                     "text": "// generates HTML for card, but doesn't connect it yet\nfunction cardToHTML(id: string, view: CardView) : HTMLElement {\n    let card : Card | null = findCard(id);\n    if (!card) { return element(`<div></div>`); }\n    let style = \"code\"; if (view.state == CardViewState.Fullsize) { style += \" code-expanded\"; }\n    let elem : HTMLElement = element(`<div id=\"code_${card.uid}\" class=\"${style}\" spellcheck=\"false\" contenteditable=\"false\"></div>`);\n    let text : string = card.code[0].text;\n    if (card.dependsOn.length==0) {\n        elem.innerText = text;\n    } else {\n        let iChar : number = 0;\n        for(const dep of card.dependsOn) {\n            // add text-node going from (iChar) to (dep.iChar)\n            if (dep.iChar > iChar) {\n                elem.appendChild(document.createTextNode(text.slice(iChar, dep.iChar)));\n            }\n            // add span containing the link\n            const link = text.slice(dep.iChar, dep.jChar);\n            let linkId = \"linkto_\" + dep.targets[0];\n            for(let i = 1; i < dep.targets.length; i++) {\n                linkId += \"__\" + dep.targets[i];\n            }\n            const child = element(`<span class=\"tag\" id=\"${linkId}\">${link}</span>`);\n            listen(child, 'click', async function(event: any) {\n                onLinkButtonPress(child);\n            });\n            elem.appendChild(child);\n            // step\n            iChar = dep.jChar;\n        }\n        // add text-node for the remaining bit of text\n        if (iChar < text.length) {\n            elem.appendChild(document.createTextNode(text.slice(iChar, text.length)));\n        }\n    }\n    setTimeout(() => { elem.scrollLeft = view.xScroll; elem.scrollTop = view.yScroll;}, 0);\n    listen(elem, 'click', function() { expandOrContract(elem); });\n    listen(elem, 'scroll', function(event: any) { getScrollPos(elem); });\n    let container = codeContainer(elem, shortName(card));\n    container.id = card.uid;\n    return container;\n}",
                     "language": "ts",
-                    "iLine": 400,
-                    "jLine": 441
+                    "iLine": 428,
+                    "jLine": 469
                 }
             ],
             "dependsOn": [
@@ -13320,8 +13642,8 @@
                 {
                     "text": "function codeContainer(codeDiv: HTMLElement, title: string) : HTMLElement {\n    const containerDiv = document.createElement('div');\n    containerDiv.className = 'code-container';\n\n    // Create the title div\n    const titleDiv = document.createElement('div');\n    titleDiv.className = 'code-title';\n    titleDiv.textContent = title;\n\n    // Append the title and the code div to the container\n    containerDiv.appendChild(titleDiv);\n    containerDiv.appendChild(codeDiv);\n\n    return containerDiv;\n}",
                     "language": "ts",
-                    "iLine": 443,
-                    "jLine": 457
+                    "iLine": 471,
+                    "jLine": 485
                 }
             ],
             "dependsOn": [],
@@ -13351,8 +13673,8 @@
                 {
                     "text": "function shortName(card: Card) : string {\n    let result: string = \"\";\n    if (card.parent != \"null\") { result += findCard(card.parent)!.name + \".\"; }\n    result += card.name;\n    if (card.kind==\"method\" || card.kind==\"function\") result += \"()\";\n    return result;\n}",
                     "language": "ts",
-                    "iLine": 459,
-                    "jLine": 465
+                    "iLine": 487,
+                    "jLine": 493
                 }
             ],
             "dependsOn": [
@@ -13418,8 +13740,8 @@
                 {
                     "text": "function highlightLink(linkDiv: HTMLElement, highlight: boolean) {\n    if (highlight) linkDiv.className = \"tag-highlight\"; else linkDiv.className = \"tag\";\n}",
                     "language": "ts",
-                    "iLine": 467,
-                    "jLine": 469
+                    "iLine": 495,
+                    "jLine": 497
                 }
             ],
             "dependsOn": [],
@@ -13463,8 +13785,8 @@
                 {
                     "text": "function listen(elem: HTMLElement, type: string, func: Function) {\n    elem.addEventListener(type, async (event) => {\n        //console.log(`${type}: ${elem.id}`);\n        await func(event);  // Assuming func is synchronous. If it's async, use await func(event);\n        event.stopPropagation();\n        debouncedSaveAll();\n    });\n}",
                     "language": "ts",
-                    "iLine": 471,
-                    "jLine": 478
+                    "iLine": 499,
+                    "jLine": 506
                 }
             ],
             "dependsOn": [
@@ -13477,6 +13799,20 @@
                 }
             ],
             "dependents": [
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_searchBox"
+                    ],
+                    "iChar": 1058,
+                    "jChar": 1064
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_searchOptions"
+                    ],
+                    "iChar": 682,
+                    "jChar": 688
+                },
                 {
                     "targets": [
                         "ts_firefly_firefly_function_keyboard"
@@ -13516,8 +13852,8 @@
                 {
                     "text": "function expandOrContract(elem : HTMLElement) {\n    let div = elem.parentElement!;\n    let view = s_graphView.userObj(div);\n    if (view.state == CardViewState.Compact) {\n        elem.classList.add(\"code-expanded\");\n        view.state = CardViewState.Fullsize;\n\n    } else if (view.state == CardViewState.Fullsize) {\n         elem.classList.remove(\"code-expanded\");\n         view.state = CardViewState.Compact;\n         elem.scrollLeft = view.xScroll;\n         elem.scrollTop = view.yScroll;\n    }\n    s_graphView.emphasize(div, elem.classList.contains(\"code-expanded\"));\n    s_graphView.attention(div);\n}",
                     "language": "ts",
-                    "iLine": 480,
-                    "jLine": 495
+                    "iLine": 508,
+                    "jLine": 523
                 }
             ],
             "dependsOn": [
@@ -13615,8 +13951,8 @@
                 {
                     "text": "function getScrollPos(elem: HTMLElement) {\n    let div = elem.parentElement!;\n    let view = s_graphView.userObj(div);\n    if (view.state == CardViewState.Compact) {\n        view.xScroll = div.scrollLeft;\n        view.yScroll = div.scrollTop;\n    }\n}",
                     "language": "ts",
-                    "iLine": 497,
-                    "jLine": 504
+                    "iLine": 525,
+                    "jLine": 532
                 }
             ],
             "dependsOn": [
@@ -13685,8 +14021,8 @@
                 {
                     "text": "const debouncedSaveAll = debounce(() => { saveAll() }, 300);",
                     "language": "ts",
-                    "iLine": 506,
-                    "jLine": 506
+                    "iLine": 534,
+                    "jLine": 534
                 }
             ],
             "dependsOn": [
@@ -13731,8 +14067,8 @@
                 {
                     "text": "async function saveAll() {\n    //console.log(\"saveAll\");\n    const json = s_graphView.json();\n    await save(json, \"sessions/test.json\");\n}",
                     "language": "ts",
-                    "iLine": 508,
-                    "jLine": 512
+                    "iLine": 536,
+                    "jLine": 540
                 }
             ],
             "dependsOn": [
@@ -13785,8 +14121,8 @@
                 {
                     "text": "async function save(json: any, path: string) {\n    await remote(\"@firefly.save\", { path: \"sessions/test.json\", obj: json });\n}",
                     "language": "ts",
-                    "iLine": 514,
-                    "jLine": 516
+                    "iLine": 542,
+                    "jLine": 544
                 }
             ],
             "dependsOn": [
@@ -13840,8 +14176,8 @@
                 {
                     "text": "async function load(path: string) : Promise<any> {\n    return await remote(\"@firefly.load\", { path: \"sessions/test.json\"});\n}",
                     "language": "ts",
-                    "iLine": 518,
-                    "jLine": 520
+                    "iLine": 546,
+                    "jLine": 548
                 }
             ],
             "dependsOn": [
@@ -13895,8 +14231,8 @@
                 {
                     "text": "// link button pressed\nfunction onLinkButtonPress(button: HTMLElement) {\n    const id = button.id.slice(\"linkto_\".length);\n    const linkIDs = id.split(\"__\");\n    for(const linkID of linkIDs) {\n        openOrCloseCard(linkID, button);\n    }\n}",
                     "language": "ts",
-                    "iLine": 522,
-                    "jLine": 529
+                    "iLine": 550,
+                    "jLine": 557
                 }
             ],
             "dependsOn": [
@@ -13934,8 +14270,8 @@
                 {
                     "text": "// if a card view is closed, opens it; otherwise closes it\nfunction openOrCloseCard(uid: string, button: HTMLElement) {\n    const card : Card | null = findCard(uid);\n    if (!card) return;\n    let existing = s_graphView.find(uid);\n    if (existing) {\n        closeCard(existing);\n    } else {\n        openCard(uid, button);\n    }\n}",
                     "language": "ts",
-                    "iLine": 531,
-                    "jLine": 541
+                    "iLine": 559,
+                    "jLine": 569
                 }
             ],
             "dependsOn": [
@@ -14008,8 +14344,8 @@
                 {
                     "text": "// opens a card, optionally connected to a button element\nfunction openCard(uid: string, button: HTMLElement | null){\n    let linkID = \"\";\n    let parentID = \"\";\n    if (button) {\n        linkID = button.id;\n        let parent = s_graphView.findDivContainingLink(button);\n        if (parent) parentID = parent.id;\n    }\n    s_graphView.reopen(uid, linkID, parentID, new CardView(CardViewState.Compact));\n    if (button) {\n        highlightLink(button, true);\n    }\n}",
                     "language": "ts",
-                    "iLine": 543,
-                    "jLine": 556
+                    "iLine": 571,
+                    "jLine": 584
                 }
             ],
             "dependsOn": [
@@ -14082,8 +14418,8 @@
                 {
                     "text": "// closes a card\nfunction closeCard(cardDiv: HTMLElement) {\n    let button = s_graphView.findLink(cardDiv);\n    if (button) {\n        highlightLink(button, false);\n    }\n    s_graphView.close(cardDiv);\n}",
                     "language": "ts",
-                    "iLine": 558,
-                    "jLine": 565
+                    "iLine": 586,
+                    "jLine": 593
                 }
             ],
             "dependsOn": [
@@ -14142,8 +14478,8 @@
                 {
                     "text": "text: string = \"\";                  // actual code text",
                     "language": "ts",
-                    "iLine": 22,
-                    "jLine": 22
+                    "iLine": 24,
+                    "jLine": 24
                 }
             ],
             "dependsOn": [],
@@ -14187,8 +14523,8 @@
                 {
                     "text": "language: string;                   // \".ts\", \".py\", \".cpp\", \".hpp\", etc.",
                     "language": "ts",
-                    "iLine": 23,
-                    "jLine": 23
+                    "iLine": 25,
+                    "jLine": 25
                 }
             ],
             "dependsOn": [],
@@ -14225,8 +14561,8 @@
                 {
                     "text": "iLine: number = 0;                  // 1-based line index in original code file",
                     "language": "ts",
-                    "iLine": 24,
-                    "jLine": 24
+                    "iLine": 26,
+                    "jLine": 26
                 }
             ],
             "dependsOn": [],
@@ -14263,8 +14599,8 @@
                 {
                     "text": "    constructor(code: string, language: string, iLine: number) {\n        this.text = code; this.language = language; this.iLine = iLine;\n    }\n}",
                     "language": "ts",
-                    "iLine": 25,
-                    "jLine": 28
+                    "iLine": 27,
+                    "jLine": 30
                 }
             ],
             "dependsOn": [
@@ -14309,8 +14645,8 @@
                 {
                     "text": "iChar: number = 0;                  // character index in code of start of symbol",
                     "language": "ts",
-                    "iLine": 31,
-                    "jLine": 31
+                    "iLine": 33,
+                    "jLine": 33
                 }
             ],
             "dependsOn": [],
@@ -14332,8 +14668,8 @@
                 {
                     "text": "jChar: number = 0;                  // character index in code after symbol",
                     "language": "ts",
-                    "iLine": 32,
-                    "jLine": 32
+                    "iLine": 34,
+                    "jLine": 34
                 }
             ],
             "dependsOn": [],
@@ -14363,8 +14699,8 @@
                 {
                     "text": "targets: string[] = [];             // card uids we link to",
                     "language": "ts",
-                    "iLine": 33,
-                    "jLine": 33
+                    "iLine": 35,
+                    "jLine": 35
                 }
             ],
             "dependsOn": [],
@@ -14408,8 +14744,8 @@
                 {
                     "text": "};",
                     "language": "ts",
-                    "iLine": 34,
-                    "jLine": 34
+                    "iLine": 36,
+                    "jLine": 36
                 }
             ],
             "dependsOn": [],
@@ -14431,8 +14767,8 @@
                 {
                     "text": "uid: string = \"\";                   // uid; something like lang_module_kind_name, but maybe other decorators too",
                     "language": "ts",
-                    "iLine": 37,
-                    "jLine": 37
+                    "iLine": 39,
+                    "jLine": 39
                 }
             ],
             "dependsOn": [],
@@ -14483,8 +14819,8 @@
                 {
                     "text": "language: string = \"\";              // language shortname of original code",
                     "language": "ts",
-                    "iLine": 38,
-                    "jLine": 38
+                    "iLine": 40,
+                    "jLine": 40
                 }
             ],
             "dependsOn": [],
@@ -14521,8 +14857,8 @@
                 {
                     "text": "module: string = \"\";                // module: eg. firefly or graphview",
                     "language": "ts",
-                    "iLine": 39,
-                    "jLine": 39
+                    "iLine": 41,
+                    "jLine": 41
                 }
             ],
             "dependsOn": [],
@@ -14544,8 +14880,8 @@
                 {
                     "text": "kind: string = \"\";                  // \"class\" or \"function\" or \"other\"",
                     "language": "ts",
-                    "iLine": 40,
-                    "jLine": 40
+                    "iLine": 42,
+                    "jLine": 42
                 }
             ],
             "dependsOn": [],
@@ -14596,8 +14932,8 @@
                 {
                     "text": "name: string = \"\";                  // name of function or class being defined",
                     "language": "ts",
-                    "iLine": 41,
-                    "jLine": 41
+                    "iLine": 43,
+                    "jLine": 43
                 }
             ],
             "dependsOn": [],
@@ -14619,8 +14955,8 @@
                 {
                     "text": "purpose: string = \"\";               // purpose",
                     "language": "ts",
-                    "iLine": 42,
-                    "jLine": 42
+                    "iLine": 44,
+                    "jLine": 44
                 }
             ],
             "dependsOn": [],
@@ -14642,8 +14978,8 @@
                 {
                     "text": "examples: string = \"\";              // examples",
                     "language": "ts",
-                    "iLine": 43,
-                    "jLine": 43
+                    "iLine": 45,
+                    "jLine": 45
                 }
             ],
             "dependsOn": [],
@@ -14665,8 +15001,8 @@
                 {
                     "text": "inputs: string = \"\";                // inputs",
                     "language": "ts",
-                    "iLine": 44,
-                    "jLine": 44
+                    "iLine": 46,
+                    "jLine": 46
                 }
             ],
             "dependsOn": [],
@@ -14688,8 +15024,8 @@
                 {
                     "text": "outputs: string = \"\";               // outputs",
                     "language": "ts",
-                    "iLine": 45,
-                    "jLine": 45
+                    "iLine": 47,
+                    "jLine": 47
                 }
             ],
             "dependsOn": [],
@@ -14711,8 +15047,8 @@
                 {
                     "text": "code: CodeBlock[] = [];             // actual text from code file",
                     "language": "ts",
-                    "iLine": 46,
-                    "jLine": 46
+                    "iLine": 48,
+                    "jLine": 48
                 }
             ],
             "dependsOn": [
@@ -14750,8 +15086,8 @@
                 {
                     "text": "dependsOn: Dependency[] = [];       // cards we depend on",
                     "language": "ts",
-                    "iLine": 47,
-                    "jLine": 47
+                    "iLine": 49,
+                    "jLine": 49
                 }
             ],
             "dependsOn": [
@@ -14796,8 +15132,8 @@
                 {
                     "text": "dependents: Dependency[] =[];       // cards that depend on us",
                     "language": "ts",
-                    "iLine": 48,
-                    "jLine": 48
+                    "iLine": 50,
+                    "jLine": 50
                 }
             ],
             "dependsOn": [
@@ -14827,8 +15163,8 @@
                 {
                     "text": "children: Card[] =[];               // if we're a class, cards for methods",
                     "language": "ts",
-                    "iLine": 49,
-                    "jLine": 49
+                    "iLine": 51,
+                    "jLine": 51
                 }
             ],
             "dependsOn": [
@@ -14894,8 +15230,8 @@
                 {
                     "text": "parent: string = \"\";                // if we're a method or property, points to parent",
                     "language": "ts",
-                    "iLine": 50,
-                    "jLine": 50
+                    "iLine": 52,
+                    "jLine": 52
                 }
             ],
             "dependsOn": [],
@@ -14946,8 +15282,8 @@
                 {
                     "text": "rankFromBottom: number = 0;         // 1 means depends on nothing; x means depends on things with rank < x",
                     "language": "ts",
-                    "iLine": 51,
-                    "jLine": 51
+                    "iLine": 53,
+                    "jLine": 53
                 }
             ],
             "dependsOn": [],
@@ -14969,8 +15305,8 @@
                 {
                     "text": "rankFromTop: number = 0;            // 1 means nothing calls this; x means called by things with rank < x",
                     "language": "ts",
-                    "iLine": 52,
-                    "jLine": 52
+                    "iLine": 54,
+                    "jLine": 54
                 }
             ],
             "dependsOn": [],
@@ -14992,8 +15328,8 @@
                 {
                     "text": "state: CardViewState = CardViewState.Compact;",
                     "language": "ts",
-                    "iLine": 64,
-                    "jLine": 64
+                    "iLine": 66,
+                    "jLine": 66
                 }
             ],
             "dependsOn": [],
@@ -15051,8 +15387,8 @@
                 {
                     "text": "xScroll: number =0;",
                     "language": "ts",
-                    "iLine": 65,
-                    "jLine": 65
+                    "iLine": 67,
+                    "jLine": 67
                 }
             ],
             "dependsOn": [],
@@ -15124,8 +15460,8 @@
                 {
                     "text": "yScroll: number =0;",
                     "language": "ts",
-                    "iLine": 66,
-                    "jLine": 66
+                    "iLine": 68,
+                    "jLine": 68
                 }
             ],
             "dependsOn": [],
@@ -15197,8 +15533,8 @@
                 {
                     "text": "    constructor(state: CardViewState) {\n        this.state = state;\n    }\n}",
                     "language": "ts",
-                    "iLine": 67,
-                    "jLine": 70
+                    "iLine": 69,
+                    "jLine": 72
                 }
             ],
             "dependsOn": [
@@ -15243,8 +15579,8 @@
                 {
                     "text": "iDep: number =-1;               // dependency index in caller",
                     "language": "ts",
-                    "iLine": 238,
-                    "jLine": 238
+                    "iLine": 266,
+                    "jLine": 266
                 }
             ],
             "dependsOn": [],
@@ -15281,8 +15617,8 @@
                 {
                     "text": "card: Card | null = null;       // card to open",
                     "language": "ts",
-                    "iLine": 239,
-                    "jLine": 239
+                    "iLine": 267,
+                    "jLine": 267
                 }
             ],
             "dependsOn": [
@@ -15334,8 +15670,8 @@
                 {
                     "text": "    constructor(iDep: number, card: Card) {\n        this.iDep = iDep; this.card = card;\n    }\n}",
                     "language": "ts",
-                    "iLine": 240,
-                    "jLine": 243
+                    "iLine": 268,
+                    "jLine": 271
                 }
             ],
             "dependsOn": [
