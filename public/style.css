@@ -42,15 +42,16 @@ body {
     border-radius: 3px;
     background-color: #74aaa0;
     position: relative;
-    width: 320px;
-    min-width: 320px;
-    max-width: 320px;
+    width: 128px;
+    min-width: 128px;
+    max-width: 512px;
     margin-left: 10px;
-    margin-right: 8px;
+    margin-right: 4px;
     height: 1.5em;
     white-space: nowrap;
     padding: 0.25em;
     padding-left: 8px;
+    overflow-x: auto;
 }
 
 .search-results {

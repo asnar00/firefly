@@ -86,6 +86,7 @@ async function init() {
     logo();
     graph();
     searchBox();
+    keyboard();
 }
 
 function logo() {
@@ -153,19 +154,25 @@ function reset() {
 function searchBox() {
     const searchFieldHTML = `<div class="search-field" id="search-field" contenteditable="true" spellcheck="false"></div>`;
     const iconHTML = `<i class="icon-search" style="padding-top: 6px;"></i>`;
+    const icon2HTML = `<i class="icon-right-open" style="padding-top: 6px; padding-right:3px"></i>`;
     const searchResultsHTML = `<div class="search-results" id="search-results"></div>`;
-    const searchDivHTML = `<div class="search-box" id="search-box">${iconHTML}${searchFieldHTML}${searchResultsHTML}</div>`;
+    const searchDivHTML = `<div class="search-box" id="search-box">${iconHTML}${searchFieldHTML}${icon2HTML}${searchResultsHTML}</div>`;
     const shadow = element(`<div class="shadow"></div>`);
     let searchDiv = element(searchDivHTML);
     document.body.append(searchDiv);
     searchDiv.style.top = `${window.innerHeight -  64}px`;
     let searchField = document.getElementById("search-field")!;
     searchField.addEventListener('keydown', async (event) => {
-        if (event.key ==="Enter") {
-            event.preventDefault();
+        searchField.style.width = '128px';
+        if (searchField.scrollWidth < 512) {
+            searchField.style.width = `${searchField.scrollWidth}px`;
+        } else {
+            searchField.style.width = '512px';
+        }
+        setTimeout(async () => {
             const results = await testSearch(searchField!.innerText);
             showSearchResults(results);
-        }
+        }, 0);
     });
 
     document.body.append(shadow);
@@ -176,6 +183,21 @@ function searchBox() {
     shadow.style.width = `${sr.width()+16}px`;
 }
 
+async function keyboard() {
+    listen(document.body, 'keydown', async (event: KeyboardEvent) => {
+        console.log(event.key);
+        if (event.metaKey && event.key == 'f') {
+            event.preventDefault();
+            await onCommandKey();
+        }
+    });
+}
+
+async function onCommandKey() {
+    let searchField = document.getElementById("search-field")!;
+    searchField.innerText = "";
+    searchField.focus();
+}
 
 async function testSearch(query: string) : Promise<any>{
     console.log("testSearch");
@@ -233,7 +255,8 @@ function jumpToCard(target: Card) {
         s_graphView.open(cardID, `linkto_${cardID}`, card.uid, new CardView(CardViewState.Compact), false);
         card = link.card!;
     }
-    s_graphView.attention(s_graphView.find(card.uid)!);
+    let lastId = chain[chain.length-1].card!.uid;
+    //setTimeout(() => { expandOrContract(s_graphView.find(lastId)!); }, 0);
 }
 
 
