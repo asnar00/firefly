@@ -11491,7 +11491,7 @@
             "outputs": "",
             "code": [
                 {
-                    "text": "function moveLogo() {\n    let xScroll = window.scrollX;\n    let logo = document.getElementById(\"logo_and_shadow\")!;\n    let shadow = document.getElementById(\"logo_shadow\")!;\n    let [yMin, yMax] = s_graphView.yRange(xScroll + rect(logo).width() + 50);\n    if (yMin && yMax) {\n        logo.style.top = `${yMin - 80}px`;\n        shadow.style.top = `${document.body.clientHeight - yMin - 100}px`;\n    } else {\n        logo.style.top = `${(window.innerHeight/2)-40}px`;\n        shadow.style.top = `${45}px`;\n    }\n}",
+                    "text": "function moveLogo() {\n    let xScroll = window.scrollX;\n    let logo = document.getElementById(\"logo_and_shadow\")!;\n    let shadow = document.getElementById(\"logo_shadow\")!;\n    let [yMin, yMax] = s_graphView.yRange(xScroll + rect(logo).width() + 50);\n    if (yMin && yMax) {\n        logo.style.top = `${window.innerHeight -  60}px`;\n        shadow.style.top = `${document.body.clientHeight - yMin - 100}px`;\n    } else {\n        logo.style.top = `${(window.innerHeight/2)-40}px`;\n        shadow.style.top = `${45}px`;\n    }\n}",
                     "language": "ts",
                     "iLine": 111,
                     "jLine": 123

@@ -125,7 +125,7 @@ function moveLogo() {
     let shadow = document.getElementById("logo_shadow");
     let [yMin, yMax] = s_graphView.yRange(xScroll + rect(logo).width() + 50);
     if (yMin && yMax) {
-        logo.style.top = `${yMin - 80}px`;
+        logo.style.top = `${window.innerHeight - 60}px`;
         shadow.style.top = `${document.body.clientHeight - yMin - 100}px`;
     }
     else {
