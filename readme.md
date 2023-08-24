@@ -69,6 +69,39 @@ But it's also totally fine to resolve ambiguity in other ways.
 The key thing is to get capability with vector search, embeddings, document understanding, and the agent.
 Now let's do service registry.
 
+TODAY:
+got semantic search workflow pass 1 running !
+and our little noob friend comes with us on the journey - makes a big difference. Not sure his movement is quite right yet.
+but it's fun, right amount of playfulness.
+direction: keep building it for ME to use, don't care what anyone else wants.
+
+things to improve:
+- lexer-based dependency mapping
+- reset view before open-sequence
+- fold in exact search results, merge with semantic
+- check why "embedding" buttons don't always work in search results
+- shortcut keys for search, jump-to-result
+
+TOMORROW: travel day, may not get much done
+but if we do, priority is lexer-based dependency computation
+- have to make that a bit more robust and correct.
+
+next thing: compute "versions" from original version.
+memoised prompts to GPT-4. That's got to be the way forward.
+
+Thoughts on what to build with this:
+
+clearly, build a WebGPU renderer that can render this, with proper shadows/lighting/radiosity and whatnot. Like in "Her".
+how that interacts with the browser renderer I don't know, but I guess render HTML to some kind of offscreen buffer.
+also good to use it to emulate the old FTR, hummingbird, mosquito, dragonfly codebases.
+
+Thoughts on company structure.
+
+1. nøøb is the R&D company
+2. to see its top-secret demos, sign an NDA and play with the experiments
+3. emulate old work and make it available (CV)
+4. older experiments can also be released without NDA
+5. express your mission statement through action.
 
 TODAY:
 - titles DONE
