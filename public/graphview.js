@@ -109,6 +109,16 @@ export class GraphView {
     }
     reopen(id, linkID, parentID, userObj, emphasize = false) {
         let toOpen = [];
+        // is the node already open? if so, move it to the new link/parent
+        let existingDiv = this.find(id);
+        if (existingDiv) {
+            let node = this.get(existingDiv);
+            if (node) {
+                node.reassignTo(linkID, parentID);
+            }
+            return;
+        }
+        // we're opening the node
         let i = this.closedNodes.findIndex(n => n.id == id); // is new node in closedNodes?
         if (i == -1) {
             toOpen = [{ id: id, link: linkID !== null && linkID !== void 0 ? linkID : "null",
@@ -559,6 +569,16 @@ class Node {
     }
     moving() {
         return (this.x != this.xTarget || this.y != this.yTarget);
+    }
+    reassignTo(linkID, parentID) {
+        if (this.linkDiv) {
+            this.graph.removeArrow(this.linkDiv, this.div);
+            this.graph.highlightFunction(this.linkDiv, false);
+        }
+        this.parentDiv = this.graph.find(parentID);
+        this.parentNode = this.graph.get(this.parentDiv);
+        this.linkDiv = this.graph.find(linkID, this.parentDiv);
+        this.graph.addArrow(this.linkDiv, this.parentDiv, this.div);
     }
     update() {
         const dx = this.xTarget - this.x;

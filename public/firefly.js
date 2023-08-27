@@ -289,11 +289,11 @@ function jumpToCard(target) {
         return;
     //reset();
     let card = mainCard;
-    for (let link of chain) {
-        const cardID = link.card.uid;
-        s_graphView.open(cardID, `linkto_${cardID}`, card.uid, new CardView(CardViewState.Compact), false);
-        card = link.card;
-    }
+    //for(let link of chain) {
+    //    const cardID = link.card!.uid;
+    //    s_graphView.open(cardID, `linkto_${cardID}`, card.uid, new CardView(CardViewState.Compact), false);
+    //    card = link.card!;
+    //}
     let lastId = chain[chain.length - 1].card.uid;
     //setTimeout(() => { expandOrContract(s_graphView.find(lastId)!); }, 0);
 }
@@ -462,6 +462,7 @@ function cardToHTML(id, view) {
     }
     else {
         let iChar = 0;
+        let iLink = 0;
         for (const dep of card.dependsOn) {
             // add text-node going from (iChar) to (dep.iChar)
             if (dep.iChar > iChar) {
@@ -469,7 +470,8 @@ function cardToHTML(id, view) {
             }
             // add span containing the link
             const link = text.slice(dep.iChar, dep.jChar);
-            let linkId = "linkto_" + dep.targets[0];
+            let linkId = `linkto__${iLink}__` + dep.targets[0];
+            iLink++;
             for (let i = 1; i < dep.targets.length; i++) {
                 linkId += "__" + dep.targets[i];
             }
@@ -575,23 +577,33 @@ function load(path) {
 }
 // link button pressed
 function onLinkButtonPress(button) {
-    const id = button.id.slice("linkto_".length);
-    const linkIDs = id.split("__");
-    for (const linkID of linkIDs) {
-        openOrCloseCard(linkID, button);
+    const linkIDs = button.id.split("__"); // linkto__number__link1__link2__ etc.
+    let cards = [];
+    for (let i = 2; i < linkIDs.length; i++) {
+        const cardUid = linkIDs[i];
+        const card = findCard(cardUid);
+        if (card)
+            cards.push(card);
+    }
+    let highlighted = button.classList.contains("tag-highlight");
+    if (highlighted) {
+        for (let c of cards) {
+            closeCardIfExists(c.uid);
+        }
+        highlightLink(button, false);
+    }
+    else {
+        for (let c of cards) {
+            openCard(c.uid, button);
+        }
+        highlightLink(button, true);
     }
 }
-// if a card view is closed, opens it; otherwise closes it
-function openOrCloseCard(uid, button) {
-    const card = findCard(uid);
-    if (!card)
-        return;
+// closes card if it's open
+function closeCardIfExists(uid) {
     let existing = s_graphView.find(uid);
     if (existing) {
         closeCard(existing);
-    }
-    else {
-        openCard(uid, button);
     }
 }
 // opens a card, optionally connected to a button element
