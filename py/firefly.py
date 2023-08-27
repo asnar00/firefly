@@ -70,6 +70,7 @@ def importAllCards(project, folders) -> dict:
         for file in files:
             cards.extend(importCardsFromFile(project, file))
     cards = list(filter(lambda c: not c.uid().endswith("_"), cards))
+    removeIndents(cards)
     computeDependencies(cards)
     #computeLevels(cards)
     saveEmbeddings(cards)
@@ -108,8 +109,22 @@ class Language:
         return ""
     def comment(self) -> str:
         return ""
+    def multiLineComment(self) -> str:
+        return ""
+    def endMultiLineComment(self) -> str:
+        return ""
+    def checkOpenQuote(self, str, ic):   # if (str[ic:]) starts with an openquote, return the closed-quote string to look for
+        return ""
+    def namesCanContainHyphens(self) -> bool:
+        return False
+    def constructorName(self) -> str:
+        return ""
+    def definitionKeywords(self) -> List[str]:
+        return []
     def importCards(self, project, module,  text):
         return []
+    def thisName(self) -> str:  # return "this" or "self" or whatever
+        return ""
     def findTypeAndName(self, card, minIndent) -> (str, str):
         return ("", "")
     
@@ -174,10 +189,10 @@ def card_serialiser(obj):
     raise TypeError(f"Type {type(obj)} unfortunately is not serializable")
 
 class Dependency:
-    def __init__(self, iChar: int, jChar: int, target: Card):
+    def __init__(self, iChar: int, jChar: int, targets: Card):
         self.iChar = iChar
         self.jChar = jChar
-        self.targets = [ target ]
+        self.targets = targets
     def combine(self, dep):
         len0 = self.jChar - self.iChar
         len1 = dep.jChar - dep.iChar
@@ -196,6 +211,18 @@ class Python(Language):
     def name(self): return "python"
     def shortName(self): return "py"
     def comment(self): return "#"
+    def checkOpenQuote(self, str, ic):   # if (str) starts with an openquote, return a pair: open and close quote strings
+        if str.startswith('\'', ic): return ('\'', '\'')
+        elif str.startswith('"', ic): return ('"', '"')
+        elif str.startswith('f"', ic): return ('f"', '"')
+        elif str.startswith('"""', ic): return ('"""', '"""')
+        return("", "")
+    def constructorName(self) -> str:
+        return "__init__"
+    def definitionKeywords(self) -> List[str]:
+        return ["def", "class"]
+    def thisName(self) -> str:  # return "this" or "self" or whatever
+        return 'self'
     def importCards(self, project, module, text, minIndent) -> List[Card]:
         lines = text.split("\n")
         card = None
@@ -242,6 +269,19 @@ class Typescript(Language):
     def name(self): return "typescript"
     def shortName(self): return "ts"
     def comment(self): return "//"
+    def multiLineComment(self): return "/*"
+    def endMultiLineComment(self): return "*/"
+    def checkOpenQuote(self, str, ic):
+        if str[ic] == '"': return ('"', '"')
+        elif str[ic] == '`': return ('`','`')
+        elif str[ic] == '\'': return ('\'', '\'')
+        return ("", "")
+    def constructorName(self) -> str:
+        return "constructor"
+    def definitionKeywords(self) -> List[str]:
+        return ["function", "class"]
+    def thisName(self) -> str:  # return "this" or "self" or whatever
+        return 'this'
     def importCards(self, project, module, text, minIndent) -> List[Card]:
         lines = text.split("\n")
         cards = []
@@ -254,11 +294,13 @@ class Typescript(Language):
                 # should we start a new card?
                 # YES if current line has indent = minIndent, line is not blank and previous line is not a comment
                 # NO if the line is just "}"
-                isSingleCloseBrace = (line.strip() == "}")
-                if indent == minIndent and (not prevLine.strip().startswith("//")) and (not isSingleCloseBrace):
+                blank = (line.strip()=="")
+                singleCloseBrace = (line.strip() == "}")
+                prevComment = prevLine.strip().startswith("//")
+                if indent == minIndent and (not blank) and (not prevComment) and (not singleCloseBrace):
                     card = Card(project, module, line, self, iLine+1)
                     cards.append(card)
-                else:
+                elif card:
                     card.code[0].text += "\n" + line
                     card.code[0].jLine = iLine + 1
             indent = indent + countBraces(line)
@@ -268,7 +310,9 @@ class Typescript(Language):
         lines = card.code[0].text.split("\n")
         for line in lines:
             l = line.strip()
-            if not l.startswith("//"):
+            icom = l.find("//")
+            if icom>=0: l = l[0 : icom]
+            if l != "":
                 w = l.split(" ")
                 classIndex = findString(w, "class")
                 if classIndex >= 0:
@@ -338,70 +382,189 @@ def cardsToJsonDict(cards: List[Card]) -> dict:
     print("saved")
     return jsonObj
 
-def computeDependencies(cards: List[Card]):
-    #print("\ncomputing dependencies...")
-    # for each card's code, run through all other cards to see if their names occur
-    for card in cards:
-        if card.name != "unknown" :  #and card.kind != "property" and card.kind != "global" and card.kind != "class"
-            for c in cards:
-                iCharStart = -1
-                search = ""
-                if c != card and c.name == card.name and c.kind == "function":     # cross-project dependency
-                    search = f"@{c.project}.{c.name}"
-                    iCharStart = card.code[0].text.find(search)
-                elif c != card and c.name != "unknown" and c.name != card.name and c.language == card.language:
-                    search = c.name 
-                    if c.kind == "method":
-                        if c.name == "constructor": search = c.parent.name + "("    # this is language-specific! move this into a Language method
-                        else: search = "." + c.name
-                    elif c.kind == "property":
-                        search = "." + c.name
-                    iCharStart = findWordInString(search, card.code[0].text)
-                if iCharStart >= 0:
-                    if not inComment(iCharStart, card.code[0]):
-                        iCharEnd = iCharStart + len(search)
-                        card.dependsOn.append(Dependency(iCharStart, iCharEnd, c))
-                        c.dependents.append(Dependency(iCharStart, iCharEnd, card))
-            card.dependsOn = sorted(card.dependsOn, key=lambda d: d.iChar)
-            # deal with overlapping dependencies (until we switch to using
-            i = 0
-            while i < len(card.dependsOn)-1:
-                d0 = card.dependsOn[i]
-                d1 = card.dependsOn[i+1]
-                if d0.jChar > d1.iChar and d1.iChar < d0.jChar: # overlaps
-                    d0.combine(d1)
-                    card.dependsOn.remove(d1)
-                else:
-                    i +=1
+class Lex:
+    def __init__(self, code: str ="", iChar:int =0, jChar:int =0, type:str =""):
+        sub = code[iChar:jChar]
+        ts = sub.lstrip()
+        iChar += len(sub) - len(ts)
+        te = sub.rstrip()
+        jChar -= len(sub) - len(te)
+        self.ic = iChar
+        self.jc = jChar
+        self.text = code[iChar:jChar]
+        self.type = type
+        self.targets = []
 
-def inComment(iChar: int, code: CodeBlock) -> bool:
-    return searchBackwards(code.text, code.language.comment(), iChar)
-
-def searchBackwards(s: str, target: str, iChar: int) -> bool:
-    # search backwards from iChar for comment, until we hit start of line or text
-    # Edge case: if iChar is outside the bounds of the string
-    if iChar < 0 or iChar > len(s):
+    def __eq__(self, other):
+        if isinstance(other, Lex):
+            return self.text == other.text
+        elif isinstance(other, str):
+            return self.text == other
         return False
-    
-    # Start from iChar and go backwards
-    for i in range(iChar, -1, -1):
-        # Check for start of the string
-        if i == 0:
-            return False
-        # Check for start of a line
-        if s[i] == '\n':
-            return False
-        # Check if the substring ending at index i matches the target
-        if s[i-len(target)+1:i+1] == target:
-            return True
-    
+
+def computeDependencies(cards: List[Card]):         # this is a bit of a behemoth, refactor!
+    # put all cards into a hash table mapping name -> List[Card]
+    cardsFromName = {}
+    for card in cards:
+        name = card.name
+        if not (name in cardsFromName):
+            cardsFromName[name] = [card]
+        else:
+            cardsFromName[name].append(card)
+    # now check each card for words that might map to others
+    for card in cards:
+        code = card.code[0].text
+        lang = card.code[0].language
+        ls = processLexemes(code, lang)
+        # first, get the types of all local variables, if they're declared
+        typeFromVar = {}
+        typeFromVar[lang.thisName()] = card.parent.name if card.parent else ''
+        for i in range(0, len(ls)-2):
+            if ls[i].type == 'identifier' and ls[i+1]==':' and ls[i+2].type == 'identifier':
+                typeFromVar[ls[i].text] = ls[i+2].text
+        # now get an array of possible cards for each identifier
+        for l in ls:
+            if l.type == 'identifier':
+                p = []
+                if l.text in cardsFromName:
+                    p = cardsFromName[l.text]
+                l.targets = p
+        # get the type of each global, if you can
+        for l in ls:
+            if l.type == 'identifier' and len(l.targets)==1:
+                t = l.targets[0]
+                if t.kind == 'global':
+                    # split the global def into lexemes
+                    gls = processLexemes(t.code[0].text, t.code[0].language)
+                    # look for a : b and grab b
+                    for i in range(0, len(gls)-2):
+                        if gls[i].type == 'identifier' and gls[i] == t.name and gls[i+1] == ':' and gls[i+2].type=='identifier':
+                            typeFromVar[l.text] = gls[i+2].text
+
+        # now whittle down the potentials list using various filters
+
+        # 1- remove the targets for the definition
+        for l in ls:
+            if l.text == card.name and len(l.targets)>0:
+                l.targets= []
+                break
+        # 2- remove targets from b that don't match type of a.b
+        for i in range(2, len(ls)):
+            pred = ls[i-2]
+            if ls[i].type == 'identifier' and ls[i-1] == '.' and pred.type == 'identifier':
+                if pred.text in typeFromVar:
+                    predType = typeFromVar[pred.text]
+                    ls[i].targets = [t for t in ls[i].targets if t.parent and t.parent.name == predType]
+        # 3- if you matched a property or method but there's no dot before, get rid
+        for i in range(1, len(ls)):
+            if ls[i].type == 'identifier' and ls[i-1] != '.':
+                ls[i].targets = [t for t in ls[i].targets if t.kind != 'method' and t.kind != 'property']
+        # 4- if you matched a function or method but there's no bracket after, get rid; but only if the match is ambiguous! (i.e. keep function ptrs)
+        for i in range(0, len(ls)-1):
+            if ls[i].type == 'identifier' and ls[i+1] != '(' and len(ls[i].targets) > 1:
+                ls[i].targets = [t for t in ls[i].targets if t.kind != 'function' and t.kind != 'method']
+        # 5- if you matched something in a different language, remove it (TBC)
+        for l in ls:
+            if l.type == 'identifier':
+                l.targets = [t for t in l.targets if t.code[0].language.shortName() == lang.shortName()]
+
+        # and create dependencies from the potentials
+        for i in range(0, len(ls)):
+            l = ls[i]
+            l.targets = [t for t in l.targets if t != card]
+            if len(l.targets) > 0:
+                dep = Dependency(l.ic, l.jc, l.targets)
+                card.dependsOn.append(dep)
+                for t in l.targets:
+                    if t != card:
+                        t.dependents.append(Dependency(l.ic, l.jc, [card]))
+            
+def processLexemes(code: str, lang: Language) -> List[Lex]:
+    mlc = lang.multiLineComment()
+    elmc = lang.endMultiLineComment()
+    result = []
+    ic = 0
+    while ic < len(code):
+        ic = skipToNextNonWhitespace(code, ic)
+        type = ''
+        if ic < len(code):
+            if code.startswith(lang.comment(), ic):         # single-line comment
+                jc = skipPast('\n', code, ic)
+                type = 'comment'
+            elif mlc != '' and code.startswith(mlc, ic):    # multi-line comment
+                jc = skipPast(elmc, code, ic)
+                type = 'comment'
+            else:
+                (openQuote, closeQuote) = lang.checkOpenQuote(code, ic)          # quotes
+                if closeQuote != '':
+                    jc = skipPastCloseQuote(closeQuote, code, ic + len(openQuote))
+                    type = 'quote'
+                elif isAlpha(code[ic]):
+                    jc = skipPastNextWord(code, ic, lang)
+                    type = 'identifier'
+                elif isOperator(code[ic]):
+                    jc = skipPastOperator(code, ic)
+                    type = 'operator'
+                else:
+                    jc = ic + 1
+            result.append(Lex(code, ic, jc, type))
+            ic = jc
+    return result
+
+def skipPast(searchFor, inText, ic) -> int:     # just straight search for (search), return index after or len() if not found
+    jc = inText.find(searchFor, ic)
+    return (jc + len(searchFor)) if jc >= 0 else len(inText)
+
+def skipPastCloseQuote(searchFor, inText, ic) -> int:   # same, but will overlook '\' characters
+    while(ic < len(inText)):
+        ic = inText.find(searchFor, ic)
+        if ic < 0: return len(inText)
+        if ic == 0 or inText[ic-1] != '\\': return ic + len(searchFor)
+        ic = ic + len(searchFor)
+    return len(inText)
+
+def skipPastNextWord(inText, ic, lang: Language) -> int:    # skip past end of next word
+    while(ic < len(inText)):
+        char = inText[ic]
+        if not isWordChar(char, lang): return ic
+        ic += 1
+    return len(inText)
+
+def isWhitespace(char) -> bool:
+    return char in ' \n\t'
+
+def skipToNextNonWhitespace(inText, ic) -> int: # skip to next nonwhitespace character
+    while(ic < len(inText)):
+        if not isWhitespace(inText[ic]):
+            return ic
+        ic += 1
+    return ic
+
+def isAlpha(char) -> bool:
+    l = char.lower()
+    return (l >= 'a' and l <= 'z') or l == '_'
+
+def isOperator(char) -> bool:
+    return char in '!@#$%^&*_+-=:;<>.,/?'
+
+def skipPastOperator(inText, ic) -> int:
+    if ic < len(inText)-1 and isOperator(inText[ic+1]): return ic+2
+    return ic+1
+
+def isWordChar(char, lang: Language) -> bool:
+    l = char.lower()
+    if (l >= 'a' and l <= 'z'): return True
+    if (l >= '0' and l <= '9'): return True
+    if (l == '_'): return True
+    if (lang.namesCanContainHyphens() and l == '-'): return True
     return False
 
+
 def computeLevels(cards: List[Card]):
-    #print("computeLevels...")
+    #print('computeLevels...')
     # now compute the levels of all callable things (not classes or properties)
-    callables = [c for c in cards if c.kind == "method" or c.kind == "function"]
-    #print("\ncomputing rank from top...")
+    callables = [c for c in cards if c.kind == 'method' or c.kind == 'function']
+    #print('\ncomputing rank from top...')
     queue = []
     for c in callables:
         count=0
@@ -454,14 +617,6 @@ def computeLevels(cards: List[Card]):
                             nextQueue.append(t)
         queue = nextQueue
         level += 1
-    
-    #cards = sorted(cards, key=lambda x: x.level)
-    #maxLevel =0
-    #for card in cards:
-        # if card.level > maxLevel:
-        #     print("level", card.level, "--------------------")
-        #     maxLevel = card.level
-        # print(card.shortName())
 
 def writeTextToFile(text: str, path: str):
     folder = os.path.dirname(path)
@@ -472,13 +627,9 @@ def writeTextToFile(text: str, path: str):
 
 def importCardsFromText(project: str, module: str, language: Language, text: str, parent: Card, minIndent: int)-> List[Card]:
     cards = language.importCards(project, module, text, minIndent)
-    removeIndents(cards)
     for c in cards:
         c.parent = parent
         (c.kind, c.name) = language.findTypeAndName(c)
-        parentName = (c.parent.name + ".") if c.parent else ""
-        #print(f"\n{c.kind}: {parentName}{c.name} ---------------------")
-        #print(c.code[0].text)
     return cards
     
 def removeIndents(cards: List[Card]):
@@ -486,8 +637,9 @@ def removeIndents(cards: List[Card]):
         lines = card.code[0].text.split('\n')
         minLeadingSpaces = 10000
         for line in lines:
-            nLeadingSpaces = len(line) - len(line.lstrip(' '))
-            minLeadingSpaces = min(minLeadingSpaces, nLeadingSpaces)
+            if len(line) > 0:
+                nLeadingSpaces = len(line) - len(line.lstrip(' '))
+                minLeadingSpaces = min(minLeadingSpaces, nLeadingSpaces)
         if minLeadingSpaces > 0:
             lines = [l[minLeadingSpaces:] for l in lines]
             card.code[0].text = '\n'.join(lines)
@@ -533,7 +685,25 @@ def findAllFiles(directory, extension):
 
     return matched_files
 
-
-if __name__ == "__main__":
+def startFirefly():
     vectors.load()
     service.start("firefly", 8003, root)
+
+def test():
+    print("testing...")
+    cards = importCardsFromFile("firefly", "../ts/firefly.ts")
+    computeDependencies(cards)
+    for card in cards:
+        print("----------------------------------")
+        print(card.uid())
+        code = card.code[0].text
+        print(code)
+        words = []
+        for d in card.dependsOn:
+            for t in d.targets:
+                words.append(t.shortName())
+        print(words)
+
+if __name__ == "__main__":
+    #test()
+    startFirefly()

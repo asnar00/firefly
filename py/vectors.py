@@ -12,7 +12,8 @@ import os
 import json
 
 global sbertModel
-sbertModel = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+sbertModel = None
+
 global embeddings
 embeddings = {} # key => { value, vector }
 
@@ -21,13 +22,13 @@ root = "/Users/asnaroo/desktop/experiments/firefly/data/vectors"
 def add(key: str, value):
     global embeddings
     if key in embeddings:   # exists already
-        print("already exists")
+        #print("already exists")
         oldValue = (embeddings[key])['value']
         if oldValue != value:
             (embeddings[key])['value'] = value
             save(key, embeddings[key])
     else:                   # compute embedding
-        print("new: computing embedding vector")
+        #print("new: computing embedding vector")
         vector = sbertEmbedding(key)
         data = { 'value': value, 'vector': vector }
         embeddings[key] = data
@@ -45,7 +46,7 @@ def search(query: str, nResults: int):
 
 def save(key: str, data):
     filename = root + "/" + stringToHash(key) + ".json"
-    print("saving", filename)
+    #print("saving", filename)
     folder = os.path.dirname(filename)
     if folder != '':
         os.makedirs(folder, exist_ok=True)
@@ -65,6 +66,9 @@ def cosine_similarity(v1: np.ndarray, v2: np.ndarray) -> float:
     return (dot_product / (norm_v1 * norm_v2)).item()
 
 def load():
+    print("loading sbert model...")
+    global sbertModel
+    sbertModel = SentenceTransformer('paraphrase-MiniLM-L6-v2')
     print("loading vectors...")
     path = root
     try:
@@ -91,8 +95,3 @@ def stringToHash(input_string):
     hash_obj.update(input_string.encode('utf-8'))
     hash_hex = hash_obj.hexdigest()
     return hash_hex[0:32]
-
-if __name__ == "__main__":
-    load()
-    service.start("vectors", 8004, root)
-

@@ -69,6 +69,10 @@ But it's also totally fine to resolve ambiguity in other ways.
 The key thing is to get capability with vector search, embeddings, document understanding, and the agent.
 Now let's do service registry.
 
+TODAY (travel day):
+worked on cleaning up the search interface (all surface stuff, not really the time for any real meaty work).
+search is now continuous (each keypress)
+
 TODAY:
 got semantic search workflow pass 1 running !
 and our little noob friend comes with us on the journey - makes a big difference. Not sure his movement is quite right yet.
@@ -103,56 +107,63 @@ Thoughts on company structure.
 4. older experiments can also be released without NDA
 5. express your mission statement through action.
 
-TODAY:
-- titles DONE
-- class/subclass map
-- body resize DONE
-- github repo download
-- journal back up and running
-
-yesterday:
-- python classes and methods DONE
-- deal with overlapping Dependency ranges DONE
-- do the full supercompact tree view. It'll rock. NEXT
-- embedding service! infrastructure ahoy! needs a super overhaul.
-
 ## TODO
+
+NEXT: 
+- disambiguate calls by finding type
+- get inter-language callgraphs working again ("remote" barrier)
+- deal with ${} and {} in ts and py strings... annoying but anyway
 
 ### infrastructure
 
 - tidy up the server code to use the same library of functions
 - auto-restart of the subsidiary servers (and indeed the main server)
 - proper logging
+- github repo download
+- journal back up and running
 
+### search
+- exact match in title, contents, mix in with semantic results
+- reset tree view, or don't (use option-press)
+- supercompact graph-to-target node
+- work correctly with all nodes
+- show shortest chain, all chains
+- keep UI state in session
+- proper lexer
 
 ### visual / UI
-- titlebars per node with Class.method() names
-- tree extends upwards and downwards as far as necessary
+- disambiguate references (.method, importname.method, etc)
 - map class relationships, use it to open multi-class method implementations (Language.importx example)
-- conflicting dependencies (constructor vs classname) DONE
 - supercompact view: want to see all the code !!! 
 - class view: don't want to see all the code, just headers
-- want to see class.property etc not just property
-- restrict size of expanded DONE
-- animate size to make it less jarring DONE
-- reopen old trees DONE
-- make sure buttons get highlighted properly DONE
-- serialise session DONE
-- smooth motion DONE
-- noob comes with you
 - open/close logic for multiple references
 - loopback/recursion
 - some way of viewing "boundaries" eg. client/server/python
 - open dependents
-- session persistence DONE
 - multiple sessions
-- restore scroll position on compact DONE
-- transitive close DONE
+
 - better inter-group position negotiation DONE
 - "focus in" on a node DONE
 - shadows DONE
 - arrows DONE
 - compact view DONE
+- body resize DONE
+- titles DONE
+- python classes and methods DONE
+- deal with overlapping Dependency ranges DONE
+- noob comes with you DONE- restrict size of expanded DONE
+- animate size to make it less jarring DONE
+- reopen old trees DONE
+- make sure buttons get highlighted properly DONE
+- serialise session DONE
+- smooth motion DONE
+- want to see class.property etc not just property DONE
+- titlebars per node with Class.method() names DONE
+- tree extends upwards and downwards as far as necessary DONE
+- conflicting dependencies (constructor vs classname) DONE
+- restore scroll position on compact DONE
+- session persistence DONE
+- transitive close DONE
 
 ### search / GPT
 - symbolic search
@@ -160,13 +171,14 @@ yesterday:
 - ask any question about current view
 
 ### importing logic
+- proper lexer DONE
 - cross-project dependencies
-- python classes / properties / methods DONE
-- multi-file imports DONE
-- mixed codebase DONE
 - download github repo !
 - language server
 - tests
+- python classes / properties / methods DONE
+- multi-file imports DONE
+- mixed codebase DONE
 
 ### edit/build/debug
 - live coding
@@ -273,3 +285,21 @@ Let's look into generators.
 OK so: microservices is a no-go, because the request/forward/response thing is about 6ms per request.
 Which is crazy, but there we go.
 So firefly.py just calls into vectors.py and all is good.
+
+
+Like at this point we're legit just writing a parser for typescript.
+Why not just bite the lang-server bullet? Get that capability.
+You're just delaying the inevitable.
+OK. But that'll get you bogged down, and we don't want that yet.
+Better to write some simple code that does most of the job, for now.
+
+Let's think about it a little bit, maybe it's simpler than you think.
+
+
+    a.b.c.d
+
+    a => global if it's a global, otherwise nothing
+    b => a.b; we get the type t from the sequence before.
+
+    can we identify the type of the chain before (lex) ?
+    if so, we filter the array down, and then it's done.

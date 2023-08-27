@@ -105,11 +105,11 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     def translate_path(self, path):
         global listen_port, app_name, public, root
-        print("requested:", path)
+        #print("requested:", path)
         path = urlparse(path).path
-        print("after urlparse", path)
+        #print("after urlparse", path)
         path = os.path.normpath(path)
-        print("after normpath", path)
+        #print("after normpath", path)
 
         _, ext = os.path.splitext(path)
         if (path==f"/{app_name}"):
@@ -143,10 +143,13 @@ def start(name, port, rootFolder):
         observer.stop()
     observer.join()
 
+class ReusableTCPServer(socketserver.TCPServer):
+    allow_reuse_address = True
+
 def runServer():
     global listen_port, app_name, public, root
     print(f"starting service '{app_name}' listening on port {listen_port}...")
     Handler = CustomHTTPRequestHandler
-    with socketserver.TCPServer(("", listen_port), Handler) as httpd:
+    with ReusableTCPServer(("", listen_port), Handler) as httpd:
         print(f"Serving on port {listen_port}")
         httpd.serve_forever()

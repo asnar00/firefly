@@ -29,10 +29,10 @@ body {
     border-radius: 6px;
     background-color: #96bfb9;
     left: 120px;
-    top: 32px;
+    bottom: 32px;
     min-width: 256px;
     padding-left: 8px;
-    width: 80%;
+    right: 48px; /* This sets the width to be the window width minus 50 pixels */
 }
 
 .icon-palette {
@@ -61,9 +61,11 @@ body {
     max-width: 512px;
     margin-left: 10px;
     margin-right: 4px;
+    margin-top: 1px;
     height: 1.5em;
     white-space: nowrap;
-    padding: 0.25em;
+    padding-top: 0.27em;
+    padding-bottom: 0.23em;
     padding-left: 8px;
     overflow-x: auto;
 }
