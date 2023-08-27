@@ -151,6 +151,7 @@ class Card:
         self.dependents = []    # cards that depend on us
         self.children = []      # if we're a class, cards for methods
         self.parent = None      # if we're a method or property, points to parent
+        self.superclass = None  # if we're a class, points to superclass
         self.rankFromBottom = 0 # 1 means depends on nothing; x means depends on things with rank < x
         self.rankFromTop = 0    # 1 means nothing calls this; x means called by things with rank < x 
 
@@ -255,6 +256,7 @@ class Python(Language):
                     else:
                         return ("function", funcName)
                 elif l.startswith("class"):
+                    
                     return ("class", l.split(" ")[1].split(":")[0].split("(")[0])
                 else: # could be property (self.blah = ) or global (blah = ..)
                     parts = l.split("=")
@@ -411,6 +413,25 @@ def computeDependencies(cards: List[Card]):         # this is a bit of a behemot
             cardsFromName[name] = [card]
         else:
             cardsFromName[name].append(card)
+
+    # find superclass relationships
+    for card in cards:
+        if card.kind == 'class':
+            code = card.code[0].text
+            lang = card.code[0].language
+            ic = code.find('class ')
+            if ic == -1: continue
+            eol = code.find('\n', ic)
+            line = code[ic:eol]
+            ls = processLexemes(line, lang) # class MyClass(Superclass) or class MyClass : Superclass
+            if len(ls) >=4 and ls[1].type=='identifier' and ls[3].type=='identifier' and (ls[2]==':' or ls[2]=='('):
+                if ls[3].text in cardsFromName:
+                    supers = cardsFromName[ls[3].text]
+                    supers = [s for s in supers if s.kind == "class"]
+                    if len(supers)==1:
+                        print(card.shortName(),"is subclass of", supers[0].shortName())
+                        card.superclass = supers[0]
+
     # now check each card for words that might map to others
     for card in cards:
         code = card.code[0].text
@@ -442,7 +463,6 @@ def computeDependencies(cards: List[Card]):         # this is a bit of a behemot
                             typeFromVar[l.text] = gls[i+2].text
 
         # now whittle down the potentials list using various filters
-
         # 1- remove the targets for the definition
         for l in ls:
             if l.text == card.name and len(l.targets)>0:
@@ -454,7 +474,7 @@ def computeDependencies(cards: List[Card]):         # this is a bit of a behemot
             if ls[i].type == 'identifier' and ls[i-1] == '.' and pred.type == 'identifier':
                 if pred.text in typeFromVar:
                     predType = typeFromVar[pred.text]
-                    ls[i].targets = [t for t in ls[i].targets if t.parent and t.parent.name == predType]
+                    ls[i].targets = [t for t in ls[i].targets if t.parent and (t.parent.name == predType or (t.parent.superclass and t.parent.superclass.name == predType))]
         # 3- if you matched a property or method but there's no dot before, get rid
         for i in range(1, len(ls)):
             if ls[i].type == 'identifier' and ls[i-1] != '.':
@@ -467,6 +487,19 @@ def computeDependencies(cards: List[Card]):         # this is a bit of a behemot
         for l in ls:
             if l.type == 'identifier':
                 l.targets = [t for t in l.targets if t.code[0].language.shortName() == lang.shortName()]
+        # 6- CUSTOM: remote("@service.function" ... gets linked to function
+        for i in range(2, len(ls)-2):
+            if ls[i-2] == 'remote' and ls[i-1]=='(' and ls[i].type == 'quote':
+                id = ls[i].text[1:-1]        # strip quotations
+                if id.startswith('@'):
+                    id = id[1:]
+                    parts = id.split('.')
+                    service = parts[0]
+                    function = parts[1]
+                    potentials = cardsFromName[function]
+                    for p in potentials:
+                        if p.name == function and p.project == service:
+                            ls[i].targets.append(p)
 
         # and create dependencies from the potentials
         for i in range(0, len(ls)):
