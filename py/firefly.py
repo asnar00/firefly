@@ -69,7 +69,6 @@ def importAllCards(project, folders) -> dict:
         print("files:", files)
         for file in files:
             cards.extend(importCardsFromFile(project, file))
-    cards = list(filter(lambda c: not c.uid().endswith("_"), cards))
     removeIndents(cards)
     computeDependencies(cards)
     #computeLevels(cards)
@@ -367,12 +366,12 @@ def importCards(project: str, module: str, text: str, ext: str) -> List[Card]:
             #print("importing methods for class", c.name)
             c.children = importCardsFromText(project, module, language, c.code[0].text, c, 1)
             for child in c.children:
+                #print("  ", child.name)
                 child.code[0].iLine += c.code[0].iLine +1       # not sure why but hey
                 child.code[0].jLine += c.code[0].iLine +1
             allChildren += c.children
     cards += allChildren
     cards = [card for card in cards if card.name != "unknown"] # remove unknown name cards
-
     return cards
 
 def cardsToJsonDict(cards: List[Card]) -> dict:
@@ -407,7 +406,9 @@ class Lex:
 def computeDependencies(cards: List[Card]):         # this is a bit of a behemoth, refactor!
     # put all cards into a hash table mapping name -> List[Card]
     cardsFromName = {}
+    #print("--------------- computeDeps -------------")
     for card in cards:
+        #print(card.shortName())
         name = card.name
         if not (name in cardsFromName):
             cardsFromName[name] = [card]
@@ -429,7 +430,6 @@ def computeDependencies(cards: List[Card]):         # this is a bit of a behemot
                     supers = cardsFromName[ls[3].text]
                     supers = [s for s in supers if s.kind == "class"]
                     if len(supers)==1:
-                        print(card.shortName(),"is subclass of", supers[0].shortName())
                         card.superclass = supers[0]
 
     # now check each card for words that might map to others
@@ -487,7 +487,16 @@ def computeDependencies(cards: List[Card]):         # this is a bit of a behemot
         for l in ls:
             if l.type == 'identifier':
                 l.targets = [t for t in l.targets if t.code[0].language.shortName() == lang.shortName()]
-        # 6- CUSTOM: remote("@service.function" ... gets linked to function
+        # 6 - if you matched a class name followed by a "(", redirect to constructor
+        for i in range(0, len(ls)-1):
+            if ls[i].type == 'identifier' and len(ls[i].targets)==1 and ls[i].targets[0].kind == 'class':
+                if ls[i+1] == '(':
+                    constructors = cardsFromName[lang.constructorName()]
+                    constructors = [c for c in constructors if c.parent and c.parent.name == ls[i].text]
+                    if len(constructors)==1:
+                        ls[i].targets = constructors
+                
+        # CUSTOM: remote("@service.function" ... gets linked to function
         for i in range(2, len(ls)-2):
             if ls[i-2] == 'remote' and ls[i-1]=='(' and ls[i].type == 'quote':
                 id = ls[i].text[1:-1]        # strip quotations

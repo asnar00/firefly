@@ -79,7 +79,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_util_class_Rect"
+                        "ts_firefly_util_method_Rect_constructor"
                     ],
                     "iChar": 1203,
                     "jChar": 1207
@@ -363,7 +363,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_graphview_class_Node"
+                        "ts_firefly_graphview_method_Node_constructor"
                     ],
                     "iChar": 7883,
                     "jChar": 7887
@@ -517,7 +517,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_util_class_Rect"
+                        "ts_firefly_util_method_Rect_constructor"
                     ],
                     "iChar": 10694,
                     "jChar": 10698
@@ -1088,7 +1088,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_graphview_class_Arrow"
+                        "ts_firefly_graphview_method_Arrow_constructor"
                     ],
                     "iChar": 18303,
                     "jChar": 18308
@@ -1193,13 +1193,6 @@
                     ],
                     "iChar": 18,
                     "jChar": 27
-                },
-                {
-                    "targets": [
-                        "ts_firefly_firefly_function_graph"
-                    ],
-                    "iChar": 116,
-                    "jChar": 125
                 }
             ],
             "children": [
@@ -1382,7 +1375,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_util_class_Rect"
+                        "ts_firefly_util_method_Rect_constructor"
                     ],
                     "iChar": 2632,
                     "jChar": 2636
@@ -1598,13 +1591,6 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 7883,
-                    "jChar": 7887
-                },
-                {
-                    "targets": [
-                        "ts_firefly_graphview_class_GraphView"
-                    ],
                     "iChar": 8714,
                     "jChar": 8718
                 },
@@ -1768,13 +1754,6 @@
                     ],
                     "iChar": 126,
                     "jChar": 130
-                },
-                {
-                    "targets": [
-                        "ts_firefly_graphview_method_GraphView_add"
-                    ],
-                    "iChar": 694,
-                    "jChar": 698
                 },
                 {
                     "targets": [
@@ -1949,7 +1928,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_util_class_Rect"
+                        "ts_firefly_util_method_Rect_constructor"
                     ],
                     "iChar": 115,
                     "jChar": 119
@@ -2033,7 +2012,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_util_class_Rect"
+                        "ts_firefly_util_method_Rect_constructor"
                     ],
                     "iChar": 1423,
                     "jChar": 1427
@@ -2079,13 +2058,6 @@
                     "targets": [
                         "ts_firefly_graphview_class_GraphView"
                     ],
-                    "iChar": 18303,
-                    "jChar": 18308
-                },
-                {
-                    "targets": [
-                        "ts_firefly_graphview_class_GraphView"
-                    ],
                     "iChar": 18587,
                     "jChar": 18592
                 },
@@ -2102,13 +2074,6 @@
                     ],
                     "iChar": 27,
                     "jChar": 32
-                },
-                {
-                    "targets": [
-                        "ts_firefly_graphview_method_GraphView_addArrow"
-                    ],
-                    "iChar": 95,
-                    "jChar": 100
                 },
                 {
                     "targets": [
@@ -3442,13 +3407,21 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_util_class_Rect"
+                        "ts_firefly_util_method_Rect_constructor"
                     ],
                     "iChar": 401,
                     "jChar": 405
                 }
             ],
-            "dependents": [],
+            "dependents": [
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_graph"
+                    ],
+                    "iChar": 116,
+                    "jChar": 125
+                }
+            ],
             "children": [],
             "parent": "ts_firefly_graphview_class_GraphView"
         },
@@ -4594,7 +4567,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_graphview_class_Node"
+                        "ts_firefly_graphview_method_Node_constructor"
                     ],
                     "iChar": 694,
                     "jChar": 698
@@ -5177,7 +5150,7 @@
             "dependsOn": [
                 {
                     "targets": [
-                        "ts_firefly_util_class_Rect"
+                        "ts_firefly_util_method_Rect_constructor"
                     ],
                     "iChar": 38,
                     "jChar": 42
@@ -6676,7 +6649,7 @@
             "dependsOn": [
                 {
                     "targets": [
-                        "ts_firefly_graphview_class_Arrow"
+                        "ts_firefly_graphview_method_Arrow_constructor"
                     ],
                     "iChar": 95,
                     "jChar": 100
@@ -8900,7 +8873,22 @@
                     "jChar": 732
                 }
             ],
-            "dependents": [],
+            "dependents": [
+                {
+                    "targets": [
+                        "ts_firefly_graphview_class_GraphView"
+                    ],
+                    "iChar": 7883,
+                    "jChar": 7887
+                },
+                {
+                    "targets": [
+                        "ts_firefly_graphview_method_GraphView_add"
+                    ],
+                    "iChar": 694,
+                    "jChar": 698
+                }
+            ],
             "children": [],
             "parent": "ts_firefly_graphview_class_Node"
         },
@@ -9231,7 +9219,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_util_class_Rect"
+                        "ts_firefly_util_method_Rect_constructor"
                     ],
                     "iChar": 67,
                     "jChar": 71
@@ -10422,7 +10410,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_util_class_Rect"
+                        "ts_firefly_util_method_Rect_constructor"
                     ],
                     "iChar": 21,
                     "jChar": 25
@@ -10662,7 +10650,22 @@
                     "jChar": 392
                 }
             ],
-            "dependents": [],
+            "dependents": [
+                {
+                    "targets": [
+                        "ts_firefly_graphview_class_GraphView"
+                    ],
+                    "iChar": 18303,
+                    "jChar": 18308
+                },
+                {
+                    "targets": [
+                        "ts_firefly_graphview_method_GraphView_addArrow"
+                    ],
+                    "iChar": 95,
+                    "jChar": 100
+                }
+            ],
             "children": [],
             "parent": "ts_firefly_graphview_class_Arrow"
         },
@@ -10951,7 +10954,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_util_class_Rect"
+                        "ts_firefly_util_method_Rect_constructor"
                     ],
                     "iChar": 514,
                     "jChar": 518
@@ -11107,31 +11110,10 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_graphview_class_GraphView"
-                    ],
-                    "iChar": 1203,
-                    "jChar": 1207
-                },
-                {
-                    "targets": [
-                        "ts_firefly_graphview_class_GraphView"
-                    ],
-                    "iChar": 10694,
-                    "jChar": 10698
-                },
-                {
-                    "targets": [
                         "ts_firefly_graphview_class_Node"
                     ],
                     "iChar": 2572,
                     "jChar": 2576
-                },
-                {
-                    "targets": [
-                        "ts_firefly_graphview_class_Node"
-                    ],
-                    "iChar": 2632,
-                    "jChar": 2636
                 },
                 {
                     "targets": [
@@ -11142,38 +11124,10 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_graphview_class_Arrow"
-                    ],
-                    "iChar": 115,
-                    "jChar": 119
-                },
-                {
-                    "targets": [
-                        "ts_firefly_graphview_class_Arrow"
-                    ],
-                    "iChar": 1423,
-                    "jChar": 1427
-                },
-                {
-                    "targets": [
                         "ts_firefly_graphview_property_GraphView_canvasRect"
                     ],
                     "iChar": 12,
                     "jChar": 16
-                },
-                {
-                    "targets": [
-                        "ts_firefly_graphview_method_GraphView_constructor"
-                    ],
-                    "iChar": 401,
-                    "jChar": 405
-                },
-                {
-                    "targets": [
-                        "ts_firefly_graphview_method_GraphView_updateCanvas"
-                    ],
-                    "iChar": 38,
-                    "jChar": 42
                 },
                 {
                     "targets": [
@@ -11184,13 +11138,6 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_graphview_method_Node_targetRect"
-                    ],
-                    "iChar": 67,
-                    "jChar": 71
-                },
-                {
-                    "targets": [
                         "ts_firefly_graphview_property_Arrow_drawRect"
                     ],
                     "iChar": 10,
@@ -11198,31 +11145,10 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_graphview_property_Arrow_drawRect"
-                    ],
-                    "iChar": 21,
-                    "jChar": 25
-                },
-                {
-                    "targets": [
-                        "ts_firefly_graphview_method_Arrow_initDrawRect"
-                    ],
-                    "iChar": 514,
-                    "jChar": 518
-                },
-                {
-                    "targets": [
                         "ts_firefly_util_function_rect"
                     ],
                     "iChar": 111,
                     "jChar": 115
-                },
-                {
-                    "targets": [
-                        "ts_firefly_util_function_rect"
-                    ],
-                    "iChar": 187,
-                    "jChar": 191
                 }
             ],
             "children": [
@@ -11386,7 +11312,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_util_class_Rect"
+                        "ts_firefly_util_method_Rect_constructor"
                     ],
                     "iChar": 187,
                     "jChar": 191
@@ -13330,7 +13256,85 @@
                     "jChar": 141
                 }
             ],
-            "dependents": [],
+            "dependents": [
+                {
+                    "targets": [
+                        "ts_firefly_graphview_class_GraphView"
+                    ],
+                    "iChar": 1203,
+                    "jChar": 1207
+                },
+                {
+                    "targets": [
+                        "ts_firefly_graphview_class_GraphView"
+                    ],
+                    "iChar": 10694,
+                    "jChar": 10698
+                },
+                {
+                    "targets": [
+                        "ts_firefly_graphview_class_Node"
+                    ],
+                    "iChar": 2632,
+                    "jChar": 2636
+                },
+                {
+                    "targets": [
+                        "ts_firefly_graphview_class_Arrow"
+                    ],
+                    "iChar": 115,
+                    "jChar": 119
+                },
+                {
+                    "targets": [
+                        "ts_firefly_graphview_class_Arrow"
+                    ],
+                    "iChar": 1423,
+                    "jChar": 1427
+                },
+                {
+                    "targets": [
+                        "ts_firefly_graphview_method_GraphView_constructor"
+                    ],
+                    "iChar": 401,
+                    "jChar": 405
+                },
+                {
+                    "targets": [
+                        "ts_firefly_graphview_method_GraphView_updateCanvas"
+                    ],
+                    "iChar": 38,
+                    "jChar": 42
+                },
+                {
+                    "targets": [
+                        "ts_firefly_graphview_method_Node_targetRect"
+                    ],
+                    "iChar": 67,
+                    "jChar": 71
+                },
+                {
+                    "targets": [
+                        "ts_firefly_graphview_property_Arrow_drawRect"
+                    ],
+                    "iChar": 21,
+                    "jChar": 25
+                },
+                {
+                    "targets": [
+                        "ts_firefly_graphview_method_Arrow_initDrawRect"
+                    ],
+                    "iChar": 514,
+                    "jChar": 518
+                },
+                {
+                    "targets": [
+                        "ts_firefly_util_function_rect"
+                    ],
+                    "iChar": 187,
+                    "jChar": 191
+                }
+            ],
             "children": [],
             "parent": "ts_firefly_util_class_Rect"
         },
@@ -14442,13 +14446,6 @@
                     ],
                     "iChar": 93,
                     "jChar": 101
-                },
-                {
-                    "targets": [
-                        "ts_firefly_firefly_function_openCard"
-                    ],
-                    "iChar": 370,
-                    "jChar": 378
                 }
             ],
             "children": [
@@ -14747,7 +14744,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_graphview_class_GraphView"
+                        "ts_firefly_graphview_method_GraphView_constructor"
                     ],
                     "iChar": 116,
                     "jChar": 125
@@ -15738,34 +15735,6 @@
                     ],
                     "iChar": 121,
                     "jChar": 125
-                },
-                {
-                    "targets": [
-                        "ts_firefly_firefly_function_callChainRec"
-                    ],
-                    "iChar": 286,
-                    "jChar": 290
-                },
-                {
-                    "targets": [
-                        "ts_firefly_firefly_function_callChainRec"
-                    ],
-                    "iChar": 383,
-                    "jChar": 387
-                },
-                {
-                    "targets": [
-                        "ts_firefly_firefly_function_callChainRec"
-                    ],
-                    "iChar": 409,
-                    "jChar": 413
-                },
-                {
-                    "targets": [
-                        "ts_firefly_firefly_function_callChainRec"
-                    ],
-                    "iChar": 769,
-                    "jChar": 773
                 }
             ],
             "children": [
@@ -15979,7 +15948,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_firefly_class_Link"
+                        "ts_firefly_firefly_method_Link_constructor"
                     ],
                     "iChar": 286,
                     "jChar": 290
@@ -15993,14 +15962,14 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_firefly_class_Link"
+                        "ts_firefly_firefly_method_Link_constructor"
                     ],
                     "iChar": 383,
                     "jChar": 387
                 },
                 {
                     "targets": [
-                        "ts_firefly_firefly_class_Link"
+                        "ts_firefly_firefly_method_Link_constructor"
                     ],
                     "iChar": 409,
                     "jChar": 413
@@ -16042,7 +16011,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_firefly_class_Link"
+                        "ts_firefly_firefly_method_Link_constructor"
                     ],
                     "iChar": 769,
                     "jChar": 773
@@ -17895,7 +17864,7 @@
                 },
                 {
                     "targets": [
-                        "ts_firefly_firefly_class_CardView"
+                        "ts_firefly_firefly_method_CardView_constructor"
                     ],
                     "iChar": 370,
                     "jChar": 378
@@ -19097,7 +19066,15 @@
                     "jChar": 58
                 }
             ],
-            "dependents": [],
+            "dependents": [
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_openCard"
+                    ],
+                    "iChar": 370,
+                    "jChar": 378
+                }
+            ],
             "children": [],
             "parent": "ts_firefly_firefly_class_CardView"
         },
@@ -19219,7 +19196,36 @@
                     "jChar": 79
                 }
             ],
-            "dependents": [],
+            "dependents": [
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_callChainRec"
+                    ],
+                    "iChar": 286,
+                    "jChar": 290
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_callChainRec"
+                    ],
+                    "iChar": 383,
+                    "jChar": 387
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_callChainRec"
+                    ],
+                    "iChar": 409,
+                    "jChar": 413
+                },
+                {
+                    "targets": [
+                        "ts_firefly_firefly_function_callChainRec"
+                    ],
+                    "iChar": 769,
+                    "jChar": 773
+                }
+            ],
             "children": [],
             "parent": "ts_firefly_firefly_class_Link"
         },
@@ -20214,10 +20220,10 @@
             "outputs": "",
             "code": [
                 {
-                    "text": "def importAllCards(project, folders) -> dict:\n    cards = []\n    for folder in folders:\n        files = findAllFiles(folder, \".ts\") + findAllFiles(folder, \".py\")\n        print(\"files:\", files)\n        for file in files:\n            cards.extend(importCardsFromFile(project, file))\n    cards = list(filter(lambda c: not c.uid().endswith(\"_\"), cards))\n    removeIndents(cards)\n    computeDependencies(cards)\n    #computeLevels(cards)\n    saveEmbeddings(cards)\n    return cardsToJsonDict(cards)",
+                    "text": "def importAllCards(project, folders) -> dict:\n    cards = []\n    for folder in folders:\n        files = findAllFiles(folder, \".ts\") + findAllFiles(folder, \".py\")\n        print(\"files:\", files)\n        for file in files:\n            cards.extend(importCardsFromFile(project, file))\n    removeIndents(cards)\n    computeDependencies(cards)\n    #computeLevels(cards)\n    saveEmbeddings(cards)\n    return cardsToJsonDict(cards)",
                     "language": "py",
                     "iLine": 65,
-                    "jLine": 77
+                    "jLine": 76
                 }
             ],
             "dependsOn": [
@@ -20246,29 +20252,29 @@
                     "targets": [
                         "py_firefly_firefly_function_removeIndents"
                     ],
-                    "iChar": 354,
-                    "jChar": 367
+                    "iChar": 285,
+                    "jChar": 298
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 379,
-                    "jChar": 398
+                    "iChar": 310,
+                    "jChar": 329
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_function_saveEmbeddings"
                     ],
-                    "iChar": 436,
-                    "jChar": 450
+                    "iChar": 367,
+                    "jChar": 381
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_function_cardsToJsonDict"
                     ],
-                    "iChar": 469,
-                    "jChar": 484
+                    "iChar": 400,
+                    "jChar": 415
                 }
             ],
             "dependents": [
@@ -20297,8 +20303,8 @@
                 {
                     "text": "def saveEmbeddings(cards):\n    print(\"saving embeddings\")\n    for card in cards:\n        key = separateWords(card.shortName())\n        vectors.add(key, card.uid())",
                     "language": "py",
-                    "iLine": 79,
-                    "jLine": 83
+                    "iLine": 78,
+                    "jLine": 82
                 }
             ],
             "dependsOn": [
@@ -20339,8 +20345,8 @@
                     "targets": [
                         "py_firefly_firefly_function_importAllCards"
                     ],
-                    "iChar": 436,
-                    "jChar": 450
+                    "iChar": 367,
+                    "jChar": 381
                 }
             ],
             "children": [],
@@ -20360,8 +20366,8 @@
                 {
                     "text": "def separateWords(name): # convert \"camelCaseHTTP\" and \"camel_case_HTTP\" to \"camel case HTTP\", \n    symbols = \"!@#$%^&*()+-={}[]:\\\";\\',.<>/?\\`~_\"\n    result = \"\"\n    for i in range(0, len(name)):\n        pc = ' ' if i == 0 else name[i-1]\n        nc = ' ' if i == len(name)-1 else name[i+1]\n        c = name[i]\n        if c.isupper():\n            if pc.isupper():        # part of an acronym\n                result += c         # so don't change it\n            else:\n                if nc.isupper():    # also part of an acronym, but lead with a space\n                    result += ' ' + c\n                else:               # not part of an acronym\n                    result += ' ' + c.lower()\n        else:\n            if c in symbols: c = ' '\n            result += c\n    return result.replace(\"\\n\", \" \").strip()",
                     "language": "py",
-                    "iLine": 85,
-                    "jLine": 103
+                    "iLine": 84,
+                    "jLine": 102
                 }
             ],
             "dependsOn": [],
@@ -20391,8 +20397,8 @@
                 {
                     "text": "class Language:\n    def name(self) -> str:\n        return \"\"\n    def shortName(self) -> str:\n        return \"\"\n    def comment(self) -> str:\n        return \"\"\n    def multiLineComment(self) -> str:\n        return \"\"\n    def endMultiLineComment(self) -> str:\n        return \"\"\n    def checkOpenQuote(self, str, ic):   # if (str[ic:]) starts with an openquote, return the closed-quote string to look for\n        return \"\"\n    def namesCanContainHyphens(self) -> bool:\n        return False\n    def constructorName(self) -> str:\n        return \"\"\n    def definitionKeywords(self) -> List[str]:\n        return []\n    def importCards(self, project, module,  text):\n        return []\n    def thisName(self) -> str:  # return \"this\" or \"self\" or whatever\n        return \"\"\n    def findTypeAndName(self, card, minIndent) -> (str, str):\n        return (\"\", \"\")",
                     "language": "py",
-                    "iLine": 105,
-                    "jLine": 129
+                    "iLine": 104,
+                    "jLine": 128
                 }
             ],
             "dependsOn": [
@@ -20467,6 +20473,20 @@
                     ],
                     "iChar": 61,
                     "jChar": 69
+                },
+                {
+                    "targets": [
+                        "py_firefly_firefly_method_CodeBlock___init__"
+                    ],
+                    "iChar": 40,
+                    "jChar": 48
+                },
+                {
+                    "targets": [
+                        "py_firefly_firefly_method_Card___init__"
+                    ],
+                    "iChar": 67,
+                    "jChar": 75
                 }
             ],
             "children": [
@@ -20499,8 +20519,8 @@
                 {
                     "text": "class CodeBlock:\n    def __init__(self, text: str, language: Language, iLine: int):\n        self.text = text\n        self.language = language\n        self.iLine = iLine\n        self.jLine = iLine # inclusive: eurgh",
                     "language": "py",
-                    "iLine": 131,
-                    "jLine": 136
+                    "iLine": 130,
+                    "jLine": 135
                 }
             ],
             "dependsOn": [
@@ -20512,15 +20532,7 @@
                     "jChar": 69
                 }
             ],
-            "dependents": [
-                {
-                    "targets": [
-                        "py_firefly_firefly_class_Card"
-                    ],
-                    "iChar": 613,
-                    "jChar": 622
-                }
-            ],
+            "dependents": [],
             "children": [
                 "py_firefly_firefly_method_CodeBlock___init__"
             ],
@@ -20540,8 +20552,8 @@
                 {
                     "text": "class Card:\n    def __init__(self, project: str, module: str, code: str, language: Language, iLine: int) :\n        self.project = project  # global\n        self.module = module    # root-relative path of the file, for disambiguation\n        self.language = language.shortName()    \n        self.kind = ''          # \"class\" or \"function\" or \"other\"\n        self.name = ''          # name of function or class being defined\n        self.purpose = ''       # purpose\n        self.examples = ''      # examples\n        self.inputs = ''        # inputs\n        self.outputs = ''       # outputs\n        self.code = [ CodeBlock(code, language, iLine) ]        # actual text from code file\n        self.dependsOn = []     # cards we depend on\n        self.dependents = []    # cards that depend on us\n        self.children = []      # if we're a class, cards for methods\n        self.parent = None      # if we're a method or property, points to parent\n        self.superclass = None  # if we're a class, points to superclass\n        self.rankFromBottom = 0 # 1 means depends on nothing; x means depends on things with rank < x\n        self.rankFromTop = 0    # 1 means nothing calls this; x means called by things with rank < x \n    def shortName(self):\n        s = \"\"\n        if self.parent: s= self.parent.name + \".\"\n        s += self.name\n        if self.kind == 'function' or self.kind == 'method':\n            s += \"()\"\n        return s\n    def uid(self):\n        u = self.language + \"_\" + self.project + \"_\" + self.module + \"_\" + self.kind + \"_\"\n        if self.parent: u += self.parent.name + \"_\"\n        u += self.name\n        return u",
                     "language": "py",
-                    "iLine": 138,
-                    "jLine": 170
+                    "iLine": 137,
+                    "jLine": 169
                 }
             ],
             "dependsOn": [
@@ -20563,7 +20575,7 @@
                 },
                 {
                     "targets": [
-                        "py_firefly_firefly_class_CodeBlock"
+                        "py_firefly_firefly_method_CodeBlock___init__"
                     ],
                     "iChar": 613,
                     "jChar": 622
@@ -20593,24 +20605,10 @@
                 },
                 {
                     "targets": [
-                        "py_firefly_firefly_class_Python"
-                    ],
-                    "iChar": 1390,
-                    "jChar": 1394
-                },
-                {
-                    "targets": [
                         "py_firefly_firefly_class_Typescript"
                     ],
                     "iChar": 759,
                     "jChar": 763
-                },
-                {
-                    "targets": [
-                        "py_firefly_firefly_class_Typescript"
-                    ],
-                    "iChar": 1541,
-                    "jChar": 1545
                 },
                 {
                     "targets": [
@@ -20670,21 +20668,14 @@
                 },
                 {
                     "targets": [
-                        "py_firefly_firefly_method_Python_importCards"
+                        "py_firefly_firefly_method_Dependency___init__"
                     ],
-                    "iChar": 64,
-                    "jChar": 68
+                    "iChar": 52,
+                    "jChar": 56
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_method_Python_importCards"
-                    ],
-                    "iChar": 590,
-                    "jChar": 594
-                },
-                {
-                    "targets": [
-                        "py_firefly_firefly_method_Typescript_importCards"
                     ],
                     "iChar": 64,
                     "jChar": 68
@@ -20693,8 +20684,8 @@
                     "targets": [
                         "py_firefly_firefly_method_Typescript_importCards"
                     ],
-                    "iChar": 782,
-                    "jChar": 786
+                    "iChar": 64,
+                    "jChar": 68
                 }
             ],
             "children": [
@@ -20718,8 +20709,8 @@
                 {
                     "text": "def card_serialiser(obj):\n    if isinstance(obj, Card):\n        return {\n            \"uid\" : obj.uid(),\n            \"language\" : obj.language,\n            \"module\" : obj.module,\n            \"kind\" : obj.kind,\n            \"name\" : obj.name,\n            \"purpose\" : obj.purpose,\n            \"examples\" : obj.examples,\n            \"inputs\" : obj.inputs,\n            \"outputs\" : obj.outputs,\n            \"code\" : [{ \"text\" : c.text, \"language\" : c.language.shortName(), \"iLine\" : c.iLine, \"jLine\" : c.jLine } for c in obj.code],\n            \"dependsOn\" : [ { \"targets\" : [t.uid() for t in d.targets], \"iChar\": d.iChar, \"jChar\": d.jChar } for d in obj.dependsOn],\n            \"dependents\" : [ { \"targets\" : [t.uid() for t in d.targets], \"iChar\": d.iChar, \"jChar\": d.jChar } for d in obj.dependents],\n            \"children\" : [ c.uid() for c in obj.children],\n            \"parent\" : obj.parent.uid() if obj.parent else \"null\"\n        }\n    raise TypeError(f\"Type {type(obj)} unfortunately is not serializable\")",
                     "language": "py",
-                    "iLine": 172,
-                    "jLine": 190
+                    "iLine": 171,
+                    "jLine": 189
                 }
             ],
             "dependsOn": [
@@ -20802,8 +20793,8 @@
                 {
                     "text": "class Dependency:\n    def __init__(self, iChar: int, jChar: int, targets: Card):\n        self.iChar = iChar\n        self.jChar = jChar\n        self.targets = targets\n    def combine(self, dep):\n        len0 = self.jChar - self.iChar\n        len1 = dep.jChar - dep.iChar\n        if len1 > len0: # dep wins because longer\n            self.iChar = dep.iChar\n            self.jChar = dep.jChar\n            self.targets = dep.targets\n        elif len1 < len0 : # self wins because longer\n            pass\n        else: # equal length; combine the arrays\n            self.iChar = min(self.iChar, dep.iChar)\n            self.jChar = max(self.jChar, dep.jChar)\n            self.targets += dep.targets",
                     "language": "py",
-                    "iLine": 192,
-                    "jLine": 209
+                    "iLine": 191,
+                    "jLine": 208
                 }
             ],
             "dependsOn": [
@@ -20815,22 +20806,7 @@
                     "jChar": 78
                 }
             ],
-            "dependents": [
-                {
-                    "targets": [
-                        "py_firefly_firefly_function_computeDependencies"
-                    ],
-                    "iChar": 5263,
-                    "jChar": 5273
-                },
-                {
-                    "targets": [
-                        "py_firefly_firefly_function_computeDependencies"
-                    ],
-                    "iChar": 5454,
-                    "jChar": 5464
-                }
-            ],
+            "dependents": [],
             "children": [
                 "py_firefly_firefly_method_Dependency___init__",
                 "py_firefly_firefly_method_Dependency_combine"
@@ -20851,8 +20827,8 @@
                 {
                     "text": "class Python(Language):\n    def name(self): return \"python\"\n    def shortName(self): return \"py\"\n    def comment(self): return \"#\"\n    def checkOpenQuote(self, str, ic):   # if (str) starts with an openquote, return a pair: open and close quote strings\n        if str.startswith('\\'', ic): return ('\\'', '\\'')\n        elif str.startswith('\"', ic): return ('\"', '\"')\n        elif str.startswith('f\"', ic): return ('f\"', '\"')\n        elif str.startswith('\"\"\"', ic): return ('\"\"\"', '\"\"\"')\n        return(\"\", \"\")\n    def constructorName(self) -> str:\n        return \"__init__\"\n    def definitionKeywords(self) -> List[str]:\n        return [\"def\", \"class\"]\n    def thisName(self) -> str:  # return \"this\" or \"self\" or whatever\n        return 'self'\n    def importCards(self, project, module, text, minIndent) -> List[Card]:\n        lines = text.split(\"\\n\")\n        card = None\n        cards = []\n        indent = 0\n        for i in range(0, len(lines)):\n            line = lines[i]\n            prevLine = lines[i-1] if i > 0 else \"\"\n            if not(isBlank(line)):\n                oldIndent = indent\n                indent = nTabsAtStart(line)\n                if indent >= minIndent:\n                    if card == None or (oldIndent > minIndent and indent == minIndent) or (indent==minIndent and oldIndent==indent and (not(prevLine.strip().startswith(\"#\")))):\n                        card = Card(project, module, line, self, i+1)\n                        cards.append(card)\n                    else:\n                        card.code[0].text += \"\\n\" + line\n                        card.code[0].jLine = i+1\n        return cards\n    def findTypeAndName(self, card) -> (str, str):\n        lines = card.code[0].text.split(\"\\n\")\n        for line in lines:\n            l = line.strip()\n            if not l.startswith(\"#\"):\n                if l.startswith(\"def\"):\n                    parts = l.split(f\"(\")   # \"def funcName\"  \"params) -> result:\"\n                    funcName = parts[0].split(\" \")[1].strip()\n                    if parts[1].startswith(\"self\"):\n                        return (\"method\", funcName)\n                    else:\n                        return (\"function\", funcName)\n                elif l.startswith(\"class\"):\n                    return (\"class\", l.split(\" \")[1].split(\":\")[0].split(\"(\")[0])\n                else: # could be property (self.blah = ) or global (blah = ..)\n                    parts = l.split(\"=\")\n                    if \"self.\" in parts[0]:\n                        return (\"method\", parts[0].strip())\n                    else:\n                        return (\"global\", parts[0].strip())\n        return (\"unknown\", \"unknown\")",
                     "language": "py",
-                    "iLine": 211,
-                    "jLine": 267
+                    "iLine": 210,
+                    "jLine": 266
                 }
             ],
             "dependsOn": [
@@ -20893,7 +20869,7 @@
                 },
                 {
                     "targets": [
-                        "py_firefly_firefly_class_Card"
+                        "py_firefly_firefly_method_Card___init__"
                     ],
                     "iChar": 1390,
                     "jChar": 1394
@@ -20935,8 +20911,8 @@
                 {
                     "text": "# typescript\nclass Typescript(Language):\n    def name(self): return \"typescript\"\n    def shortName(self): return \"ts\"\n    def comment(self): return \"//\"\n    def multiLineComment(self): return \"/*\"\n    def endMultiLineComment(self): return \"*/\"\n    def checkOpenQuote(self, str, ic):\n        if str[ic] == '\"': return ('\"', '\"')\n        elif str[ic] == '`': return ('`','`')\n        elif str[ic] == '\\'': return ('\\'', '\\'')\n        return (\"\", \"\")\n    def constructorName(self) -> str:\n        return \"constructor\"\n    def definitionKeywords(self) -> List[str]:\n        return [\"function\", \"class\"]\n    def thisName(self) -> str:  # return \"this\" or \"self\" or whatever\n        return 'this'\n    def importCards(self, project, module, text, minIndent) -> List[Card]:\n        lines = text.split(\"\\n\")\n        cards = []\n        card = None\n        prevLine = \"\"\n        indent = 0\n        for iLine in range(0, len(lines)):\n            line = lines[iLine]\n            if indent >= minIndent: # only consider lines above the min indent level\n                # should we start a new card?\n                # YES if current line has indent = minIndent, line is not blank and previous line is not a comment\n                # NO if the line is just \"}\"\n                blank = (line.strip()==\"\")\n                singleCloseBrace = (line.strip() == \"}\")\n                prevComment = prevLine.strip().startswith(\"//\")\n                if indent == minIndent and (not blank) and (not prevComment) and (not singleCloseBrace):\n                    card = Card(project, module, line, self, iLine+1)\n                    cards.append(card)\n                elif card:\n                    card.code[0].text += \"\\n\" + line\n                    card.code[0].jLine = iLine + 1\n            indent = indent + countBraces(line)\n            prevLine = line\n        return cards\n    def findTypeAndName(self, card) -> (str, str):\n        lines = card.code[0].text.split(\"\\n\")\n        for line in lines:\n            l = line.strip()\n            icom = l.find(\"//\")\n            if icom>=0: l = l[0 : icom]\n            if l != \"\":\n                w = l.split(\" \")\n                classIndex = findString(w, \"class\")\n                if classIndex >= 0:\n                    return (\"class\", w[classIndex+1])\n                funcIndex = findString(w, \"function\")\n                if funcIndex >= 0:\n                    return (\"function\", w[funcIndex+1].split(\"(\")[0].split(\"<\")[0])\n                elif card.parent != None:\n                    if \"(\" in w[0]:\n                        return (\"method\", w[0].split(\"(\")[0])\n                    else:\n                        return (\"property\", w[0].split(\":\")[0])\n                elif w[0]==\"var\" or w[0]==\"let\" or w[0]==\"const\":\n                    return (\"global\", w[1].split(\":\")[0])\n        return (\"unknown\", \"unknown\")",
                     "language": "py",
-                    "iLine": 269,
-                    "jLine": 332
+                    "iLine": 268,
+                    "jLine": 331
                 }
             ],
             "dependsOn": [
@@ -20963,7 +20939,7 @@
                 },
                 {
                     "targets": [
-                        "py_firefly_firefly_class_Card"
+                        "py_firefly_firefly_method_Card___init__"
                     ],
                     "iChar": 1541,
                     "jChar": 1545
@@ -21028,8 +21004,8 @@
                 {
                     "text": "def countBraces(s: str) -> int:\n    return s.count(\"{\") - s.count(\"}\")",
                     "language": "py",
-                    "iLine": 334,
-                    "jLine": 335
+                    "iLine": 333,
+                    "jLine": 334
                 }
             ],
             "dependsOn": [],
@@ -21066,8 +21042,8 @@
                 {
                     "text": "def nTabsAtStart(s: str) -> int:\n    return (len(s) - len(s.lstrip(' ')))/4",
                     "language": "py",
-                    "iLine": 337,
-                    "jLine": 338
+                    "iLine": 336,
+                    "jLine": 337
                 }
             ],
             "dependsOn": [],
@@ -21104,8 +21080,8 @@
                 {
                     "text": "def isBlank(s: str) -> bool:    \n    return not s.strip()",
                     "language": "py",
-                    "iLine": 340,
-                    "jLine": 341
+                    "iLine": 339,
+                    "jLine": 340
                 }
             ],
             "dependsOn": [],
@@ -21142,8 +21118,8 @@
                 {
                     "text": "def readFile(filename: str) -> str:\n    with open (filename, \"r\") as f:\n        text = f.read()\n    return text",
                     "language": "py",
-                    "iLine": 343,
-                    "jLine": 346
+                    "iLine": 342,
+                    "jLine": 345
                 }
             ],
             "dependsOn": [],
@@ -21173,8 +21149,8 @@
                 {
                     "text": "def findLanguage(ext: str) -> Language:\n    if ext == \".py\": return Python()\n    elif ext == \".ts\" or ext == \".js\": return Typescript()\n    else:\n        raise Exception(\"Unrecognised file extension\")",
                     "language": "py",
-                    "iLine": 348,
-                    "jLine": 352
+                    "iLine": 347,
+                    "jLine": 351
                 }
             ],
             "dependsOn": [
@@ -21226,8 +21202,8 @@
                 {
                     "text": "def importCardsFromFile(project, filename) -> List[Card]:\n    #print(\"importing cards from\", filename)\n    root, ext = os.path.splitext(filename)\n    module = root.split('/')[-1]        # eg. firefly or cards\n    text = readFile(filename)\n    return importCards(project, module, text, ext)",
                     "language": "py",
-                    "iLine": 354,
-                    "jLine": 359
+                    "iLine": 353,
+                    "jLine": 358
                 }
             ],
             "dependsOn": [
@@ -21302,10 +21278,10 @@
             "outputs": "",
             "code": [
                 {
-                    "text": "def importCards(project: str, module: str, text: str, ext: str) -> List[Card]:\n    language = findLanguage(ext)\n    cards = importCardsFromText(project, module, language, text, None, 0)\n    allChildren = []\n    for c in cards:\n        if c.kind == \"class\":\n            #print(\"importing methods for class\", c.name)\n            c.children = importCardsFromText(project, module, language, c.code[0].text, c, 1)\n            for child in c.children:\n                child.code[0].iLine += c.code[0].iLine +1       # not sure why but hey\n                child.code[0].jLine += c.code[0].iLine +1\n            allChildren += c.children\n    cards += allChildren\n    cards = [card for card in cards if card.name != \"unknown\"] # remove unknown name cards\n    return cards",
+                    "text": "def importCards(project: str, module: str, text: str, ext: str) -> List[Card]:\n    language = findLanguage(ext)\n    cards = importCardsFromText(project, module, language, text, None, 0)\n    allChildren = []\n    for c in cards:\n        if c.kind == \"class\":\n            #print(\"importing methods for class\", c.name)\n            c.children = importCardsFromText(project, module, language, c.code[0].text, c, 1)\n            for child in c.children:\n                #print(\"  \", child.name)\n                child.code[0].iLine += c.code[0].iLine +1       # not sure why but hey\n                child.code[0].jLine += c.code[0].iLine +1\n            allChildren += c.children\n    cards += allChildren\n    cards = [card for card in cards if card.name != \"unknown\"] # remove unknown name cards\n    return cards",
                     "language": "py",
-                    "iLine": 361,
-                    "jLine": 376
+                    "iLine": 360,
+                    "jLine": 375
                 }
             ],
             "dependsOn": [
@@ -21385,8 +21361,8 @@
                 {
                     "text": "def cardsToJsonDict(cards: List[Card]) -> dict:\n    print(\"cardsToJsonDict:\", len(cards), \"cards\")\n    jsonObj = { \"cards\" : [card_serialiser(c) for c in cards] }\n    jsonStr = json.dumps(jsonObj, indent=4)\n    print(\"saving...\")\n    writeTextToFile(jsonStr, \"/Users/asnaroo/desktop/experiments/firefly/data/cards/test.json\")\n    print(\"saved\")\n    return jsonObj",
                     "language": "py",
-                    "iLine": 378,
-                    "jLine": 385
+                    "iLine": 377,
+                    "jLine": 384
                 }
             ],
             "dependsOn": [
@@ -21417,8 +21393,8 @@
                     "targets": [
                         "py_firefly_firefly_function_importAllCards"
                     ],
-                    "iChar": 469,
-                    "jChar": 484
+                    "iChar": 400,
+                    "jChar": 415
                 }
             ],
             "children": [],
@@ -21438,8 +21414,8 @@
                 {
                     "text": "class Lex:\n    def __init__(self, code: str =\"\", iChar:int =0, jChar:int =0, type:str =\"\"):\n        sub = code[iChar:jChar]\n        ts = sub.lstrip()\n        iChar += len(sub) - len(ts)\n        te = sub.rstrip()\n        jChar -= len(sub) - len(te)\n        self.ic = iChar\n        self.jc = jChar\n        self.text = code[iChar:jChar]\n        self.type = type\n        self.targets = []\n    def __eq__(self, other):\n        if isinstance(other, Lex):\n            return self.text == other.text\n        elif isinstance(other, str):\n            return self.text == other\n        return False",
                     "language": "py",
-                    "iLine": 387,
-                    "jLine": 405
+                    "iLine": 386,
+                    "jLine": 404
                 }
             ],
             "dependsOn": [],
@@ -21453,10 +21429,10 @@
                 },
                 {
                     "targets": [
-                        "py_firefly_firefly_function_processLexemes"
+                        "py_firefly_firefly_method_Lex___eq__"
                     ],
-                    "iChar": 1212,
-                    "jChar": 1215
+                    "iChar": 50,
+                    "jChar": 53
                 }
             ],
             "children": [
@@ -21477,10 +21453,10 @@
             "outputs": "",
             "code": [
                 {
-                    "text": "def computeDependencies(cards: List[Card]):         # this is a bit of a behemoth, refactor!\n    # put all cards into a hash table mapping name -> List[Card]\n    cardsFromName = {}\n    for card in cards:\n        name = card.name\n        if not (name in cardsFromName):\n            cardsFromName[name] = [card]\n        else:\n            cardsFromName[name].append(card)\n    # find superclass relationships\n    for card in cards:\n        if card.kind == 'class':\n            code = card.code[0].text\n            lang = card.code[0].language\n            ic = code.find('class ')\n            if ic == -1: continue\n            eol = code.find('\\n', ic)\n            line = code[ic:eol]\n            ls = processLexemes(line, lang) # class MyClass(Superclass) or class MyClass : Superclass\n            if len(ls) >=4 and ls[1].type=='identifier' and ls[3].type=='identifier' and (ls[2]==':' or ls[2]=='('):\n                if ls[3].text in cardsFromName:\n                    supers = cardsFromName[ls[3].text]\n                    supers = [s for s in supers if s.kind == \"class\"]\n                    if len(supers)==1:\n                        print(card.shortName(),\"is subclass of\", supers[0].shortName())\n                        card.superclass = supers[0]\n    # now check each card for words that might map to others\n    for card in cards:\n        code = card.code[0].text\n        lang = card.code[0].language\n        ls = processLexemes(code, lang)\n        # first, get the types of all local variables, if they're declared\n        typeFromVar = {}\n        typeFromVar[lang.thisName()] = card.parent.name if card.parent else ''\n        for i in range(0, len(ls)-2):\n            if ls[i].type == 'identifier' and ls[i+1]==':' and ls[i+2].type == 'identifier':\n                typeFromVar[ls[i].text] = ls[i+2].text\n        # now get an array of possible cards for each identifier\n        for l in ls:\n            if l.type == 'identifier':\n                p = []\n                if l.text in cardsFromName:\n                    p = cardsFromName[l.text]\n                l.targets = p\n        # get the type of each global, if you can\n        for l in ls:\n            if l.type == 'identifier' and len(l.targets)==1:\n                t = l.targets[0]\n                if t.kind == 'global':\n                    # split the global def into lexemes\n                    gls = processLexemes(t.code[0].text, t.code[0].language)\n                    # look for a : b and grab b\n                    for i in range(0, len(gls)-2):\n                        if gls[i].type == 'identifier' and gls[i] == t.name and gls[i+1] == ':' and gls[i+2].type=='identifier':\n                            typeFromVar[l.text] = gls[i+2].text\n        # now whittle down the potentials list using various filters\n        # 1- remove the targets for the definition\n        for l in ls:\n            if l.text == card.name and len(l.targets)>0:\n                l.targets= []\n                break\n        # 2- remove targets from b that don't match type of a.b\n        for i in range(2, len(ls)):\n            pred = ls[i-2]\n            if ls[i].type == 'identifier' and ls[i-1] == '.' and pred.type == 'identifier':\n                if pred.text in typeFromVar:\n                    predType = typeFromVar[pred.text]\n                    ls[i].targets = [t for t in ls[i].targets if t.parent and (t.parent.name == predType or (t.parent.superclass and t.parent.superclass.name == predType))]\n        # 3- if you matched a property or method but there's no dot before, get rid\n        for i in range(1, len(ls)):\n            if ls[i].type == 'identifier' and ls[i-1] != '.':\n                ls[i].targets = [t for t in ls[i].targets if t.kind != 'method' and t.kind != 'property']\n        # 4- if you matched a function or method but there's no bracket after, get rid; but only if the match is ambiguous! (i.e. keep function ptrs)\n        for i in range(0, len(ls)-1):\n            if ls[i].type == 'identifier' and ls[i+1] != '(' and len(ls[i].targets) > 1:\n                ls[i].targets = [t for t in ls[i].targets if t.kind != 'function' and t.kind != 'method']\n        # 5- if you matched something in a different language, remove it (TBC)\n        for l in ls:\n            if l.type == 'identifier':\n                l.targets = [t for t in l.targets if t.code[0].language.shortName() == lang.shortName()]\n        # 6- CUSTOM: remote(\"@service.function\" ... gets linked to function\n        for i in range(2, len(ls)-2):\n            if ls[i-2] == 'remote' and ls[i-1]=='(' and ls[i].type == 'quote':\n                id = ls[i].text[1:-1]        # strip quotations\n                if id.startswith('@'):\n                    id = id[1:]\n                    parts = id.split('.')\n                    service = parts[0]\n                    function = parts[1]\n                    potentials = cardsFromName[function]\n                    for p in potentials:\n                        if p.name == function and p.project == service:\n                            ls[i].targets.append(p)\n        # and create dependencies from the potentials\n        for i in range(0, len(ls)):\n            l = ls[i]\n            l.targets = [t for t in l.targets if t != card]\n            if len(l.targets) > 0:\n                dep = Dependency(l.ic, l.jc, l.targets)\n                card.dependsOn.append(dep)\n                for t in l.targets:\n                    if t != card:\n                        t.dependents.append(Dependency(l.ic, l.jc, [card]))",
+                    "text": "def computeDependencies(cards: List[Card]):         # this is a bit of a behemoth, refactor!\n    # put all cards into a hash table mapping name -> List[Card]\n    cardsFromName = {}\n    #print(\"--------------- computeDeps -------------\")\n    for card in cards:\n        #print(card.shortName())\n        name = card.name\n        if not (name in cardsFromName):\n            cardsFromName[name] = [card]\n        else:\n            cardsFromName[name].append(card)\n    # find superclass relationships\n    for card in cards:\n        if card.kind == 'class':\n            code = card.code[0].text\n            lang = card.code[0].language\n            ic = code.find('class ')\n            if ic == -1: continue\n            eol = code.find('\\n', ic)\n            line = code[ic:eol]\n            ls = processLexemes(line, lang) # class MyClass(Superclass) or class MyClass : Superclass\n            if len(ls) >=4 and ls[1].type=='identifier' and ls[3].type=='identifier' and (ls[2]==':' or ls[2]=='('):\n                if ls[3].text in cardsFromName:\n                    supers = cardsFromName[ls[3].text]\n                    supers = [s for s in supers if s.kind == \"class\"]\n                    if len(supers)==1:\n                        print(card.shortName(),\"is subclass of\", supers[0].shortName())\n                        card.superclass = supers[0]\n    # now check each card for words that might map to others\n    for card in cards:\n        code = card.code[0].text\n        lang = card.code[0].language\n        ls = processLexemes(code, lang)\n        # first, get the types of all local variables, if they're declared\n        typeFromVar = {}\n        typeFromVar[lang.thisName()] = card.parent.name if card.parent else ''\n        for i in range(0, len(ls)-2):\n            if ls[i].type == 'identifier' and ls[i+1]==':' and ls[i+2].type == 'identifier':\n                typeFromVar[ls[i].text] = ls[i+2].text\n        # now get an array of possible cards for each identifier\n        for l in ls:\n            if l.type == 'identifier':\n                p = []\n                if l.text in cardsFromName:\n                    p = cardsFromName[l.text]\n                l.targets = p\n        # get the type of each global, if you can\n        for l in ls:\n            if l.type == 'identifier' and len(l.targets)==1:\n                t = l.targets[0]\n                if t.kind == 'global':\n                    # split the global def into lexemes\n                    gls = processLexemes(t.code[0].text, t.code[0].language)\n                    # look for a : b and grab b\n                    for i in range(0, len(gls)-2):\n                        if gls[i].type == 'identifier' and gls[i] == t.name and gls[i+1] == ':' and gls[i+2].type=='identifier':\n                            typeFromVar[l.text] = gls[i+2].text\n        # now whittle down the potentials list using various filters\n        # 1- remove the targets for the definition\n        for l in ls:\n            if l.text == card.name and len(l.targets)>0:\n                l.targets= []\n                break\n        # 2- remove targets from b that don't match type of a.b\n        for i in range(2, len(ls)):\n            pred = ls[i-2]\n            if ls[i].type == 'identifier' and ls[i-1] == '.' and pred.type == 'identifier':\n                if pred.text in typeFromVar:\n                    predType = typeFromVar[pred.text]\n                    ls[i].targets = [t for t in ls[i].targets if t.parent and (t.parent.name == predType or (t.parent.superclass and t.parent.superclass.name == predType))]\n        # 3- if you matched a property or method but there's no dot before, get rid\n        for i in range(1, len(ls)):\n            if ls[i].type == 'identifier' and ls[i-1] != '.':\n                ls[i].targets = [t for t in ls[i].targets if t.kind != 'method' and t.kind != 'property']\n        # 4- if you matched a function or method but there's no bracket after, get rid; but only if the match is ambiguous! (i.e. keep function ptrs)\n        for i in range(0, len(ls)-1):\n            if ls[i].type == 'identifier' and ls[i+1] != '(' and len(ls[i].targets) > 1:\n                ls[i].targets = [t for t in ls[i].targets if t.kind != 'function' and t.kind != 'method']\n        # 5- if you matched something in a different language, remove it (TBC)\n        for l in ls:\n            if l.type == 'identifier':\n                l.targets = [t for t in l.targets if t.code[0].language.shortName() == lang.shortName()]\n        # 6 - if you matched a class name followed by a \"(\", redirect to constructor\n        for i in range(0, len(ls)-1):\n            if ls[i].type == 'identifier' and len(ls[i].targets)==1 and ls[i].targets[0].kind == 'class':\n                if ls[i+1] == '(':\n                    constructors = cardsFromName[lang.constructorName()]\n                    constructors = [c for c in constructors if c.parent and c.parent.name == ls[i].text]\n                    if len(constructors)==1:\n                        ls[i].targets = constructors\n        # CUSTOM: remote(\"@service.function\" ... gets linked to function\n        for i in range(2, len(ls)-2):\n            if ls[i-2] == 'remote' and ls[i-1]=='(' and ls[i].type == 'quote':\n                id = ls[i].text[1:-1]        # strip quotations\n                if id.startswith('@'):\n                    id = id[1:]\n                    parts = id.split('.')\n                    service = parts[0]\n                    function = parts[1]\n                    potentials = cardsFromName[function]\n                    for p in potentials:\n                        if p.name == function and p.project == service:\n                            ls[i].targets.append(p)\n        # and create dependencies from the potentials\n        for i in range(0, len(ls)):\n            l = ls[i]\n            l.targets = [t for t in l.targets if t != card]\n            if len(l.targets) > 0:\n                dep = Dependency(l.ic, l.jc, l.targets)\n                card.dependsOn.append(dep)\n                for t in l.targets:\n                    if t != card:\n                        t.dependents.append(Dependency(l.ic, l.jc, [card]))",
                     "language": "py",
-                    "iLine": 407,
-                    "jLine": 513
+                    "iLine": 406,
+                    "jLine": 523
                 }
             ],
             "dependsOn": [
@@ -21495,8 +21471,8 @@
                     "targets": [
                         "py_firefly_firefly_function_processLexemes"
                     ],
-                    "iChar": 697,
-                    "jChar": 711
+                    "iChar": 786,
+                    "jChar": 800
                 },
                 {
                     "targets": [
@@ -21505,15 +21481,15 @@
                         "py_firefly_firefly_method_Python_shortName",
                         "py_firefly_firefly_method_Typescript_shortName"
                     ],
-                    "iChar": 1186,
-                    "jChar": 1195
+                    "iChar": 1275,
+                    "jChar": 1284
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_function_processLexemes"
                     ],
-                    "iChar": 1418,
-                    "jChar": 1432
+                    "iChar": 1507,
+                    "jChar": 1521
                 },
                 {
                     "targets": [
@@ -21521,15 +21497,15 @@
                         "py_firefly_firefly_method_Python_thisName",
                         "py_firefly_firefly_method_Typescript_thisName"
                     ],
-                    "iChar": 1570,
-                    "jChar": 1578
+                    "iChar": 1659,
+                    "jChar": 1667
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_function_processLexemes"
                     ],
-                    "iChar": 2364,
-                    "jChar": 2378
+                    "iChar": 2453,
+                    "jChar": 2467
                 },
                 {
                     "targets": [
@@ -21538,8 +21514,8 @@
                         "py_firefly_firefly_method_Python_shortName",
                         "py_firefly_firefly_method_Typescript_shortName"
                     ],
-                    "iChar": 4330,
-                    "jChar": 4339
+                    "iChar": 4419,
+                    "jChar": 4428
                 },
                 {
                     "targets": [
@@ -21548,22 +21524,31 @@
                         "py_firefly_firefly_method_Python_shortName",
                         "py_firefly_firefly_method_Typescript_shortName"
                     ],
-                    "iChar": 4350,
-                    "jChar": 4359
+                    "iChar": 4439,
+                    "jChar": 4448
                 },
                 {
                     "targets": [
-                        "py_firefly_firefly_class_Dependency"
+                        "py_firefly_firefly_method_Language_constructorName",
+                        "py_firefly_firefly_method_Python_constructorName",
+                        "py_firefly_firefly_method_Typescript_constructorName"
                     ],
-                    "iChar": 5263,
-                    "jChar": 5273
+                    "iChar": 4770,
+                    "jChar": 4785
                 },
                 {
                     "targets": [
-                        "py_firefly_firefly_class_Dependency"
+                        "py_firefly_firefly_method_Dependency___init__"
                     ],
-                    "iChar": 5454,
-                    "jChar": 5464
+                    "iChar": 5889,
+                    "jChar": 5899
+                },
+                {
+                    "targets": [
+                        "py_firefly_firefly_method_Dependency___init__"
+                    ],
+                    "iChar": 6080,
+                    "jChar": 6090
                 }
             ],
             "dependents": [
@@ -21571,8 +21556,8 @@
                     "targets": [
                         "py_firefly_firefly_function_importAllCards"
                     ],
-                    "iChar": 379,
-                    "jChar": 398
+                    "iChar": 310,
+                    "jChar": 329
                 },
                 {
                     "targets": [
@@ -21599,8 +21584,8 @@
                 {
                     "text": "def processLexemes(code: str, lang: Language) -> List[Lex]:\n    mlc = lang.multiLineComment()\n    elmc = lang.endMultiLineComment()\n    result = []\n    ic = 0\n    while ic < len(code):\n        ic = skipToNextNonWhitespace(code, ic)\n        type = ''\n        if ic < len(code):\n            if code.startswith(lang.comment(), ic):         # single-line comment\n                jc = skipPast('\\n', code, ic)\n                type = 'comment'\n            elif mlc != '' and code.startswith(mlc, ic):    # multi-line comment\n                jc = skipPast(elmc, code, ic)\n                type = 'comment'\n            else:\n                (openQuote, closeQuote) = lang.checkOpenQuote(code, ic)          # quotes\n                if closeQuote != '':\n                    jc = skipPastCloseQuote(closeQuote, code, ic + len(openQuote))\n                    type = 'quote'\n                elif isAlpha(code[ic]):\n                    jc = skipPastNextWord(code, ic, lang)\n                    type = 'identifier'\n                elif isOperator(code[ic]):\n                    jc = skipPastOperator(code, ic)\n                    type = 'operator'\n                else:\n                    jc = ic + 1\n            result.append(Lex(code, ic, jc, type))\n            ic = jc\n    return result",
                     "language": "py",
-                    "iLine": 515,
-                    "jLine": 545
+                    "iLine": 525,
+                    "jLine": 555
                 }
             ],
             "dependsOn": [
@@ -21710,7 +21695,7 @@
                 },
                 {
                     "targets": [
-                        "py_firefly_firefly_class_Lex"
+                        "py_firefly_firefly_method_Lex___init__"
                     ],
                     "iChar": 1212,
                     "jChar": 1215
@@ -21721,22 +21706,22 @@
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 697,
-                    "jChar": 711
+                    "iChar": 786,
+                    "jChar": 800
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 1418,
-                    "jChar": 1432
+                    "iChar": 1507,
+                    "jChar": 1521
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 2364,
-                    "jChar": 2378
+                    "iChar": 2453,
+                    "jChar": 2467
                 }
             ],
             "children": [],
@@ -21756,8 +21741,8 @@
                 {
                     "text": "def skipPast(searchFor, inText, ic) -> int:     # just straight search for (search), return index after or len() if not found\n    jc = inText.find(searchFor, ic)\n    return (jc + len(searchFor)) if jc >= 0 else len(inText)",
                     "language": "py",
-                    "iLine": 547,
-                    "jLine": 549
+                    "iLine": 557,
+                    "jLine": 559
                 }
             ],
             "dependsOn": [],
@@ -21794,8 +21779,8 @@
                 {
                     "text": "def skipPastCloseQuote(searchFor, inText, ic) -> int:   # same, but will overlook '\\' characters\n    while(ic < len(inText)):\n        ic = inText.find(searchFor, ic)\n        if ic < 0: return len(inText)\n        if ic == 0 or inText[ic-1] != '\\\\': return ic + len(searchFor)\n        ic = ic + len(searchFor)\n    return len(inText)",
                     "language": "py",
-                    "iLine": 551,
-                    "jLine": 557
+                    "iLine": 561,
+                    "jLine": 567
                 }
             ],
             "dependsOn": [],
@@ -21825,8 +21810,8 @@
                 {
                     "text": "def skipPastNextWord(inText, ic, lang: Language) -> int:    # skip past end of next word\n    while(ic < len(inText)):\n        char = inText[ic]\n        if not isWordChar(char, lang): return ic\n        ic += 1\n    return len(inText)",
                     "language": "py",
-                    "iLine": 559,
-                    "jLine": 564
+                    "iLine": 569,
+                    "jLine": 574
                 }
             ],
             "dependsOn": [
@@ -21871,8 +21856,8 @@
                 {
                     "text": "def isWhitespace(char) -> bool:\n    return char in ' \\n\\t'",
                     "language": "py",
-                    "iLine": 566,
-                    "jLine": 567
+                    "iLine": 576,
+                    "jLine": 577
                 }
             ],
             "dependsOn": [],
@@ -21902,8 +21887,8 @@
                 {
                     "text": "def skipToNextNonWhitespace(inText, ic) -> int: # skip to next nonwhitespace character\n    while(ic < len(inText)):\n        if not isWhitespace(inText[ic]):\n            return ic\n        ic += 1\n    return ic",
                     "language": "py",
-                    "iLine": 569,
-                    "jLine": 574
+                    "iLine": 579,
+                    "jLine": 584
                 }
             ],
             "dependsOn": [
@@ -21941,8 +21926,8 @@
                 {
                     "text": "def isAlpha(char) -> bool:\n    l = char.lower()\n    return (l >= 'a' and l <= 'z') or l == '_'",
                     "language": "py",
-                    "iLine": 576,
-                    "jLine": 578
+                    "iLine": 586,
+                    "jLine": 588
                 }
             ],
             "dependsOn": [],
@@ -21972,8 +21957,8 @@
                 {
                     "text": "def isOperator(char) -> bool:\n    return char in '!@#$%^&*_+-=:;<>.,/?'",
                     "language": "py",
-                    "iLine": 580,
-                    "jLine": 581
+                    "iLine": 590,
+                    "jLine": 591
                 }
             ],
             "dependsOn": [],
@@ -22010,8 +21995,8 @@
                 {
                     "text": "def skipPastOperator(inText, ic) -> int:\n    if ic < len(inText)-1 and isOperator(inText[ic+1]): return ic+2\n    return ic+1",
                     "language": "py",
-                    "iLine": 583,
-                    "jLine": 585
+                    "iLine": 593,
+                    "jLine": 595
                 }
             ],
             "dependsOn": [
@@ -22049,8 +22034,8 @@
                 {
                     "text": "def isWordChar(char, lang: Language) -> bool:\n    l = char.lower()\n    if (l >= 'a' and l <= 'z'): return True\n    if (l >= '0' and l <= '9'): return True\n    if (l == '_'): return True\n    if (lang.namesCanContainHyphens() and l == '-'): return True\n    return False",
                     "language": "py",
-                    "iLine": 587,
-                    "jLine": 593
+                    "iLine": 597,
+                    "jLine": 603
                 }
             ],
             "dependsOn": [
@@ -22095,8 +22080,8 @@
                 {
                     "text": "def computeLevels(cards: List[Card]):\n    #print('computeLevels...')\n    # now compute the levels of all callable things (not classes or properties)\n    callables = [c for c in cards if c.kind == 'method' or c.kind == 'function']\n    #print('\\ncomputing rank from top...')\n    queue = []\n    for c in callables:\n        count=0\n        for d in c.dependents:\n            for t in d.targets:\n                if t in callables:\n                    count += 1\n        if count == 0:\n            c.rankFromTop = 1\n            queue.append(c)\n    level = 1\n    while len(queue) > 0 and level < 100:\n        rp = f\"level {level}: \"\n        for c in queue: rp += c.shortName() + \" \"\n        #print(rp)\n        nextQueue = []\n        for c in queue:\n            for d in c.dependsOn:\n                for t in d.targets:\n                    if t in callables and t.rankFromTop == 0:\n                        t.rankFromTop = c.rankFromTop + 1\n                        if not t in nextQueue:\n                            nextQueue.append(t)\n        queue = nextQueue\n        level += 1\n    #print(\"\\ncomputing rank from bottom...\")\n    queue = []\n    for c in callables:\n        count=0\n        for d in c.dependsOn:\n            for t in d.targets:\n                if t in callables:\n                    count += 1\n        if count == 0:\n            c.rankFromBottom = 1\n            queue.append(c)\n    level = 1\n    while len(queue) > 0 and level < 100:\n        rp = f\"level {level}: \"\n        for c in queue: rp += c.shortName() + \" \"\n        #print(rp)\n        nextQueue = []\n        for c in queue:\n            for d in c.dependents:\n                for t in d.targets:\n                    if t in callables and t.rankFromBottom == 0:\n                        t.rankFromBottom = c.rankFromBottom + 1\n                        if not t in nextQueue:\n                            nextQueue.append(t)\n        queue = nextQueue\n        level += 1",
                     "language": "py",
-                    "iLine": 596,
-                    "jLine": 652
+                    "iLine": 606,
+                    "jLine": 662
                 }
             ],
             "dependsOn": [
@@ -22146,8 +22131,8 @@
                 {
                     "text": "def writeTextToFile(text: str, path: str):\n    folder = os.path.dirname(path)\n    if folder != '':\n        os.makedirs(folder, exist_ok=True)\n    with open(path, 'w') as file:\n        file.write(text)",
                     "language": "py",
-                    "iLine": 654,
-                    "jLine": 659
+                    "iLine": 664,
+                    "jLine": 669
                 }
             ],
             "dependsOn": [],
@@ -22177,8 +22162,8 @@
                 {
                     "text": "def importCardsFromText(project: str, module: str, language: Language, text: str, parent: Card, minIndent: int)-> List[Card]:\n    cards = language.importCards(project, module, text, minIndent)\n    for c in cards:\n        c.parent = parent\n        (c.kind, c.name) = language.findTypeAndName(c)\n    return cards",
                     "language": "py",
-                    "iLine": 661,
-                    "jLine": 666
+                    "iLine": 671,
+                    "jLine": 676
                 }
             ],
             "dependsOn": [
@@ -22255,8 +22240,8 @@
                 {
                     "text": "def removeIndents(cards: List[Card]):\n    for card in cards:\n        lines = card.code[0].text.split('\\n')\n        minLeadingSpaces = 10000\n        for line in lines:\n            if len(line) > 0:\n                nLeadingSpaces = len(line) - len(line.lstrip(' '))\n                minLeadingSpaces = min(minLeadingSpaces, nLeadingSpaces)\n        if minLeadingSpaces > 0:\n            lines = [l[minLeadingSpaces:] for l in lines]\n            card.code[0].text = '\\n'.join(lines)",
                     "language": "py",
-                    "iLine": 668,
-                    "jLine": 678
+                    "iLine": 678,
+                    "jLine": 688
                 }
             ],
             "dependsOn": [
@@ -22273,8 +22258,8 @@
                     "targets": [
                         "py_firefly_firefly_function_importAllCards"
                     ],
-                    "iChar": 354,
-                    "jChar": 367
+                    "iChar": 285,
+                    "jChar": 298
                 }
             ],
             "children": [],
@@ -22294,8 +22279,8 @@
                 {
                     "text": "def findWordInString(word: str, string: str) -> int:    # not part of another word\n    punc = \" !@#$%^&*()+-={}[]:\\\";\\',.<>/?\\`~\"\n    index = 0\n    while index != -1:\n        index = string.find(word, index)\n        if index == -1:\n            return -1\n        end = index + len(word)\n        if (index == 0 or \\\n            (string[index-1:index] in punc) or word[0] in punc) and \\\n            (string[end:end+1] in punc or word[len(word)-1] in punc):\n            return index\n        else:\n            index = end\n    return -1",
                     "language": "py",
-                    "iLine": 680,
-                    "jLine": 694
+                    "iLine": 690,
+                    "jLine": 704
                 }
             ],
             "dependsOn": [],
@@ -22317,8 +22302,8 @@
                 {
                     "text": "def findString(strings: list, target: str) -> int:\n    try:\n        return strings.index(target)\n    except ValueError:\n        return -1",
                     "language": "py",
-                    "iLine": 696,
-                    "jLine": 700
+                    "iLine": 706,
+                    "jLine": 710
                 }
             ],
             "dependsOn": [],
@@ -22369,8 +22354,8 @@
                 {
                     "text": "def findAllFiles(directory, extension):\n    \"\"\"\n    Returns a list of files in the given directory (and its subdirectories) that end with the given extension.\n    \"\"\"\n    matched_files = []\n    # Ensure the extension starts with a dot\n    if not extension.startswith(\".\"):\n        extension = \".\" + extension\n    # Recursively walk the directory\n    for dirpath, dirnames, filenames in os.walk(directory):\n        for filename in filenames:\n            if filename.endswith(extension):\n                full_path = os.path.join(dirpath, filename)\n                matched_files.append(full_path)\n    return matched_files",
                     "language": "py",
-                    "iLine": 702,
-                    "jLine": 719
+                    "iLine": 712,
+                    "jLine": 729
                 }
             ],
             "dependsOn": [],
@@ -22407,8 +22392,8 @@
                 {
                     "text": "def startFirefly():\n    vectors.load()\n    service.start(\"firefly\", 8003, root)",
                     "language": "py",
-                    "iLine": 721,
-                    "jLine": 723
+                    "iLine": 731,
+                    "jLine": 733
                 }
             ],
             "dependsOn": [
@@ -22437,7 +22422,15 @@
                     "jChar": 78
                 }
             ],
-            "dependents": [],
+            "dependents": [
+                {
+                    "targets": [
+                        "py_firefly_firefly_global_if __name__"
+                    ],
+                    "iChar": 43,
+                    "jChar": 55
+                }
+            ],
             "children": [],
             "parent": "null"
         },
@@ -22455,8 +22448,8 @@
                 {
                     "text": "def test():\n    print(\"testing...\")\n    cards = importCardsFromFile(\"firefly\", \"../ts/firefly.ts\")\n    computeDependencies(cards)\n    for card in cards:\n        print(\"----------------------------------\")\n        print(card.uid())\n        code = card.code[0].text\n        print(code)\n        words = []\n        for d in card.dependsOn:\n            for t in d.targets:\n                words.append(t.shortName())\n        print(words)",
                     "language": "py",
-                    "iLine": 725,
-                    "jLine": 738
+                    "iLine": 735,
+                    "jLine": 748
                 }
             ],
             "dependsOn": [
@@ -22497,6 +22490,37 @@
             "parent": "null"
         },
         {
+            "uid": "py_firefly_firefly_global_if __name__",
+            "language": "py",
+            "module": "firefly",
+            "kind": "global",
+            "name": "if __name__",
+            "purpose": "",
+            "examples": "",
+            "inputs": "",
+            "outputs": "",
+            "code": [
+                {
+                    "text": "if __name__ == \"__main__\":\n    #test()\n    startFirefly()",
+                    "language": "py",
+                    "iLine": 750,
+                    "jLine": 752
+                }
+            ],
+            "dependsOn": [
+                {
+                    "targets": [
+                        "py_firefly_firefly_function_startFirefly"
+                    ],
+                    "iChar": 43,
+                    "jChar": 55
+                }
+            ],
+            "dependents": [],
+            "children": [],
+            "parent": "null"
+        },
+        {
             "uid": "py_firefly_firefly_method_Language_name",
             "language": "py",
             "module": "firefly",
@@ -22510,8 +22534,8 @@
                 {
                     "text": "def name(self) -> str:\n    return \"\"",
                     "language": "py",
-                    "iLine": 108,
-                    "jLine": 109
+                    "iLine": 107,
+                    "jLine": 108
                 }
             ],
             "dependsOn": [],
@@ -22533,8 +22557,8 @@
                 {
                     "text": "def shortName(self) -> str:\n    return \"\"",
                     "language": "py",
-                    "iLine": 110,
-                    "jLine": 111
+                    "iLine": 109,
+                    "jLine": 110
                 }
             ],
             "dependsOn": [],
@@ -22564,22 +22588,22 @@
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 1186,
-                    "jChar": 1195
+                    "iChar": 1275,
+                    "jChar": 1284
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 4330,
-                    "jChar": 4339
+                    "iChar": 4419,
+                    "jChar": 4428
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 4350,
-                    "jChar": 4359
+                    "iChar": 4439,
+                    "jChar": 4448
                 },
                 {
                     "targets": [
@@ -22601,6 +22625,13 @@
                     ],
                     "iChar": 399,
                     "jChar": 408
+                },
+                {
+                    "targets": [
+                        "py_firefly_firefly_method_Card___init__"
+                    ],
+                    "iChar": 238,
+                    "jChar": 247
                 }
             ],
             "children": [],
@@ -22620,8 +22651,8 @@
                 {
                     "text": "def comment(self) -> str:\n    return \"\"",
                     "language": "py",
-                    "iLine": 112,
-                    "jLine": 113
+                    "iLine": 111,
+                    "jLine": 112
                 }
             ],
             "dependsOn": [],
@@ -22651,8 +22682,8 @@
                 {
                     "text": "def multiLineComment(self) -> str:\n    return \"\"",
                     "language": "py",
-                    "iLine": 114,
-                    "jLine": 115
+                    "iLine": 113,
+                    "jLine": 114
                 }
             ],
             "dependsOn": [],
@@ -22682,8 +22713,8 @@
                 {
                     "text": "def endMultiLineComment(self) -> str:\n    return \"\"",
                     "language": "py",
-                    "iLine": 116,
-                    "jLine": 117
+                    "iLine": 115,
+                    "jLine": 116
                 }
             ],
             "dependsOn": [],
@@ -22713,8 +22744,8 @@
                 {
                     "text": "def checkOpenQuote(self, str, ic):   # if (str[ic:]) starts with an openquote, return the closed-quote string to look for\n    return \"\"",
                     "language": "py",
-                    "iLine": 118,
-                    "jLine": 119
+                    "iLine": 117,
+                    "jLine": 118
                 }
             ],
             "dependsOn": [],
@@ -22744,8 +22775,8 @@
                 {
                     "text": "def namesCanContainHyphens(self) -> bool:\n    return False",
                     "language": "py",
-                    "iLine": 120,
-                    "jLine": 121
+                    "iLine": 119,
+                    "jLine": 120
                 }
             ],
             "dependsOn": [],
@@ -22775,12 +22806,20 @@
                 {
                     "text": "def constructorName(self) -> str:\n    return \"\"",
                     "language": "py",
-                    "iLine": 122,
-                    "jLine": 123
+                    "iLine": 121,
+                    "jLine": 122
                 }
             ],
             "dependsOn": [],
-            "dependents": [],
+            "dependents": [
+                {
+                    "targets": [
+                        "py_firefly_firefly_function_computeDependencies"
+                    ],
+                    "iChar": 4770,
+                    "jChar": 4785
+                }
+            ],
             "children": [],
             "parent": "py_firefly_firefly_class_Language"
         },
@@ -22798,8 +22837,8 @@
                 {
                     "text": "def definitionKeywords(self) -> List[str]:\n    return []",
                     "language": "py",
-                    "iLine": 124,
-                    "jLine": 125
+                    "iLine": 123,
+                    "jLine": 124
                 }
             ],
             "dependsOn": [],
@@ -22821,8 +22860,8 @@
                 {
                     "text": "def importCards(self, project, module,  text):\n    return []",
                     "language": "py",
-                    "iLine": 126,
-                    "jLine": 127
+                    "iLine": 125,
+                    "jLine": 126
                 }
             ],
             "dependsOn": [],
@@ -22852,8 +22891,8 @@
                 {
                     "text": "def thisName(self) -> str:  # return \"this\" or \"self\" or whatever\n    return \"\"",
                     "language": "py",
-                    "iLine": 128,
-                    "jLine": 129
+                    "iLine": 127,
+                    "jLine": 128
                 }
             ],
             "dependsOn": [],
@@ -22862,8 +22901,8 @@
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 1570,
-                    "jChar": 1578
+                    "iChar": 1659,
+                    "jChar": 1667
                 }
             ],
             "children": [],
@@ -22883,8 +22922,8 @@
                 {
                     "text": "def findTypeAndName(self, card, minIndent) -> (str, str):\n    return (\"\", \"\")",
                     "language": "py",
-                    "iLine": 130,
-                    "jLine": 131
+                    "iLine": 129,
+                    "jLine": 130
                 }
             ],
             "dependsOn": [],
@@ -22901,6 +22940,128 @@
             "parent": "py_firefly_firefly_class_Language"
         },
         {
+            "uid": "py_firefly_firefly_method_CodeBlock___init__",
+            "language": "py",
+            "module": "firefly",
+            "kind": "method",
+            "name": "__init__",
+            "purpose": "",
+            "examples": "",
+            "inputs": "",
+            "outputs": "",
+            "code": [
+                {
+                    "text": "def __init__(self, text: str, language: Language, iLine: int):\n    self.text = text\n    self.language = language\n    self.iLine = iLine\n    self.jLine = iLine # inclusive: eurgh",
+                    "language": "py",
+                    "iLine": 133,
+                    "jLine": 137
+                }
+            ],
+            "dependsOn": [
+                {
+                    "targets": [
+                        "py_firefly_firefly_class_Language"
+                    ],
+                    "iChar": 40,
+                    "jChar": 48
+                }
+            ],
+            "dependents": [
+                {
+                    "targets": [
+                        "py_firefly_firefly_class_Card"
+                    ],
+                    "iChar": 613,
+                    "jChar": 622
+                },
+                {
+                    "targets": [
+                        "py_firefly_firefly_method_Card___init__"
+                    ],
+                    "iChar": 557,
+                    "jChar": 566
+                }
+            ],
+            "children": [],
+            "parent": "py_firefly_firefly_class_CodeBlock"
+        },
+        {
+            "uid": "py_firefly_firefly_method_Card___init__",
+            "language": "py",
+            "module": "firefly",
+            "kind": "method",
+            "name": "__init__",
+            "purpose": "",
+            "examples": "",
+            "inputs": "",
+            "outputs": "",
+            "code": [
+                {
+                    "text": "def __init__(self, project: str, module: str, code: str, language: Language, iLine: int) :\n    self.project = project  # global\n    self.module = module    # root-relative path of the file, for disambiguation\n    self.language = language.shortName()    \n    self.kind = ''          # \"class\" or \"function\" or \"other\"\n    self.name = ''          # name of function or class being defined\n    self.purpose = ''       # purpose\n    self.examples = ''      # examples\n    self.inputs = ''        # inputs\n    self.outputs = ''       # outputs\n    self.code = [ CodeBlock(code, language, iLine) ]        # actual text from code file\n    self.dependsOn = []     # cards we depend on\n    self.dependents = []    # cards that depend on us\n    self.children = []      # if we're a class, cards for methods\n    self.parent = None      # if we're a method or property, points to parent\n    self.superclass = None  # if we're a class, points to superclass\n    self.rankFromBottom = 0 # 1 means depends on nothing; x means depends on things with rank < x\n    self.rankFromTop = 0    # 1 means nothing calls this; x means called by things with rank < x ",
+                    "language": "py",
+                    "iLine": 140,
+                    "jLine": 157
+                }
+            ],
+            "dependsOn": [
+                {
+                    "targets": [
+                        "py_firefly_firefly_class_Language"
+                    ],
+                    "iChar": 67,
+                    "jChar": 75
+                },
+                {
+                    "targets": [
+                        "py_firefly_firefly_method_Language_shortName",
+                        "py_firefly_firefly_method_Python_shortName",
+                        "py_firefly_firefly_method_Typescript_shortName"
+                    ],
+                    "iChar": 238,
+                    "jChar": 247
+                },
+                {
+                    "targets": [
+                        "py_firefly_firefly_method_CodeBlock___init__"
+                    ],
+                    "iChar": 557,
+                    "jChar": 566
+                }
+            ],
+            "dependents": [
+                {
+                    "targets": [
+                        "py_firefly_firefly_class_Python"
+                    ],
+                    "iChar": 1390,
+                    "jChar": 1394
+                },
+                {
+                    "targets": [
+                        "py_firefly_firefly_class_Typescript"
+                    ],
+                    "iChar": 1541,
+                    "jChar": 1545
+                },
+                {
+                    "targets": [
+                        "py_firefly_firefly_method_Python_importCards"
+                    ],
+                    "iChar": 590,
+                    "jChar": 594
+                },
+                {
+                    "targets": [
+                        "py_firefly_firefly_method_Typescript_importCards"
+                    ],
+                    "iChar": 782,
+                    "jChar": 786
+                }
+            ],
+            "children": [],
+            "parent": "py_firefly_firefly_class_Card"
+        },
+        {
             "uid": "py_firefly_firefly_method_Card_shortName",
             "language": "py",
             "module": "firefly",
@@ -22914,8 +23075,8 @@
                 {
                     "text": "def shortName(self):\n    s = \"\"\n    if self.parent: s= self.parent.name + \".\"\n    s += self.name\n    if self.kind == 'function' or self.kind == 'method':\n        s += \"()\"\n    return s",
                     "language": "py",
-                    "iLine": 159,
-                    "jLine": 165
+                    "iLine": 158,
+                    "jLine": 164
                 }
             ],
             "dependsOn": [],
@@ -22938,22 +23099,22 @@
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 1186,
-                    "jChar": 1195
+                    "iChar": 1275,
+                    "jChar": 1284
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 4330,
-                    "jChar": 4339
+                    "iChar": 4419,
+                    "jChar": 4428
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 4350,
-                    "jChar": 4359
+                    "iChar": 4439,
+                    "jChar": 4448
                 },
                 {
                     "targets": [
@@ -22994,8 +23155,8 @@
                 {
                     "text": "def uid(self):\n    u = self.language + \"_\" + self.project + \"_\" + self.module + \"_\" + self.kind + \"_\"\n    if self.parent: u += self.parent.name + \"_\"\n    u += self.name\n    return u",
                     "language": "py",
-                    "iLine": 166,
-                    "jLine": 170
+                    "iLine": 165,
+                    "jLine": 169
                 }
             ],
             "dependsOn": [],
@@ -23054,6 +23215,52 @@
             "parent": "py_firefly_firefly_class_Card"
         },
         {
+            "uid": "py_firefly_firefly_method_Dependency___init__",
+            "language": "py",
+            "module": "firefly",
+            "kind": "method",
+            "name": "__init__",
+            "purpose": "",
+            "examples": "",
+            "inputs": "",
+            "outputs": "",
+            "code": [
+                {
+                    "text": "def __init__(self, iChar: int, jChar: int, targets: Card):\n    self.iChar = iChar\n    self.jChar = jChar\n    self.targets = targets",
+                    "language": "py",
+                    "iLine": 194,
+                    "jLine": 197
+                }
+            ],
+            "dependsOn": [
+                {
+                    "targets": [
+                        "py_firefly_firefly_class_Card"
+                    ],
+                    "iChar": 52,
+                    "jChar": 56
+                }
+            ],
+            "dependents": [
+                {
+                    "targets": [
+                        "py_firefly_firefly_function_computeDependencies"
+                    ],
+                    "iChar": 5889,
+                    "jChar": 5899
+                },
+                {
+                    "targets": [
+                        "py_firefly_firefly_function_computeDependencies"
+                    ],
+                    "iChar": 6080,
+                    "jChar": 6090
+                }
+            ],
+            "children": [],
+            "parent": "py_firefly_firefly_class_Dependency"
+        },
+        {
             "uid": "py_firefly_firefly_method_Dependency_combine",
             "language": "py",
             "module": "firefly",
@@ -23067,8 +23274,8 @@
                 {
                     "text": "def combine(self, dep):\n    len0 = self.jChar - self.iChar\n    len1 = dep.jChar - dep.iChar\n    if len1 > len0: # dep wins because longer\n        self.iChar = dep.iChar\n        self.jChar = dep.jChar\n        self.targets = dep.targets\n    elif len1 < len0 : # self wins because longer\n        pass\n    else: # equal length; combine the arrays\n        self.iChar = min(self.iChar, dep.iChar)\n        self.jChar = max(self.jChar, dep.jChar)\n        self.targets += dep.targets",
                     "language": "py",
-                    "iLine": 199,
-                    "jLine": 211
+                    "iLine": 198,
+                    "jLine": 210
                 }
             ],
             "dependsOn": [],
@@ -23090,8 +23297,8 @@
                 {
                     "text": "def name(self): return \"python\"",
                     "language": "py",
-                    "iLine": 214,
-                    "jLine": 214
+                    "iLine": 213,
+                    "jLine": 213
                 }
             ],
             "dependsOn": [],
@@ -23113,8 +23320,8 @@
                 {
                     "text": "def shortName(self): return \"py\"",
                     "language": "py",
-                    "iLine": 215,
-                    "jLine": 215
+                    "iLine": 214,
+                    "jLine": 214
                 }
             ],
             "dependsOn": [],
@@ -23144,22 +23351,22 @@
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 1186,
-                    "jChar": 1195
+                    "iChar": 1275,
+                    "jChar": 1284
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 4330,
-                    "jChar": 4339
+                    "iChar": 4419,
+                    "jChar": 4428
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 4350,
-                    "jChar": 4359
+                    "iChar": 4439,
+                    "jChar": 4448
                 },
                 {
                     "targets": [
@@ -23181,6 +23388,13 @@
                     ],
                     "iChar": 399,
                     "jChar": 408
+                },
+                {
+                    "targets": [
+                        "py_firefly_firefly_method_Card___init__"
+                    ],
+                    "iChar": 238,
+                    "jChar": 247
                 }
             ],
             "children": [],
@@ -23200,8 +23414,8 @@
                 {
                     "text": "def comment(self): return \"#\"",
                     "language": "py",
-                    "iLine": 216,
-                    "jLine": 216
+                    "iLine": 215,
+                    "jLine": 215
                 }
             ],
             "dependsOn": [],
@@ -23231,8 +23445,8 @@
                 {
                     "text": "def checkOpenQuote(self, str, ic):   # if (str) starts with an openquote, return a pair: open and close quote strings\n    if str.startswith('\\'', ic): return ('\\'', '\\'')\n    elif str.startswith('\"', ic): return ('\"', '\"')\n    elif str.startswith('f\"', ic): return ('f\"', '\"')\n    elif str.startswith('\"\"\"', ic): return ('\"\"\"', '\"\"\"')\n    return(\"\", \"\")",
                     "language": "py",
-                    "iLine": 217,
-                    "jLine": 222
+                    "iLine": 216,
+                    "jLine": 221
                 }
             ],
             "dependsOn": [],
@@ -23262,12 +23476,20 @@
                 {
                     "text": "def constructorName(self) -> str:\n    return \"__init__\"",
                     "language": "py",
-                    "iLine": 223,
-                    "jLine": 224
+                    "iLine": 222,
+                    "jLine": 223
                 }
             ],
             "dependsOn": [],
-            "dependents": [],
+            "dependents": [
+                {
+                    "targets": [
+                        "py_firefly_firefly_function_computeDependencies"
+                    ],
+                    "iChar": 4770,
+                    "jChar": 4785
+                }
+            ],
             "children": [],
             "parent": "py_firefly_firefly_class_Python"
         },
@@ -23285,8 +23507,8 @@
                 {
                     "text": "def definitionKeywords(self) -> List[str]:\n    return [\"def\", \"class\"]",
                     "language": "py",
-                    "iLine": 225,
-                    "jLine": 226
+                    "iLine": 224,
+                    "jLine": 225
                 }
             ],
             "dependsOn": [],
@@ -23308,8 +23530,8 @@
                 {
                     "text": "def thisName(self) -> str:  # return \"this\" or \"self\" or whatever\n    return 'self'",
                     "language": "py",
-                    "iLine": 227,
-                    "jLine": 228
+                    "iLine": 226,
+                    "jLine": 227
                 }
             ],
             "dependsOn": [],
@@ -23318,8 +23540,8 @@
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 1570,
-                    "jChar": 1578
+                    "iChar": 1659,
+                    "jChar": 1667
                 }
             ],
             "children": [],
@@ -23339,8 +23561,8 @@
                 {
                     "text": "def importCards(self, project, module, text, minIndent) -> List[Card]:\n    lines = text.split(\"\\n\")\n    card = None\n    cards = []\n    indent = 0\n    for i in range(0, len(lines)):\n        line = lines[i]\n        prevLine = lines[i-1] if i > 0 else \"\"\n        if not(isBlank(line)):\n            oldIndent = indent\n            indent = nTabsAtStart(line)\n            if indent >= minIndent:\n                if card == None or (oldIndent > minIndent and indent == minIndent) or (indent==minIndent and oldIndent==indent and (not(prevLine.strip().startswith(\"#\")))):\n                    card = Card(project, module, line, self, i+1)\n                    cards.append(card)\n                else:\n                    card.code[0].text += \"\\n\" + line\n                    card.code[0].jLine = i+1\n    return cards",
                     "language": "py",
-                    "iLine": 229,
-                    "jLine": 247
+                    "iLine": 228,
+                    "jLine": 246
                 }
             ],
             "dependsOn": [
@@ -23367,7 +23589,7 @@
                 },
                 {
                     "targets": [
-                        "py_firefly_firefly_class_Card"
+                        "py_firefly_firefly_method_Card___init__"
                     ],
                     "iChar": 590,
                     "jChar": 594
@@ -23399,8 +23621,8 @@
                 {
                     "text": "def findTypeAndName(self, card) -> (str, str):\n    lines = card.code[0].text.split(\"\\n\")\n    for line in lines:\n        l = line.strip()\n        if not l.startswith(\"#\"):\n            if l.startswith(\"def\"):\n                parts = l.split(f\"(\")   # \"def funcName\"  \"params) -> result:\"\n                funcName = parts[0].split(\" \")[1].strip()\n                if parts[1].startswith(\"self\"):\n                    return (\"method\", funcName)\n                else:\n                    return (\"function\", funcName)\n            elif l.startswith(\"class\"):\n                return (\"class\", l.split(\" \")[1].split(\":\")[0].split(\"(\")[0])\n            else: # could be property (self.blah = ) or global (blah = ..)\n                parts = l.split(\"=\")\n                if \"self.\" in parts[0]:\n                    return (\"method\", parts[0].strip())\n                else:\n                    return (\"global\", parts[0].strip())\n    return (\"unknown\", \"unknown\")",
                     "language": "py",
-                    "iLine": 248,
-                    "jLine": 268
+                    "iLine": 247,
+                    "jLine": 267
                 }
             ],
             "dependsOn": [],
@@ -23430,8 +23652,8 @@
                 {
                     "text": "def name(self): return \"typescript\"",
                     "language": "py",
-                    "iLine": 273,
-                    "jLine": 273
+                    "iLine": 272,
+                    "jLine": 272
                 }
             ],
             "dependsOn": [],
@@ -23453,8 +23675,8 @@
                 {
                     "text": "def shortName(self): return \"ts\"",
                     "language": "py",
-                    "iLine": 274,
-                    "jLine": 274
+                    "iLine": 273,
+                    "jLine": 273
                 }
             ],
             "dependsOn": [],
@@ -23484,22 +23706,22 @@
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 1186,
-                    "jChar": 1195
+                    "iChar": 1275,
+                    "jChar": 1284
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 4330,
-                    "jChar": 4339
+                    "iChar": 4419,
+                    "jChar": 4428
                 },
                 {
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 4350,
-                    "jChar": 4359
+                    "iChar": 4439,
+                    "jChar": 4448
                 },
                 {
                     "targets": [
@@ -23521,6 +23743,13 @@
                     ],
                     "iChar": 399,
                     "jChar": 408
+                },
+                {
+                    "targets": [
+                        "py_firefly_firefly_method_Card___init__"
+                    ],
+                    "iChar": 238,
+                    "jChar": 247
                 }
             ],
             "children": [],
@@ -23540,8 +23769,8 @@
                 {
                     "text": "def comment(self): return \"//\"",
                     "language": "py",
-                    "iLine": 275,
-                    "jLine": 275
+                    "iLine": 274,
+                    "jLine": 274
                 }
             ],
             "dependsOn": [],
@@ -23571,8 +23800,8 @@
                 {
                     "text": "def multiLineComment(self): return \"/*\"",
                     "language": "py",
-                    "iLine": 276,
-                    "jLine": 276
+                    "iLine": 275,
+                    "jLine": 275
                 }
             ],
             "dependsOn": [],
@@ -23602,8 +23831,8 @@
                 {
                     "text": "def endMultiLineComment(self): return \"*/\"",
                     "language": "py",
-                    "iLine": 277,
-                    "jLine": 277
+                    "iLine": 276,
+                    "jLine": 276
                 }
             ],
             "dependsOn": [],
@@ -23633,8 +23862,8 @@
                 {
                     "text": "def checkOpenQuote(self, str, ic):\n    if str[ic] == '\"': return ('\"', '\"')\n    elif str[ic] == '`': return ('`','`')\n    elif str[ic] == '\\'': return ('\\'', '\\'')\n    return (\"\", \"\")",
                     "language": "py",
-                    "iLine": 278,
-                    "jLine": 282
+                    "iLine": 277,
+                    "jLine": 281
                 }
             ],
             "dependsOn": [],
@@ -23664,12 +23893,20 @@
                 {
                     "text": "def constructorName(self) -> str:\n    return \"constructor\"",
                     "language": "py",
-                    "iLine": 283,
-                    "jLine": 284
+                    "iLine": 282,
+                    "jLine": 283
                 }
             ],
             "dependsOn": [],
-            "dependents": [],
+            "dependents": [
+                {
+                    "targets": [
+                        "py_firefly_firefly_function_computeDependencies"
+                    ],
+                    "iChar": 4770,
+                    "jChar": 4785
+                }
+            ],
             "children": [],
             "parent": "py_firefly_firefly_class_Typescript"
         },
@@ -23687,8 +23924,8 @@
                 {
                     "text": "def definitionKeywords(self) -> List[str]:\n    return [\"function\", \"class\"]",
                     "language": "py",
-                    "iLine": 285,
-                    "jLine": 286
+                    "iLine": 284,
+                    "jLine": 285
                 }
             ],
             "dependsOn": [],
@@ -23710,8 +23947,8 @@
                 {
                     "text": "def thisName(self) -> str:  # return \"this\" or \"self\" or whatever\n    return 'this'",
                     "language": "py",
-                    "iLine": 287,
-                    "jLine": 288
+                    "iLine": 286,
+                    "jLine": 287
                 }
             ],
             "dependsOn": [],
@@ -23720,8 +23957,8 @@
                     "targets": [
                         "py_firefly_firefly_function_computeDependencies"
                     ],
-                    "iChar": 1570,
-                    "jChar": 1578
+                    "iChar": 1659,
+                    "jChar": 1667
                 }
             ],
             "children": [],
@@ -23741,8 +23978,8 @@
                 {
                     "text": "def importCards(self, project, module, text, minIndent) -> List[Card]:\n    lines = text.split(\"\\n\")\n    cards = []\n    card = None\n    prevLine = \"\"\n    indent = 0\n    for iLine in range(0, len(lines)):\n        line = lines[iLine]\n        if indent >= minIndent: # only consider lines above the min indent level\n            # should we start a new card?\n            # YES if current line has indent = minIndent, line is not blank and previous line is not a comment\n            # NO if the line is just \"}\"\n            blank = (line.strip()==\"\")\n            singleCloseBrace = (line.strip() == \"}\")\n            prevComment = prevLine.strip().startswith(\"//\")\n            if indent == minIndent and (not blank) and (not prevComment) and (not singleCloseBrace):\n                card = Card(project, module, line, self, iLine+1)\n                cards.append(card)\n            elif card:\n                card.code[0].text += \"\\n\" + line\n                card.code[0].jLine = iLine + 1\n        indent = indent + countBraces(line)\n        prevLine = line\n    return cards",
                     "language": "py",
-                    "iLine": 289,
-                    "jLine": 312
+                    "iLine": 288,
+                    "jLine": 311
                 }
             ],
             "dependsOn": [
@@ -23755,7 +23992,7 @@
                 },
                 {
                     "targets": [
-                        "py_firefly_firefly_class_Card"
+                        "py_firefly_firefly_method_Card___init__"
                     ],
                     "iChar": 782,
                     "jChar": 786
@@ -23794,8 +24031,8 @@
                 {
                     "text": "def findTypeAndName(self, card) -> (str, str):\n    lines = card.code[0].text.split(\"\\n\")\n    for line in lines:\n        l = line.strip()\n        icom = l.find(\"//\")\n        if icom>=0: l = l[0 : icom]\n        if l != \"\":\n            w = l.split(\" \")\n            classIndex = findString(w, \"class\")\n            if classIndex >= 0:\n                return (\"class\", w[classIndex+1])\n            funcIndex = findString(w, \"function\")\n            if funcIndex >= 0:\n                return (\"function\", w[funcIndex+1].split(\"(\")[0].split(\"<\")[0])\n            elif card.parent != None:\n                if \"(\" in w[0]:\n                    return (\"method\", w[0].split(\"(\")[0])\n                else:\n                    return (\"property\", w[0].split(\":\")[0])\n            elif w[0]==\"var\" or w[0]==\"let\" or w[0]==\"const\":\n                return (\"global\", w[1].split(\":\")[0])\n    return (\"unknown\", \"unknown\")",
                     "language": "py",
-                    "iLine": 313,
-                    "jLine": 334
+                    "iLine": 312,
+                    "jLine": 333
                 }
             ],
             "dependsOn": [
@@ -23825,6 +24062,68 @@
             ],
             "children": [],
             "parent": "py_firefly_firefly_class_Typescript"
+        },
+        {
+            "uid": "py_firefly_firefly_method_Lex___init__",
+            "language": "py",
+            "module": "firefly",
+            "kind": "method",
+            "name": "__init__",
+            "purpose": "",
+            "examples": "",
+            "inputs": "",
+            "outputs": "",
+            "code": [
+                {
+                    "text": "def __init__(self, code: str =\"\", iChar:int =0, jChar:int =0, type:str =\"\"):\n    sub = code[iChar:jChar]\n    ts = sub.lstrip()\n    iChar += len(sub) - len(ts)\n    te = sub.rstrip()\n    jChar -= len(sub) - len(te)\n    self.ic = iChar\n    self.jc = jChar\n    self.text = code[iChar:jChar]\n    self.type = type\n    self.targets = []",
+                    "language": "py",
+                    "iLine": 389,
+                    "jLine": 399
+                }
+            ],
+            "dependsOn": [],
+            "dependents": [
+                {
+                    "targets": [
+                        "py_firefly_firefly_function_processLexemes"
+                    ],
+                    "iChar": 1212,
+                    "jChar": 1215
+                }
+            ],
+            "children": [],
+            "parent": "py_firefly_firefly_class_Lex"
+        },
+        {
+            "uid": "py_firefly_firefly_method_Lex___eq__",
+            "language": "py",
+            "module": "firefly",
+            "kind": "method",
+            "name": "__eq__",
+            "purpose": "",
+            "examples": "",
+            "inputs": "",
+            "outputs": "",
+            "code": [
+                {
+                    "text": "def __eq__(self, other):\n    if isinstance(other, Lex):\n        return self.text == other.text\n    elif isinstance(other, str):\n        return self.text == other\n    return False",
+                    "language": "py",
+                    "iLine": 400,
+                    "jLine": 405
+                }
+            ],
+            "dependsOn": [
+                {
+                    "targets": [
+                        "py_firefly_firefly_class_Lex"
+                    ],
+                    "iChar": 50,
+                    "jChar": 53
+                }
+            ],
+            "dependents": [],
+            "children": [],
+            "parent": "py_firefly_firefly_class_Lex"
         },
         {
             "uid": "py_firefly_vectors_global_import numpy as np",
@@ -25814,15 +26113,7 @@
                 }
             ],
             "dependsOn": [],
-            "dependents": [
-                {
-                    "targets": [
-                        "py_firefly_service_function_start"
-                    ],
-                    "iChar": 223,
-                    "jChar": 237
-                }
-            ],
+            "dependents": [],
             "children": [
                 "py_firefly_service_method_RestartHandler___init__",
                 "py_firefly_service_method_RestartHandler_on_modified",
@@ -26030,7 +26321,7 @@
                 },
                 {
                     "targets": [
-                        "py_firefly_service_class_RestartHandler"
+                        "py_firefly_service_method_RestartHandler___init__"
                     ],
                     "iChar": 223,
                     "jChar": 237
@@ -26178,6 +26469,37 @@
             ],
             "children": [],
             "parent": "null"
+        },
+        {
+            "uid": "py_firefly_service_method_RestartHandler___init__",
+            "language": "py",
+            "module": "service",
+            "kind": "method",
+            "name": "__init__",
+            "purpose": "",
+            "examples": "",
+            "inputs": "",
+            "outputs": "",
+            "code": [
+                {
+                    "text": "def __init__(self, observer, script_to_run):\n    self.observer = observer\n    self.script_to_run = script_to_run",
+                    "language": "py",
+                    "iLine": 53,
+                    "jLine": 55
+                }
+            ],
+            "dependsOn": [],
+            "dependents": [
+                {
+                    "targets": [
+                        "py_firefly_service_function_start"
+                    ],
+                    "iChar": 223,
+                    "jChar": 237
+                }
+            ],
+            "children": [],
+            "parent": "py_firefly_service_class_RestartHandler"
         },
         {
             "uid": "py_firefly_service_method_RestartHandler_on_modified",
