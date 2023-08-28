@@ -129,7 +129,7 @@ NEXT:
 - work correctly with all nodes
 - show shortest chain, all chains
 - keep UI state in session
-- proper lexer
+- proper lexer DONE
 
 ### visual / UI
 - disambiguate references (.method, importname.method, etc)

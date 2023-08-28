@@ -574,6 +574,7 @@ class Node {
         return (this.x != this.xTarget || this.y != this.yTarget);
     }
     reassignTo(linkID, parentID) {
+        this.graph.columns[this.column] = this.graph.columns[this.column].filter(item => item !== this);
         if (this.linkDiv) {
             this.graph.removeArrow(this.linkDiv, this.div);
             this.graph.highlightFunction(this.linkDiv, false);
@@ -581,6 +582,8 @@ class Node {
         this.parentDiv = this.graph.find(parentID);
         this.parentNode = this.graph.get(this.parentDiv);
         this.linkDiv = this.graph.find(linkID, this.parentDiv);
+        this.column = this.parentNode.column + 1;
+        this.graph.addToColumnArray(this);
         this.graph.addArrow(this.linkDiv, this.parentDiv, this.div);
     }
     update() {
