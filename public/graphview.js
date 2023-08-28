@@ -66,8 +66,6 @@ export class GraphView {
             for (let i = 1; i < nodes.length; i++) {
                 this.closedNodes.push(nodes[i].json());
             }
-            //console.log("closed nodes:");
-            //for(const c of this.closedNodes) { console.log("  ", user(c.id)) };
             for (let node of nodes) {
                 this.disappear(node);
             }
@@ -81,6 +79,7 @@ export class GraphView {
     }
     // animates to nothing over (time) seconds, then closes
     disappear(node, time = 0.25) {
+        this.highlightFunction(node.linkDiv, false);
         let div = node.div;
         if (node.linkDiv) {
             this.removeArrow(node.linkDiv, div);
@@ -143,10 +142,6 @@ export class GraphView {
                 }
             }
             this.closedNodes = remaining;
-        }
-        //console.log("reopen", user(id));
-        for (const c of toOpen) {
-            //console.log("   ", user(c.id));
         }
         // and open them
         this.openJsonNodeList(toOpen);
@@ -236,6 +231,9 @@ export class GraphView {
     // arranges all views : computes xTarget, yTarget for each view
     arrangeAll() {
         this.sortColumns();
+        let rootNode = this.columns[0][0];
+        let crect = rect(rootNode.div);
+        rootNode.setTargetPos(150, (window.innerHeight / 2) - (crect.height() / 2) - 32);
         let xPos = this.xMax(this.columns[0]);
         for (let i = 1; i < this.columns.length; i++) {
             let groups = this.splitColumnIntoGroups(i);
@@ -372,6 +370,11 @@ export class GraphView {
     get(div) {
         let node = this.nodeMap.get(div);
         return node ? node : null;
+    }
+    // returns the user-obj associated with top-level div
+    getUserObj(div) {
+        let node = this.get(div);
+        return node ? node.userObj : null;
     }
     // find the top-level div that contains a link elemeent
     findDivContainingLink(link) {
@@ -647,7 +650,11 @@ class Arrow {
         this.updatePath();
     }
     initDrawRect() {
-        const parentRect = rect(this.parentDiv);
+        let parentDiv = this.linkDiv.parentElement;
+        if (window.getComputedStyle(parentDiv).display == 'none') {
+            parentDiv = parentDiv.parentElement;
+        }
+        const parentRect = rect(parentDiv);
         const linkRect = rect(this.linkDiv);
         const targetRect = rect(this.div);
         const xFrom = parentRect.right + 2;
@@ -659,7 +666,7 @@ class Arrow {
         yTo = Math.max(yTo, targetRect.top + 12);
         yTo = Math.min(yTo, targetRect.bottom - 12);
         this.drawRect = new Rect(xFrom, yFrom, xTo, yTo);
-        this.xVertical = (xFrom + xTo) / 2;
+        this.xVertical = xTo - 24;
     }
     updatePath() {
         /*if (!document.body.contains(this.linkDiv) || !document.body.contains(this.div)) {

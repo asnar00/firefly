@@ -3,8 +3,8 @@ body {
     margin: 0;
     background-attachment: local;
     background: linear-gradient(to bottom, 
-    #469a8a 50%,   /* Start color at the top */
-    #54a998 50%  /* End color till the bottom */
+    #377f72 50%,
+    #469a8a 50% 
     );
 }
 
@@ -51,7 +51,7 @@ body {
 
 .search-field {
     font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
-    font-weight: 500;
+    font-weight: 400;
     font-size: 10pt;
     border-radius: 3px;
     background-color: #74aaa0;
@@ -65,7 +65,7 @@ body {
     height: 1.5em;
     white-space: nowrap;
     padding-top: 0.27em;
-    padding-bottom: 0.23em;
+    padding-bottom: 0.2em;
     padding-left: 8px;
     overflow-x: auto;
 }
@@ -158,6 +158,7 @@ h3 {
     cursor: pointer;
     line-height: 125%;
     transition: max-width 0.3s, max-height 0.3s, background-color 0.3s;
+    border-bottom: 6px;
 }
 
 .code-expanded {
@@ -175,13 +176,16 @@ h3 {
 }
 
 .code-title {    
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;
     font-size: 9pt;
     background-color: #6aa299;
     color: #000000;
     padding: 0.5em;
     font-weight: 600;
-    border-bottom: 1px solid #87bdb5;
+    cursor: pointer;
 }
 
 [contenteditable]:focus {

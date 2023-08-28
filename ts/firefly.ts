@@ -54,14 +54,14 @@ class Card {
 }
 
 enum CardViewState {
-    SuperCompact,
     Compact,
     Fullsize,
     Editing
 }
 
 class CardView {
-    state: CardViewState = CardViewState.Compact;
+    minimised: boolean = false;                         // if true, title bar only
+    state: CardViewState = CardViewState.Compact;       // state of code viewer
     xScroll: number =0;
     yScroll: number =0;
     constructor(state: CardViewState) {
@@ -81,7 +81,6 @@ async function run() {
     await animateLogoToLeft();
     await openSession();
     searchBox();
-    testSearch("animate logo to left");
     eventLoop();
 }
 
@@ -180,7 +179,7 @@ async function updateSearch(searchField: HTMLElement) {
         searchField.style.width = '512px';
     }
     setTimeout(async () => {
-        const results = await testSearch(searchField!.innerText);
+        const results = await search(searchField!.innerText);
         if (results) {
             showSearchResults(results);
         } else {
@@ -231,25 +230,21 @@ async function onCommandKey() {
     searchField.focus();
 }
 
-async function testSearch(query: string) : Promise<any>{
-    if (query.trim() == "") return null;
-    const results = await search(query);
-    return results;
-}
-
 function showSearchResults(results: any) {
     clearSearchResults();
     let searchResultsDiv = document.getElementById("search-results")!;
     const array = results.results;
     for(const item of array) {
-        const id = item.value;
-        const card = findCard(id);
-        if (card) {
-            const name = shortName(card);
-            if (card.kind == "function" || card.kind == "method" || card.kind == "class") {
-                let searchResultDiv = element(`<div class="search-result">${name}</div>`);
-                listen(searchResultDiv, 'click', () => { jumpToCard(card)});
-                searchResultsDiv.append(searchResultDiv);
+        const ids : string[] = item.value; // NEXT
+        for(let id of ids) {
+            const card = findCard(id);
+            if (card) {
+                const name = shortName(card);
+                if (card.kind == "function" || card.kind == "method" || card.kind == "class") {
+                    let searchResultDiv = element(`<div class="search-result">${name}</div>`);
+                    listen(searchResultDiv, 'click', () => { jumpToCard(card)});
+                    searchResultsDiv.append(searchResultDiv);
+                }
             }
         }
     }
@@ -278,7 +273,6 @@ function jumpToCard(target: Card) {
     let lastId = chain[chain.length-1].card!.uid;
     //setTimeout(() => { expandOrContract(s_graphView.find(lastId)!); }, 0);
 }
-
 
 function callChain(from: Card, to: Card) : Link[] {
     newVisitPass();
@@ -333,6 +327,7 @@ function clearSearchResults() {
 }
 
 async function search(query: string) : Promise<any> {
+    if (query.trim() == "") return null;
     return await remote("@firefly.search", { query });
 }
 
@@ -460,6 +455,9 @@ function cardToHTML(id: string, view: CardView) : HTMLElement {
     listen(elem, 'scroll', function(event: any) { getScrollPos(elem); });
     let container = codeContainer(elem, shortName(card));
     container.id = card.uid;
+    if (view.minimised) {
+        elem.style.display = "none";
+    }
     return container;
 }
 
@@ -471,12 +469,46 @@ function codeContainer(codeDiv: HTMLElement, title: string) : HTMLElement {
     const titleDiv = document.createElement('div');
     titleDiv.className = 'code-title';
     titleDiv.textContent = title;
+    listen(titleDiv, 'click', () => { onTitleBarClick(containerDiv, codeDiv); });
+
+    // close button (eventually multiple)
+    if (title != "main()") { // todo: better way of finding the root node
+        let closeButton = element(`<i class="icon-cancel"></i>`)!
+        closeButton.style.visibility = "hidden";
+        titleDiv.append(closeButton);
+        listen(titleDiv, 'mouseenter', () => { onMouseOverTitle(titleDiv, closeButton, true); });
+        listen(titleDiv, 'mouseleave', () => { onMouseOverTitle(titleDiv, closeButton, false); });
+        listen(closeButton, 'click', () => { onCloseButtonClick(containerDiv); });
+    }
 
     // Append the title and the code div to the container
     containerDiv.appendChild(titleDiv);
     containerDiv.appendChild(codeDiv);
 
     return containerDiv;
+}
+
+function onTitleBarClick(containerDiv: HTMLElement, codeDiv: HTMLElement) {
+    const view = s_graphView.getUserObj(containerDiv)! as CardView;
+    view.minimised = !(view.minimised);
+    if (view.minimised) {
+        codeDiv.style.display = "none";
+    } else {
+        codeDiv.style.display = "inline-block";
+    }
+    s_graphView.arrangeAll();
+}
+
+function onMouseOverTitle(titleDiv: HTMLElement, buttonDiv: HTMLElement, entering: boolean) {
+    if (entering) {
+        buttonDiv.style.visibility = "visible";
+    } else {
+        buttonDiv.style.visibility = "hidden";
+    }
+}
+
+function onCloseButtonClick(div: HTMLElement) {
+    s_graphView.close(div);
 }
 
 function shortName(card: Card) : string {

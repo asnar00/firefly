@@ -110,8 +110,8 @@ Thoughts on company structure.
 ## TODO
 
 NEXT: 
-- disambiguate calls by finding type
-- get inter-language callgraphs working again ("remote" barrier)
+- disambiguate calls by finding type DONE
+- get inter-language callgraphs working again ("remote" barrier) DONE
 - deal with ${} and {} in ts and py strings... annoying but anyway
 
 ### infrastructure

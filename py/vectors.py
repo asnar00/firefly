@@ -65,7 +65,7 @@ def cosine_similarity(v1: np.ndarray, v2: np.ndarray) -> float:
     norm_v2 = np.linalg.norm(v2)
     return (dot_product / (norm_v1 * norm_v2)).item()
 
-def load():
+def loadEmbeddings():
     print("loading sbert model...")
     global sbertModel
     sbertModel = SentenceTransformer('paraphrase-MiniLM-L6-v2')

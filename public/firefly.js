@@ -68,14 +68,14 @@ class Card {
 }
 var CardViewState;
 (function (CardViewState) {
-    CardViewState[CardViewState["SuperCompact"] = 0] = "SuperCompact";
-    CardViewState[CardViewState["Compact"] = 1] = "Compact";
-    CardViewState[CardViewState["Fullsize"] = 2] = "Fullsize";
-    CardViewState[CardViewState["Editing"] = 3] = "Editing";
+    CardViewState[CardViewState["Compact"] = 0] = "Compact";
+    CardViewState[CardViewState["Fullsize"] = 1] = "Fullsize";
+    CardViewState[CardViewState["Editing"] = 2] = "Editing";
 })(CardViewState || (CardViewState = {}));
 class CardView {
     constructor(state) {
-        this.state = CardViewState.Compact;
+        this.minimised = false; // if true, title bar only
+        this.state = CardViewState.Compact; // state of code viewer
         this.xScroll = 0;
         this.yScroll = 0;
         this.state = state;
@@ -94,7 +94,6 @@ function run() {
         yield animateLogoToLeft();
         yield openSession();
         searchBox();
-        testSearch("animate logo to left");
         eventLoop();
     });
 }
@@ -195,7 +194,7 @@ function updateSearch(searchField) {
             searchField.style.width = '512px';
         }
         setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-            const results = yield testSearch(searchField.innerText);
+            const results = yield search(searchField.innerText);
             if (results) {
                 showSearchResults(results);
             }
@@ -247,27 +246,21 @@ function onCommandKey() {
         searchField.focus();
     });
 }
-function testSearch(query) {
-    return __awaiter(this, void 0, void 0, function* () {
-        if (query.trim() == "")
-            return null;
-        const results = yield search(query);
-        return results;
-    });
-}
 function showSearchResults(results) {
     clearSearchResults();
     let searchResultsDiv = document.getElementById("search-results");
     const array = results.results;
     for (const item of array) {
-        const id = item.value;
-        const card = findCard(id);
-        if (card) {
-            const name = shortName(card);
-            if (card.kind == "function" || card.kind == "method" || card.kind == "class") {
-                let searchResultDiv = element(`<div class="search-result">${name}</div>`);
-                listen(searchResultDiv, 'click', () => { jumpToCard(card); });
-                searchResultsDiv.append(searchResultDiv);
+        const ids = item.value; // NEXT
+        for (let id of ids) {
+            const card = findCard(id);
+            if (card) {
+                const name = shortName(card);
+                if (card.kind == "function" || card.kind == "method" || card.kind == "class") {
+                    let searchResultDiv = element(`<div class="search-result">${name}</div>`);
+                    listen(searchResultDiv, 'click', () => { jumpToCard(card); });
+                    searchResultsDiv.append(searchResultDiv);
+                }
             }
         }
     }
@@ -348,6 +341,8 @@ function clearSearchResults() {
 }
 function search(query) {
     return __awaiter(this, void 0, void 0, function* () {
+        if (query.trim() == "")
+            return null;
         return yield remote("@firefly.search", { query });
     });
 }
@@ -495,6 +490,9 @@ function cardToHTML(id, view) {
     listen(elem, 'scroll', function (event) { getScrollPos(elem); });
     let container = codeContainer(elem, shortName(card));
     container.id = card.uid;
+    if (view.minimised) {
+        elem.style.display = "none";
+    }
     return container;
 }
 function codeContainer(codeDiv, title) {
@@ -504,10 +502,42 @@ function codeContainer(codeDiv, title) {
     const titleDiv = document.createElement('div');
     titleDiv.className = 'code-title';
     titleDiv.textContent = title;
+    listen(titleDiv, 'click', () => { onTitleBarClick(containerDiv, codeDiv); });
+    // close button (eventually multiple)
+    if (title != "main()") { // todo: better way of finding the root node
+        let closeButton = element(`<i class="icon-cancel"></i>`);
+        closeButton.style.visibility = "hidden";
+        titleDiv.append(closeButton);
+        listen(titleDiv, 'mouseenter', () => { onMouseOverTitle(titleDiv, closeButton, true); });
+        listen(titleDiv, 'mouseleave', () => { onMouseOverTitle(titleDiv, closeButton, false); });
+        listen(closeButton, 'click', () => { onCloseButtonClick(containerDiv); });
+    }
     // Append the title and the code div to the container
     containerDiv.appendChild(titleDiv);
     containerDiv.appendChild(codeDiv);
     return containerDiv;
+}
+function onTitleBarClick(containerDiv, codeDiv) {
+    const view = s_graphView.getUserObj(containerDiv);
+    view.minimised = !(view.minimised);
+    if (view.minimised) {
+        codeDiv.style.display = "none";
+    }
+    else {
+        codeDiv.style.display = "inline-block";
+    }
+    s_graphView.arrangeAll();
+}
+function onMouseOverTitle(titleDiv, buttonDiv, entering) {
+    if (entering) {
+        buttonDiv.style.visibility = "visible";
+    }
+    else {
+        buttonDiv.style.visibility = "hidden";
+    }
+}
+function onCloseButtonClick(div) {
+    s_graphView.close(div);
 }
 function shortName(card) {
     let result = "";

@@ -77,9 +77,17 @@ def importAllCards(project, folders) -> dict:
 
 def saveEmbeddings(cards):
     print("saving embeddings")
+    cardsFromShortName = {}
     for card in cards:
-        key = separateWords(card.shortName())
-        vectors.add(key, card.uid())
+        csn = card.shortName()
+        if not (csn in cardsFromShortName):
+            cardsFromShortName[csn] = [ card ]
+        else:
+            cardsFromShortName[csn].append(card)
+    for shortName, cards in cardsFromShortName.items():
+        key = separateWords(shortName)
+        uids = [c.uid() for c in cards]
+        vectors.add(key, uids)
 
 def separateWords(name): # convert "camelCaseHTTP" and "camel_case_HTTP" to "camel case HTTP", 
     symbols = "!@#$%^&*()+-={}[]:\";\',.<>/?\`~_"
@@ -677,6 +685,7 @@ def importCardsFromText(project: str, module: str, language: Language, text: str
 def removeIndents(cards: List[Card]):
     for card in cards:
         lines = card.code[0].text.split('\n')
+        if (lines[-1].strip(' ') == ''): lines = lines[0:-1]
         minLeadingSpaces = 10000
         for line in lines:
             if len(line) > 0:
@@ -684,7 +693,7 @@ def removeIndents(cards: List[Card]):
                 minLeadingSpaces = min(minLeadingSpaces, nLeadingSpaces)
         if minLeadingSpaces > 0:
             lines = [l[minLeadingSpaces:] for l in lines]
-            card.code[0].text = '\n'.join(lines)
+        card.code[0].text = '\n'.join(lines)
 
 def findWordInString(word: str, string: str) -> int:    # not part of another word
     punc = " !@#$%^&*()+-={}[]:\";\',.<>/?\`~"
@@ -728,7 +737,7 @@ def findAllFiles(directory, extension):
     return matched_files
 
 def startFirefly():
-    vectors.load()
+    vectors.loadEmbeddings()
     service.start("firefly", 8003, root)
 
 def test():
