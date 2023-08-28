@@ -36,7 +36,8 @@ export class GraphView {
     xScrollTarget: number = 0;
     yScrollTarget: number = 0;
     autoScroll: boolean = false;
-    closedNodes: any[] = [];            // nodes we've closed but might reopen, stored as json
+    closedNodes: any[] = [];            // nodes we closed intentionally
+    reopenNodes: any[] = [];            // nodes that were children of a node we closed
     canvasRect: Rect;                   // bounding-rect of all nodes, or window rect, whichever is bigger
 
     // setup: pass the div that's going to hold all nodes
@@ -76,8 +77,9 @@ export class GraphView {
         const node = this.get(div)!;
         if (node) {
             let nodes = this.allChildren(node);
-            for(let i = 0; i < nodes.length; i++) { 
-                this.closedNodes.push(nodes[i].json());
+            this.closedNodes.push(nodes[0].json());
+            for(let i = 1; i < nodes.length; i++) { 
+                this.reopenNodes.push(nodes[i].json());
             }
             for(let node of nodes) { this.disappear(node); }
         }
@@ -133,30 +135,34 @@ export class GraphView {
             return;
         }
 
-        // we're opening the node
-        let i = this.closedNodes.findIndex(n => n.id == id);        // is new node in closedNodes?
+        // is the node in reopen-list or closed-list? If so, use old userObj
+        let i = this.reopenNodes.findIndex(n => n.id == id);        // is new node in reopenNodes?
+        if (i >= 0) { toOpen = this.reopenNodes.splice(i, 1);  }
+        else {
+            i = this.closedNodes.findIndex(n => n.id == id);
+            if (i >= 0) { toOpen = this.closedNodes.splice(i, 1); }
+        }
+        // if not, use the userObj passed in
         if (i == -1) {
             toOpen = [ { id: id, link: linkID ?? "null",            // if no, make a new json version
                 parent: parentID ?? "null",
                 emphasize: emphasize,
                 userObj: userObj }];
-        } else {
-            toOpen = this.closedNodes.splice(i, 1);                 // otherwise get it from closedNodes
         }
 
-        // grab all nodes from closedNodes whose parents are in (tOpen)
+        // grab all nodes from reopenNodes whose parents are in (tOpen)
         let iCheck = 0;
         while(iCheck < toOpen.length) {
             const p = toOpen[iCheck++];
             let remaining: any[] = [];
-            for(let c of this.closedNodes) {
+            for(let c of this.reopenNodes) {
                 if (c.parent == p.id) {
                     toOpen.push(c);
                 } else {
                     remaining.push(c);
                 }
             }
-            this.closedNodes = remaining;
+            this.reopenNodes = remaining;
         }
 
         // and open them
@@ -191,13 +197,14 @@ export class GraphView {
             }
         }
         this.columns.splice(1, this.columns.length-1);
-        this.closedNodes = [];
+        this.reopenNodes = [];
     }
 
     openJson(obj: any) {
         this.openJsonNodeList(obj.nodes);
-        this.closedNodes = obj.closed;
-        //console.log("closed nodelist:", this.closedNodes);
+        this.closedNodes = obj.closedNodes;
+        this.reopenNodes = obj.reopenNodes;
+        //console.log("closed nodelist:", this.reopenNodes);
         this.xScroll = obj.xScroll;
         this.yScroll = obj.yScroll;
         scrollTo(this.xScroll, this.yScroll);
@@ -553,7 +560,8 @@ export class GraphView {
         let nodes: Node[] = this.allChildren(node);
         return { xScroll: this.xScroll, yScroll: this.yScroll,
                  nodes:  nodes.map(node => node.json()),
-                 closed: this.closedNodes };
+                 closedNodes: this.closedNodes,
+                 reopenNodes: this.reopenNodes };
     }
 }
 
