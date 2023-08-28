@@ -76,7 +76,7 @@ export class GraphView {
         const node = this.get(div)!;
         if (node) {
             let nodes = this.allChildren(node);
-            for(let i = 1; i < nodes.length; i++) { 
+            for(let i = 0; i < nodes.length; i++) { 
                 this.closedNodes.push(nodes[i].json());
             }
             for(let node of nodes) { this.disappear(node); }
@@ -454,7 +454,7 @@ export class GraphView {
         const centerLine = (parentRect.top + parentRect.bottom)/2;
 
         // now space group out vertically around the centerline
-        let yPos = Math.max(this.padding, centerLine - (sumHeight/2));
+        let yPos = centerLine - (sumHeight/2);
         let pivot = (group.length-1)/2;
         for (let i = 0; i < group.length; i++) {
             let node = group[i];
@@ -522,7 +522,7 @@ export class GraphView {
     }
 
     addArrow(linkDiv: HTMLElement, parentDiv: HTMLElement, div: HTMLElement) {
-        let arrow = new Arrow(linkDiv, parentDiv, div);
+        let arrow = new Arrow(linkDiv, parentDiv, div, false);
         if (!this.arrowMap.has(linkDiv)) { this.arrowMap.set(linkDiv, []); }
         this.arrowMap.get(linkDiv)!.push(arrow);
         arrow.addToSVG(this.arrowsSVG);
@@ -692,13 +692,16 @@ class Arrow {
     drawRect: Rect = new Rect(0,0,0,0);
     xVertical: number = 0;
     path: SVGPathElement;
-    constructor(linkDiv: HTMLElement, parentDiv: HTMLElement, div: HTMLElement) {
+    constructor(linkDiv: HTMLElement, parentDiv: HTMLElement, div: HTMLElement, dashed: boolean) {
         this.linkDiv = linkDiv; this.parentDiv = parentDiv; this.div = div;
         this.path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         this.path.setAttribute('stroke', '#87bdb5');
         this.path.setAttribute('stroke-width', '3');
         this.path.setAttribute('stroke-opacity', '1');
         this.path.setAttribute('fill', 'transparent');
+        if (dashed) {
+            this.path.setAttribute('stroke-dasharray', '8,4');
+        }
     }
     addToSVG(svg: SVGSVGElement) {
         svg.appendChild(this.path);

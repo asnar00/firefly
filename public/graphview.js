@@ -63,7 +63,7 @@ export class GraphView {
         const node = this.get(div);
         if (node) {
             let nodes = this.allChildren(node);
-            for (let i = 1; i < nodes.length; i++) {
+            for (let i = 0; i < nodes.length; i++) {
                 this.closedNodes.push(nodes[i].json());
             }
             for (let node of nodes) {
@@ -421,7 +421,7 @@ export class GraphView {
         const parentRect = parentNode.targetRect();
         const centerLine = (parentRect.top + parentRect.bottom) / 2;
         // now space group out vertically around the centerline
-        let yPos = Math.max(this.padding, centerLine - (sumHeight / 2));
+        let yPos = centerLine - (sumHeight / 2);
         let pivot = (group.length - 1) / 2;
         for (let i = 0; i < group.length; i++) {
             let node = group[i];
@@ -483,7 +483,7 @@ export class GraphView {
         return svg;
     }
     addArrow(linkDiv, parentDiv, div) {
-        let arrow = new Arrow(linkDiv, parentDiv, div);
+        let arrow = new Arrow(linkDiv, parentDiv, div, false);
         if (!this.arrowMap.has(linkDiv)) {
             this.arrowMap.set(linkDiv, []);
         }
@@ -630,7 +630,7 @@ class Node {
     }
 }
 class Arrow {
-    constructor(linkDiv, parentDiv, div) {
+    constructor(linkDiv, parentDiv, div, dashed) {
         this.drawRect = new Rect(0, 0, 0, 0);
         this.xVertical = 0;
         this.linkDiv = linkDiv;
@@ -641,6 +641,9 @@ class Arrow {
         this.path.setAttribute('stroke-width', '3');
         this.path.setAttribute('stroke-opacity', '1');
         this.path.setAttribute('fill', 'transparent');
+        if (dashed) {
+            this.path.setAttribute('stroke-dasharray', '8,4');
+        }
     }
     addToSVG(svg) {
         svg.appendChild(this.path);

@@ -165,6 +165,7 @@ h3 {
     max-width: 768px;
     max-height: 768px;
     background-color: #a8c9c4;
+    border-bottom: 6px;
 }
 
 .code-container {
