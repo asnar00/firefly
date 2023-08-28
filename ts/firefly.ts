@@ -473,7 +473,7 @@ function codeContainer(codeDiv: HTMLElement, title: string) : HTMLElement {
 
     // close button (eventually multiple)
     if (title != "main()") { // todo: better way of finding the root node
-        let closeButton = element(`<i class="icon-cancel"></i>`)!
+        let closeButton = element(`<i class="icon-cancel"></i>`)!;
         closeButton.style.visibility = "hidden";
         titleDiv.append(closeButton);
         listen(titleDiv, 'mouseenter', () => { onMouseOverTitle(titleDiv, closeButton, true); });

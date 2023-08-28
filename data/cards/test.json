@@ -17312,7 +17312,7 @@
             "outputs": "",
             "code": [
                 {
-                    "text": "function codeContainer(codeDiv: HTMLElement, title: string) : HTMLElement {\n    const containerDiv = document.createElement('div');\n    containerDiv.className = 'code-container';\n\n    // Create the title div\n    const titleDiv = document.createElement('div');\n    titleDiv.className = 'code-title';\n    titleDiv.textContent = title;\n    listen(titleDiv, 'click', () => { onTitleBarClick(containerDiv, codeDiv); });\n\n    // close button (eventually multiple)\n    if (title != \"main()\") { // todo: better way of finding the root node\n        let closeButton = element(`<i class=\"icon-cancel\"></i>`)!\n        closeButton.style.visibility = \"hidden\";\n        titleDiv.append(closeButton);\n        listen(titleDiv, 'mouseenter', () => { onMouseOverTitle(titleDiv, closeButton, true); });\n        listen(titleDiv, 'mouseleave', () => { onMouseOverTitle(titleDiv, closeButton, false); });\n        listen(closeButton, 'click', () => { onCloseButtonClick(containerDiv); });\n    }\n\n    // Append the title and the code div to the container\n    containerDiv.appendChild(titleDiv);\n    containerDiv.appendChild(codeDiv);\n\n    return containerDiv;\n}",
+                    "text": "function codeContainer(codeDiv: HTMLElement, title: string) : HTMLElement {\n    const containerDiv = document.createElement('div');\n    containerDiv.className = 'code-container';\n\n    // Create the title div\n    const titleDiv = document.createElement('div');\n    titleDiv.className = 'code-title';\n    titleDiv.textContent = title;\n    listen(titleDiv, 'click', () => { onTitleBarClick(containerDiv, codeDiv); });\n\n    // close button (eventually multiple)\n    if (title != \"main()\") { // todo: better way of finding the root node\n        let closeButton = element(`<i class=\"icon-cancel\"></i>`)!;\n        closeButton.style.visibility = \"hidden\";\n        titleDiv.append(closeButton);\n        listen(titleDiv, 'mouseenter', () => { onMouseOverTitle(titleDiv, closeButton, true); });\n        listen(titleDiv, 'mouseleave', () => { onMouseOverTitle(titleDiv, closeButton, false); });\n        listen(closeButton, 'click', () => { onCloseButtonClick(containerDiv); });\n    }\n\n    // Append the title and the code div to the container\n    containerDiv.appendChild(titleDiv);\n    containerDiv.appendChild(codeDiv);\n\n    return containerDiv;\n}",
                     "language": "ts",
                     "iLine": 464,
                     "jLine": 490
@@ -17344,43 +17344,43 @@
                     "targets": [
                         "ts_firefly_firefly_function_listen"
                     ],
-                    "iChar": 693,
-                    "jChar": 699
+                    "iChar": 694,
+                    "jChar": 700
                 },
                 {
                     "targets": [
                         "ts_firefly_firefly_function_onMouseOverTitle"
                     ],
-                    "iChar": 732,
-                    "jChar": 748
+                    "iChar": 733,
+                    "jChar": 749
                 },
                 {
                     "targets": [
                         "ts_firefly_firefly_function_listen"
                     ],
-                    "iChar": 791,
-                    "jChar": 797
+                    "iChar": 792,
+                    "jChar": 798
                 },
                 {
                     "targets": [
                         "ts_firefly_firefly_function_onMouseOverTitle"
                     ],
-                    "iChar": 830,
-                    "jChar": 846
+                    "iChar": 831,
+                    "jChar": 847
                 },
                 {
                     "targets": [
                         "ts_firefly_firefly_function_listen"
                     ],
-                    "iChar": 890,
-                    "jChar": 896
+                    "iChar": 891,
+                    "jChar": 897
                 },
                 {
                     "targets": [
                         "ts_firefly_firefly_function_onCloseButtonClick"
                     ],
-                    "iChar": 927,
-                    "jChar": 945
+                    "iChar": 928,
+                    "jChar": 946
                 }
             ],
             "dependents": [
@@ -17507,15 +17507,15 @@
                     "targets": [
                         "ts_firefly_firefly_function_codeContainer"
                     ],
-                    "iChar": 732,
-                    "jChar": 748
+                    "iChar": 733,
+                    "jChar": 749
                 },
                 {
                     "targets": [
                         "ts_firefly_firefly_function_codeContainer"
                     ],
-                    "iChar": 830,
-                    "jChar": 846
+                    "iChar": 831,
+                    "jChar": 847
                 }
             ],
             "children": [],
@@ -17560,8 +17560,8 @@
                     "targets": [
                         "ts_firefly_firefly_function_codeContainer"
                     ],
-                    "iChar": 927,
-                    "jChar": 945
+                    "iChar": 928,
+                    "jChar": 946
                 }
             ],
             "children": [],
@@ -17802,22 +17802,22 @@
                     "targets": [
                         "ts_firefly_firefly_function_codeContainer"
                     ],
-                    "iChar": 693,
-                    "jChar": 699
+                    "iChar": 694,
+                    "jChar": 700
                 },
                 {
                     "targets": [
                         "ts_firefly_firefly_function_codeContainer"
                     ],
-                    "iChar": 791,
-                    "jChar": 797
+                    "iChar": 792,
+                    "jChar": 798
                 },
                 {
                     "targets": [
                         "ts_firefly_firefly_function_codeContainer"
                     ],
-                    "iChar": 890,
-                    "jChar": 896
+                    "iChar": 891,
+                    "jChar": 897
                 }
             ],
             "children": [],
