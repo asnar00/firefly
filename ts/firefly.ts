@@ -14,9 +14,12 @@ window.onload = () => { main(); };
 const s_useLocalFiles = false;              // change this to true to enable local file access
 let dirHandle: any | null = null;
 var s_allCards: Card[];
+let s_cardsByUid: Map<string, Card> = new Map();
+let s_cardChains: Map<Card, Card[]> = new Map();
 var s_graphView : GraphView;
 let s_mainIcon = "icon-search";
 let s_mainOption = "search";
+const s_mainID = "ts_firefly_firefly_function_main";
 
 class CodeBlock {
     text: string = "";                  // actual code text
@@ -64,8 +67,9 @@ class CardView {
     state: CardViewState = CardViewState.Compact;       // state of code viewer
     xScroll: number =0;
     yScroll: number =0;
-    constructor(state: CardViewState) {
+    constructor(state: CardViewState, minimised: boolean=false) {
         this.state = state;
+        this.minimised = minimised;
     }
 }
 
@@ -131,6 +135,9 @@ async function loadCards() {
     } 
     const jsonObj = await importFolders("firefly", ["ts", "py"]);
     s_allCards = jsonObj.cards as Card[];
+    for(const card of s_allCards) {
+        s_cardsByUid.set(card.uid, card);
+    }
     console.log("nCards:", s_allCards.length);
 }
 
@@ -142,10 +149,12 @@ async function openSession() {
     } else {
         s_graphView.openJson(json);
     }
+    computeAllChains();
 }
 
 function openMain() {
-    openCard("ts_firefly_firefly_function_main", null);
+    openCard(s_mainID, null);
+    const mainCard = findCard(s_mainID)!;
 }
 
 function reset() {
@@ -250,53 +259,62 @@ function showSearchResults(results: any) {
     }
 }
 
-class Link {
-    iDep: number =-1;               // dependency index in caller
-    card: Card | null = null;       // card to open
-    constructor(iDep: number, card: Card) {
-        this.iDep = iDep; this.card = card;
+function jumpToCard(target: Card) {
+    console.log("jumpTo", shortName(target));
+    let chain = s_cardChains.get(target);
+    if (chain === undefined) {
+        console.log("NO CHAIN!");
+        return;
+    }
+    console.log("CHAIN:");
+    for(const card of chain) {
+        console.log("  ", shortName(card));
+    }
+
+    for(let i = 1; i < chain.length; i++) {
+        const parentDiv = s_graphView.find(chain[i-1].uid)!;
+        const thisDiv = s_graphView.find(chain[i].uid);
+        if (thisDiv==null) {
+            let minimised = (i < chain.length-1);
+            openCardWithParent(chain[i], chain[i-1], minimised);
+        }
     }
 }
 
-function jumpToCard(target: Card) {
-    let mainCard = findCard("ts_firefly_firefly_function_main");
-    if (!mainCard) return;
-    let chain : Link[] = callChain(mainCard, target);
-    if (chain.length==0) return;
-    //reset();
-    let card : Card = mainCard;
-    //for(let link of chain) {
-    //    const cardID = link.card!.uid;
-    //    s_graphView.open(cardID, `linkto_${cardID}`, card.uid, new CardView(CardViewState.Compact), false);
-    //    card = link.card!;
-    //}
-    let lastId = chain[chain.length-1].card!.uid;
-    //setTimeout(() => { expandOrContract(s_graphView.find(lastId)!); }, 0);
+function computeAllChains() {
+    console.log("computeAlLChains");
+    const root = findCard(s_mainID)!;
+    s_cardChains.set(root, [root]);
+    let toProcess: Card[] = [root];
+    let safeCount = 1000;
+    console.log("computeAllChains:");
+    while(toProcess.length > 0 && safeCount-- > 0) {
+        toProcess = computeAllChainsRec(toProcess);
+    }
+    console.log("unReached:");
+    for(let card of s_allCards) {
+        if (s_cardChains.get(card) === undefined) {
+            console.log(" ", shortName(card));
+        }
+    }
 }
 
-function callChain(from: Card, to: Card) : Link[] {
-    newVisitPass();
-    return callChainRec(from, to).slice(1);
-}
-
-// returns a list of { dep, card } to get from a to b
-function callChainRec(from: Card, to: Card, iDepFrom: number=-1) : Link[]  {
-    if (from.kind != "method" && from.kind != "function") return []; // only callables
-    if (visited(from)) return [];
-    if (from === to) return [ new Link(iDepFrom, from) ];
-    let iDep = findDependency(from, to);
-    if (iDep >= 0) return [ new Link(iDepFrom, from), new Link(iDep, to) ];
-    visit(from);        // prevent us from going down this path again
-    for(let iDep = 0; iDep < from.dependsOn.length; iDep++) {
-        const dep = from.dependsOn[iDep];
-        for(const t of dep.targets) {
-            const chain = callChainRec(findCard(t)!, to, iDep);
-            if (chain.length != 0) {
-                return [ new Link(iDepFrom, from), ...chain ];
+function computeAllChainsRec(toProcess: Card[]) : Card[]{
+    let next: Card[] = [];
+    for(let card of toProcess) {
+        const myChain = s_cardChains.get(card)!;
+        for(let dep of card.dependsOn) {
+            for(let t of dep.targets) {
+                let tc = findCard(t)!;
+                if (s_cardChains.get(tc) === undefined) {
+                    s_cardChains.set(tc, myChain.concat([ tc ]));
+                    console.log(shortName(tc), myChain.length+1);
+                    next.push(tc);
+                }
             }
         }
     }
-    return [];
+    return next;
 }
 
 let s_visit: number = 0;
@@ -408,9 +426,9 @@ async function importFolders(project: string, folders: string[]) {
 
 // finds the card with the given UID, or null if doesn't exist
 function findCard(uid: string) : Card | null {
-    let index = s_allCards.findIndex((card : any ) => card.uid === uid);
-    if (index < 0) return null;
-    return s_allCards[index];
+    const card = s_cardsByUid.get(uid);
+    if (card === undefined) { return null; }
+    return card;
 }
 
 // generates HTML for card, but doesn't connect it yet
@@ -597,13 +615,13 @@ function onLinkButtonPress(button: HTMLElement) {
 // closes card if it's open
 function closeCardIfExists(uid: string) {
     let existing = s_graphView.find(uid);
-        if (existing) {
-            closeCard(existing);
-        }
+    if (existing) {
+        closeCard(existing);
+    }
 }
 
 // opens a card, optionally connected to a button element
-function openCard(uid: string, button: HTMLElement | null){
+function openCard(uid: string, button: HTMLElement | null, minimised: boolean=false){
     let linkID = "";
     let parentID = "";
     if (button) {
@@ -611,7 +629,7 @@ function openCard(uid: string, button: HTMLElement | null){
         let parent = s_graphView.findDivContainingLink(button);
         if (parent) parentID = parent.id;
     }
-    s_graphView.reopen(uid, linkID, parentID, new CardView(CardViewState.Compact));
+    s_graphView.reopen(uid, linkID, parentID, new CardView(CardViewState.Compact, minimised));
     if (button) {
         highlightLink(button, true);
     }
@@ -624,4 +642,15 @@ function closeCard(cardDiv: HTMLElement) {
         highlightLink(button, false);
     }
     s_graphView.close(cardDiv);
+}
+
+// opens a card when we don't know the link, but we know the parent
+function openCardWithParent(card: Card, parent: Card, minimised: boolean=false) {
+    console.log("openCardWithParent", shortName(card));
+    // first find the parent card's div; it should be open
+    let parentDiv = s_graphView.find(parent.uid);
+    if (!parentDiv) { console.log("can't find parent!"); return; }
+    const linkDivs: NodeListOf<Element> = parentDiv.querySelectorAll(`[id*='${card.uid}']`);
+    if (linkDivs.length==0) { console.log("can't find link!"); return; }
+    openCard(card.uid, linkDivs[0] as HTMLElement, minimised);
 }
