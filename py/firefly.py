@@ -755,6 +755,9 @@ def test():
                 words.append(t.shortName())
         print(words)
 
+def main():
+    startFirefly()
+
 if __name__ == "__main__":
     #test()
-    startFirefly()
+    main()

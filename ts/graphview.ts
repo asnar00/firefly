@@ -422,6 +422,7 @@ export class GraphView {
         return (parent) ? parent : null;
     }
 
+    // returns true if the size of any node changed this frame
     anyNodeSizeChanged() : boolean {
         for(let node of this.nodeMap.values()) {
             if (node.sizeChanged())
@@ -430,6 +431,7 @@ export class GraphView {
         return false;
     }
 
+    // group nodes that have the same parent
     splitColumnIntoGroups(i: number) : Node[][] {
         let groups : Node[][] = [];
         for(const p of this.columns[i-1]) {
@@ -473,20 +475,37 @@ export class GraphView {
     
     // space groups out vertically so they don't overlap
     spaceGroupsVertically(groups: Node[][]) {
-        if (groups.length < 2) return;
-        const even = (groups.length % 2) == 0;
-        const iPivot = Math.floor((groups.length-1)/2);
-        if (even) {
-            this.checkGroups(groups[iPivot], groups[iPivot+1], 0.5);
-        }
-        for(let i=iPivot; i>0; i--) {
-            this.checkGroups(groups[i-1], groups[1], 0);
-        }
-        for(let i=iPivot; i < groups.length-1; i++) {
-            this.checkGroups(groups[i], groups[i+1], 1);
+        if (groups.length==0) return;
+        if (groups.length==1) {
+            this.centerGroupVertically(groups[0]);
+        } else {
+            const even = (groups.length % 2) == 0;
+            const iPivot = Math.floor((groups.length-1)/2);
+            if (even) {
+                this.checkGroups(groups[iPivot], groups[iPivot+1], 0.5);
+            }
+            for(let i=iPivot; i>0; i--) {
+                this.checkGroups(groups[i-1], groups[1], 0);
+            }
+            for(let i=iPivot; i < groups.length-1; i++) {
+                this.checkGroups(groups[i], groups[i+1], 1);
+            }
         }
     }
 
+    // center a group vertically around the center-line of its parent
+    centerGroupVertically(group: Node[]) {
+        const top = group[0].targetRect().top;
+        const bottom = group[group.length-1].targetRect().bottom;
+        const height = (bottom - top);
+        const parentRect = group[0].parentNode!.targetRect();
+        const centerLine = (parentRect.top + parentRect.bottom)/2;
+        const newTop = centerLine - (height/2);
+        const yMove = newTop - top;
+        this.moveGroupVertically(group, yMove);
+    }
+
+    // if two groups overlap, move them apart until they don't; mix determines which moves most
     checkGroups(groupA: Node[], groupB: Node[], mix: number) {
         const bottomA = groupA[groupA.length-1].targetRect().bottom;
         const topB = groupB[0].targetRect().top;
@@ -498,6 +517,7 @@ export class GraphView {
         this.moveGroupVertically(groupB, moveB);
     }
 
+    // moves all nodes in a group vertically by (yMove)
     moveGroupVertically(group: Node[], yMove: number) {
         for(let node of group) {
             node.yTarget += yMove;

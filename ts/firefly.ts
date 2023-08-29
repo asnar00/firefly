@@ -19,6 +19,7 @@ let s_cardChains: Map<Card, Card[]> = new Map();
 var s_graphView : GraphView;
 let s_mainIcon = "icon-search";
 let s_mainOption = "search";
+let s_searchQuery = "";
 const s_mainID = "ts_firefly_firefly_function_main";
 
 class CodeBlock {
@@ -73,6 +74,7 @@ class CardView {
     }
 }
 
+
 async function main() {
     console.log("firefly ᕦ(ツ)ᕤ");
     await run();
@@ -111,6 +113,7 @@ function graph() {
 function eventLoop() {
     s_graphView.update();
     moveLogo();
+    updateDetailTags();
     requestAnimationFrame(eventLoop);
 }
 
@@ -142,12 +145,13 @@ async function loadCards() {
 }
 
 async function openSession() {
-    let json = await load("session/test.json");
+    let json = await load("sessions/test.json");
     if (json.error) {
         console.log("failed to load session:", json.error);
         openMain();
     } else {
-        s_graphView.openJson(json);
+        s_graphView.openJson(json.graph);
+        s_searchQuery = json.ui.search;
     }
     computeAllChains();
 }
@@ -174,10 +178,15 @@ function searchBox() {
     searchField.addEventListener('keydown', async (event) => {
         await updateSearch(searchField);
         if (event.key == 'Enter') { event.preventDefault(); }
+        debouncedSaveAll();
     });
     let searchButton = document.getElementById("search-button")!;
     searchButton.style.cursor = 'pointer';
     listen(searchButton, 'click', searchOptions);
+    if (s_searchQuery != "") {
+        searchField.innerText = s_searchQuery;
+        searchFor(s_searchQuery);
+    }
 }
 
 async function updateSearch(searchField: HTMLElement) {
@@ -188,13 +197,18 @@ async function updateSearch(searchField: HTMLElement) {
         searchField.style.width = '512px';
     }
     setTimeout(async () => {
-        const results = await search(searchField!.innerText);
-        if (results) {
-            showSearchResults(results);
-        } else {
-            clearSearchResults();
-        }
+        s_searchQuery = searchField!.innerText;
+        searchFor(s_searchQuery);
     }, 0);
+}
+
+async function searchFor(query: string) {
+    const results = await search(s_searchQuery);
+    if (results) {
+        showSearchResults(results);
+    } else {
+        clearSearchResults();
+    }
 }
 
 function searchOptions() {
@@ -260,16 +274,45 @@ function showSearchResults(results: any) {
     }
 }
 
+class DetailTag {
+    div: HTMLElement;       // track this
+    msg: string;            // display
+    detailsDiv: HTMLElement;
+    constructor(div: HTMLElement, msg: string) { 
+        this.div = div; this.msg = msg; 
+        this.detailsDiv = element(`<div class="details-tag">${msg}</div>`);
+        this.detailsDiv.style.visibility = `hidden`;
+        document.body.append(this.detailsDiv);
+        listen(div, 'mouseenter', () => { this.detailsDiv.style.visibility = 'visible'; });
+        listen(div, 'mouseleave', () => { this.detailsDiv.style.visibility = 'hidden'; });
+        onClose(div, () => { this.remove(); });
+        s_detailTags.push(this);
+        this.update();
+    }
+    update() {
+        if (this.detailsDiv.style.visibility == 'visible') {
+            let r = rect(this.div);
+            this.detailsDiv.style.left = `${r.left}px`;
+            this.detailsDiv.style.top = `${r.top - 32}px`;
+        }
+    }
+    remove() {
+        this.detailsDiv.remove();
+        let i = s_detailTags.indexOf(this);
+        if (i >= 0) { s_detailTags.splice(i, 1); }
+    }
+}
+
+var s_detailTags : DetailTag[] = [];
+
 function addDetailTag(div: HTMLElement, message: string) {
-    let detailsDiv = element(`<div class="details-tag">${message}</div>`);
-    let r = rect(div);
-    detailsDiv.style.left = `${r.left}px`;
-    detailsDiv.style.top = `${r.top - 32}px`;
-    detailsDiv.style.visibility = `hidden`;
-    document.body.append(detailsDiv);
-    listen(div, 'mouseenter', () => { detailsDiv.style.visibility = 'visible'; });
-    listen(div, 'mouseleave', () => { detailsDiv.style.visibility = 'hidden'; });
-    onClose(div, () => { detailsDiv.remove(); });
+    let tag = new DetailTag(div, message);
+}
+
+function updateDetailTags() {
+    for (let tag of s_detailTags) { 
+        tag.update(); 
+    }
 }
 
 function onClose(div: HTMLElement, func: Function) {
@@ -345,18 +388,6 @@ function computeAllChainsRec(toProcess: Card[]) : Card[]{
         }
     }
     return next;
-}
-
-let s_visit: number = 0;
-let s_visitCount: Map<Card, number> = new Map();
-
-function newVisitPass() { s_visit ++; }
-function visited(card: Card) : boolean {
-    let vc = s_visitCount.get(card);
-    return (vc && vc == s_visit) ? true : false;
-}
-function visit(card: Card) {
-    s_visitCount.set(card, s_visit);
 }
 
 // given (card) and (target), checks card.dependsOn and returns index of dependency that matches
@@ -610,12 +641,14 @@ const debouncedSaveAll = debounce(() => { saveAll() }, 300);
 
 async function saveAll() {
     //console.log("saveAll");
-    const json = s_graphView.json();
-    await save(json, "sessions/test.json");
+    const graphJson = s_graphView.json();
+    const uiJson = { search: s_searchQuery };
+    const sessionJson = { ui: uiJson, graph: graphJson };
+    await save(sessionJson, "sessions/test.json");
 }
 
 async function save(json: any, path: string) {
-    await remote("@firefly.save", { path: "sessions/test.json", obj: json });
+    await remote("@firefly.save", { path: path, obj: json });
 }
 
 async function load(path: string) : Promise<any> {

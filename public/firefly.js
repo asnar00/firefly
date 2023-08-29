@@ -31,6 +31,7 @@ let s_cardChains = new Map();
 var s_graphView;
 let s_mainIcon = "icon-search";
 let s_mainOption = "search";
+let s_searchQuery = "";
 const s_mainID = "ts_firefly_firefly_function_main";
 class CodeBlock {
     constructor(code, language, iLine) {
@@ -123,6 +124,7 @@ function graph() {
 function eventLoop() {
     s_graphView.update();
     moveLogo();
+    updateDetailTags();
     requestAnimationFrame(eventLoop);
 }
 function moveLogo() {
@@ -155,13 +157,14 @@ function loadCards() {
 }
 function openSession() {
     return __awaiter(this, void 0, void 0, function* () {
-        let json = yield load("session/test.json");
+        let json = yield load("sessions/test.json");
         if (json.error) {
             console.log("failed to load session:", json.error);
             openMain();
         }
         else {
-            s_graphView.openJson(json);
+            s_graphView.openJson(json.graph);
+            s_searchQuery = json.ui.search;
         }
         computeAllChains();
     });
@@ -188,10 +191,15 @@ function searchBox() {
         if (event.key == 'Enter') {
             event.preventDefault();
         }
+        debouncedSaveAll();
     }));
     let searchButton = document.getElementById("search-button");
     searchButton.style.cursor = 'pointer';
     listen(searchButton, 'click', searchOptions);
+    if (s_searchQuery != "") {
+        searchField.innerText = s_searchQuery;
+        searchFor(s_searchQuery);
+    }
 }
 function updateSearch(searchField) {
     return __awaiter(this, void 0, void 0, function* () {
@@ -203,14 +211,20 @@ function updateSearch(searchField) {
             searchField.style.width = '512px';
         }
         setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-            const results = yield search(searchField.innerText);
-            if (results) {
-                showSearchResults(results);
-            }
-            else {
-                clearSearchResults();
-            }
+            s_searchQuery = searchField.innerText;
+            searchFor(s_searchQuery);
         }), 0);
+    });
+}
+function searchFor(query) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const results = yield search(s_searchQuery);
+        if (results) {
+            showSearchResults(results);
+        }
+        else {
+            clearSearchResults();
+        }
     });
 }
 function searchOptions() {
@@ -275,16 +289,42 @@ function showSearchResults(results) {
         }
     }
 }
+class DetailTag {
+    constructor(div, msg) {
+        this.div = div;
+        this.msg = msg;
+        this.detailsDiv = element(`<div class="details-tag">${msg}</div>`);
+        this.detailsDiv.style.visibility = `hidden`;
+        document.body.append(this.detailsDiv);
+        listen(div, 'mouseenter', () => { this.detailsDiv.style.visibility = 'visible'; });
+        listen(div, 'mouseleave', () => { this.detailsDiv.style.visibility = 'hidden'; });
+        onClose(div, () => { this.remove(); });
+        s_detailTags.push(this);
+        this.update();
+    }
+    update() {
+        if (this.detailsDiv.style.visibility == 'visible') {
+            let r = rect(this.div);
+            this.detailsDiv.style.left = `${r.left}px`;
+            this.detailsDiv.style.top = `${r.top - 32}px`;
+        }
+    }
+    remove() {
+        this.detailsDiv.remove();
+        let i = s_detailTags.indexOf(this);
+        if (i >= 0) {
+            s_detailTags.splice(i, 1);
+        }
+    }
+}
+var s_detailTags = [];
 function addDetailTag(div, message) {
-    let detailsDiv = element(`<div class="details-tag">${message}</div>`);
-    let r = rect(div);
-    detailsDiv.style.left = `${r.left}px`;
-    detailsDiv.style.top = `${r.top - 32}px`;
-    detailsDiv.style.visibility = `hidden`;
-    document.body.append(detailsDiv);
-    listen(div, 'mouseenter', () => { detailsDiv.style.visibility = 'visible'; });
-    listen(div, 'mouseleave', () => { detailsDiv.style.visibility = 'hidden'; });
-    onClose(div, () => { detailsDiv.remove(); });
+    let tag = new DetailTag(div, message);
+}
+function updateDetailTags() {
+    for (let tag of s_detailTags) {
+        tag.update();
+    }
 }
 function onClose(div, func) {
     const parentElement = div.parentElement;
@@ -293,7 +333,6 @@ function onClose(div, func) {
             if (mutation.removedNodes) {
                 mutation.removedNodes.forEach(function (node) {
                     if (node === div) {
-                        console.log('The element has been removed!');
                         observer.disconnect();
                         func();
                     }
@@ -356,16 +395,6 @@ function computeAllChainsRec(toProcess) {
         }
     }
     return next;
-}
-let s_visit = 0;
-let s_visitCount = new Map();
-function newVisitPass() { s_visit++; }
-function visited(card) {
-    let vc = s_visitCount.get(card);
-    return (vc && vc == s_visit) ? true : false;
-}
-function visit(card) {
-    s_visitCount.set(card, s_visit);
 }
 // given (card) and (target), checks card.dependsOn and returns index of dependency that matches
 function findDependency(card, target) {
@@ -632,13 +661,15 @@ const debouncedSaveAll = debounce(() => { saveAll(); }, 300);
 function saveAll() {
     return __awaiter(this, void 0, void 0, function* () {
         //console.log("saveAll");
-        const json = s_graphView.json();
-        yield save(json, "sessions/test.json");
+        const graphJson = s_graphView.json();
+        const uiJson = { search: s_searchQuery };
+        const sessionJson = { ui: uiJson, graph: graphJson };
+        yield save(sessionJson, "sessions/test.json");
     });
 }
 function save(json, path) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield remote("@firefly.save", { path: "sessions/test.json", obj: json });
+        yield remote("@firefly.save", { path: path, obj: json });
     });
 }
 function load(path) {
