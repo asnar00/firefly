@@ -248,15 +248,45 @@ function showSearchResults(results: any) {
         for(let id of ids) {
             const card = findCard(id);
             if (card) {
-                const name = shortName(card);
+                let name = shortName(card);
                 if (card.kind == "function" || card.kind == "method" || card.kind == "class") {
                     let searchResultDiv = element(`<div class="search-result">${name}</div>`);
                     listen(searchResultDiv, 'click', () => { jumpToCard(card)});
                     searchResultsDiv.append(searchResultDiv);
+                    addDetailTag(searchResultDiv, `${card.module}.${card.language}`);
                 }
             }
         }
     }
+}
+
+function addDetailTag(div: HTMLElement, message: string) {
+    let detailsDiv = element(`<div class="details-tag">${message}</div>`);
+    let r = rect(div);
+    detailsDiv.style.left = `${r.left}px`;
+    detailsDiv.style.top = `${r.top - 32}px`;
+    detailsDiv.style.visibility = `hidden`;
+    document.body.append(detailsDiv);
+    listen(div, 'mouseenter', () => { detailsDiv.style.visibility = 'visible'; });
+    listen(div, 'mouseleave', () => { detailsDiv.style.visibility = 'hidden'; });
+    onClose(div, () => { detailsDiv.remove(); });
+}
+
+function onClose(div: HTMLElement, func: Function) {
+    const parentElement = div.parentElement!;
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.removedNodes) {
+                mutation.removedNodes.forEach(function(node) {
+                    if (node as HTMLElement === div) {
+                        observer.disconnect();
+                        func();
+                    }
+                });
+            }
+        });
+    });
+    observer.observe(parentElement, { childList: true });
 }
 
 function jumpToCard(target: Card) {
@@ -544,7 +574,7 @@ function highlightLink(linkDiv: HTMLElement, highlight: boolean) {
 function listen(elem: HTMLElement, type: string, func: Function) {
     elem.addEventListener(type, async (event) => {
         //console.log(`${type}: ${elem.id}`);
-        await func(event);  // Assuming func is synchronous. If it's async, use await func(event);
+        await func(event); 
         event.stopPropagation();
         debouncedSaveAll();
     });

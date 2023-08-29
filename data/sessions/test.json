@@ -1,5 +1,5 @@
 {
-    "xScroll": 1056,
+    "xScroll": 327,
     "yScroll": 0,
     "nodes": [
         {
@@ -27,8 +27,8 @@
             }
         },
         {
-            "id": "ts_firefly_firefly_function_eventLoop",
-            "link": "linkto__5__ts_firefly_firefly_function_eventLoop",
+            "id": "ts_firefly_firefly_function_searchBox",
+            "link": "linkto__4__ts_firefly_firefly_function_searchBox",
             "parent": "ts_firefly_firefly_function_run",
             "emphasize": false,
             "userObj": {
@@ -39,12 +39,256 @@
             }
         },
         {
+            "id": "ts_firefly_firefly_function_updateSearch",
+            "link": "linkto__2__ts_firefly_firefly_function_updateSearch",
+            "parent": "ts_firefly_firefly_function_searchBox",
+            "emphasize": true,
+            "userObj": {
+                "minimised": true,
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_search",
+            "link": "linkto__3__ts_firefly_firefly_function_search",
+            "parent": "ts_firefly_firefly_function_updateSearch",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        }
+    ],
+    "closedNodes": [
+        {
+            "id": "ts_firefly_firefly_function_logo",
+            "link": "linkto__0__ts_firefly_firefly_function_logo",
+            "parent": "ts_firefly_firefly_function_init",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_cardToHTML",
+            "link": "linkto__2__ts_firefly_firefly_function_cardToHTML",
+            "parent": "ts_firefly_firefly_function_graph",
+            "emphasize": true,
+            "userObj": {
+                "minimised": false,
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_method_GraphView_constructor",
+            "link": "linkto__1__ts_firefly_graphview_method_GraphView_constructor",
+            "parent": "ts_firefly_firefly_function_graph",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_class_GraphView",
+            "link": "linkto__0__ts_firefly_graphview_class_GraphView",
+            "parent": "ts_firefly_firefly_global_s_graphView",
+            "emphasize": true,
+            "userObj": {
+                "minimised": false,
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_global_s_graphView",
+            "link": "linkto__0__ts_firefly_firefly_global_s_graphView",
+            "parent": "ts_firefly_firefly_function_graph",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_graph",
+            "link": "linkto__1__ts_firefly_firefly_function_graph",
+            "parent": "ts_firefly_firefly_function_init",
+            "emphasize": true,
+            "userObj": {
+                "minimised": false,
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_util_function_remote",
+            "link": "linkto__0__ts_firefly_util_function_remote",
+            "parent": "ts_firefly_firefly_function_importFolders",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_init",
+            "link": "linkto__0__ts_firefly_firefly_function_init",
+            "parent": "ts_firefly_firefly_function_run",
+            "emphasize": false,
+            "userObj": {
+                "minimised": true,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_animateLogoToLeft",
+            "link": "linkto__2__ts_firefly_firefly_function_animateLogoToLeft",
+            "parent": "ts_firefly_firefly_function_run",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_eventLoop",
+            "link": "linkto__5__ts_firefly_firefly_function_eventLoop",
+            "parent": "ts_firefly_firefly_function_run",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_openSession",
+            "link": "linkto__3__ts_firefly_firefly_function_openSession",
+            "parent": "ts_firefly_firefly_function_run",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_firefly_function_importCardsFromText",
+            "link": "linkto__2__py_firefly_firefly_function_importCardsFromText",
+            "parent": "py_firefly_firefly_function_importCards",
+            "emphasize": false,
+            "userObj": {
+                "minimised": true,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_firefly_function_removeIndents",
+            "link": "linkto__3__py_firefly_firefly_function_removeIndents",
+            "parent": "py_firefly_firefly_function_importAllCards",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_importFolders",
+            "link": "linkto__2__ts_firefly_firefly_function_importFolders",
+            "parent": "ts_firefly_firefly_function_loadCards",
+            "emphasize": true,
+            "userObj": {
+                "minimised": true,
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_loadCards",
+            "link": "linkto__1__ts_firefly_firefly_function_loadCards",
+            "parent": "ts_firefly_firefly_function_run",
+            "emphasize": true,
+            "userObj": {
+                "minimised": true,
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_searchOptions",
+            "link": "linkto__4__ts_firefly_firefly_function_searchOptions",
+            "parent": "ts_firefly_firefly_function_searchBox",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_vectors_function_search",
+            "link": "linkto__1__py_firefly_firefly_function_search__py_firefly_vectors_function_search",
+            "parent": "ts_firefly_firefly_function_search",
+            "emphasize": true,
+            "userObj": {
+                "minimised": false,
+                "state": 1,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_firefly_function_search",
+            "link": "linkto__1__py_firefly_firefly_function_search__py_firefly_vectors_function_search",
+            "parent": "ts_firefly_firefly_function_search",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        }
+    ],
+    "reopenNodes": [
+        {
             "id": "ts_firefly_graphview_method_GraphView_update",
             "link": "linkto__1__ts_firefly_graphview_method_GraphView_update",
             "parent": "ts_firefly_firefly_function_eventLoop",
             "emphasize": false,
             "userObj": {
-                "minimised": true,
+                "minimised": false,
                 "state": 0,
                 "xScroll": 0,
                 "yScroll": 0
@@ -63,24 +307,96 @@
             }
         },
         {
-            "id": "ts_firefly_firefly_function_loadCards",
-            "link": "linkto__1__ts_firefly_firefly_function_loadCards",
-            "parent": "ts_firefly_firefly_function_run",
+            "id": "ts_firefly_graphview_method_GraphView_sortColumns",
+            "link": "linkto__0__ts_firefly_graphview_method_GraphView_sortColumns",
+            "parent": "ts_firefly_graphview_method_GraphView_arrangeAll",
             "emphasize": false,
             "userObj": {
-                "minimised": true,
+                "minimised": false,
                 "state": 0,
                 "xScroll": 0,
                 "yScroll": 0
             }
         },
         {
-            "id": "ts_firefly_firefly_function_importFolders",
-            "link": "linkto__2__ts_firefly_firefly_function_importFolders",
-            "parent": "ts_firefly_firefly_function_loadCards",
+            "id": "ts_firefly_graphview_method_GraphView_spaceNodesInGroup",
+            "link": "linkto__11__ts_firefly_graphview_method_GraphView_spaceNodesInGroup",
+            "parent": "ts_firefly_graphview_method_GraphView_arrangeAll",
             "emphasize": false,
             "userObj": {
-                "minimised": true,
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_method_GraphView_spaceGroupsVertically",
+            "link": "linkto__12__ts_firefly_graphview_method_GraphView_spaceGroupsVertically",
+            "parent": "ts_firefly_graphview_method_GraphView_arrangeAll",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_graphview_property_GraphView_columns",
+            "link": "linkto__14__ts_firefly_graphview_property_GraphView_columns",
+            "parent": "ts_firefly_graphview_method_GraphView_arrangeAll",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_openMain",
+            "link": "linkto__1__ts_firefly_firefly_function_openMain",
+            "parent": "ts_firefly_firefly_function_openSession",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_function_findCard",
+            "link": "linkto__2__ts_firefly_firefly_function_findCard",
+            "parent": "ts_firefly_firefly_function_openMain",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "ts_firefly_firefly_class_Card",
+            "link": "linkto__0__ts_firefly_firefly_class_Card",
+            "parent": "ts_firefly_firefly_function_findCard",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
+                "state": 0,
+                "xScroll": 0,
+                "yScroll": 0
+            }
+        },
+        {
+            "id": "py_firefly_firefly_method_Typescript_findTypeAndName",
+            "link": "linkto__4__py_firefly_firefly_method_Language_findTypeAndName__py_firefly_firefly_method_Python_findTypeAndName__py_firefly_firefly_method_Typescript_findTypeAndName",
+            "parent": "py_firefly_firefly_function_importCardsFromText",
+            "emphasize": false,
+            "userObj": {
+                "minimised": false,
                 "state": 0,
                 "xScroll": 0,
                 "yScroll": 0
@@ -114,10 +430,10 @@
             "id": "py_firefly_firefly_function_importCardsFromFile",
             "link": "linkto__2__py_firefly_firefly_function_importCardsFromFile",
             "parent": "py_firefly_firefly_function_importAllCards",
-            "emphasize": false,
+            "emphasize": true,
             "userObj": {
                 "minimised": true,
-                "state": 0,
+                "state": 1,
                 "xScroll": 0,
                 "yScroll": 0
             }
@@ -138,39 +454,13 @@
             "id": "py_firefly_firefly_function_findLanguage",
             "link": "linkto__1__py_firefly_firefly_function_findLanguage",
             "parent": "py_firefly_firefly_function_importCards",
-            "emphasize": false,
-            "userObj": {
-                "minimised": true,
-                "state": 0,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "py_firefly_firefly_class_Typescript",
-            "link": "linkto__2__py_firefly_firefly_class_Typescript",
-            "parent": "py_firefly_firefly_function_findLanguage",
-            "emphasize": false,
-            "userObj": {
-                "minimised": true,
-                "state": 0,
-                "xScroll": 0,
-                "yScroll": 0
-            }
-        },
-        {
-            "id": "py_firefly_firefly_function_countBraces",
-            "link": "linkto__4__py_firefly_firefly_function_countBraces",
-            "parent": "py_firefly_firefly_class_Typescript",
-            "emphasize": false,
+            "emphasize": true,
             "userObj": {
                 "minimised": false,
-                "state": 0,
+                "state": 1,
                 "xScroll": 0,
                 "yScroll": 0
             }
         }
-    ],
-    "closedNodes": [],
-    "reopenNodes": []
+    ]
 }

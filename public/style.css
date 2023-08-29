@@ -77,12 +77,13 @@ body {
     flex-grow: 1;
     height: 2.2em;
     overflow-x: auto;        /* Enables horizontal scrolling */
-    overflow-y: hidden;      /* Prevents vertical scrolling */
+    overflow-y: visible;      /* Prevents vertical scrolling */
     white-space: nowrap;     /* Prevents content from wrapping */
     margin-right: 8px;
 }
 
 .search-result {
+    position: relative;
     box-sizing: border-box;
     display: inline-block;
     font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;
@@ -94,6 +95,23 @@ body {
     margin-right: 8px;
     padding: 6px;
     cursor: pointer;
+}
+
+.details-tag {
+    position: absolute;
+    top: -2em;  /* Adjust as needed to move the tag above the search result */
+    left: 0;  /* Aligns the left edge of the details tag with the left edge of the search result */
+    z-index: 10;  /* Ensures the tag appears above other content */
+    color: #000000;
+    background-color: #91b6ae;
+    text-decoration: none;
+    padding: 2px;
+    border-radius: 3px;
+    margin: 0 0px;
+    vertical-align: text-top;
+    font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;
+    font-weight: 400;  
+    font-size: 8pt;
 }
 
 h3 {
