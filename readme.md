@@ -192,3 +192,11 @@ NEXT:
 - plug into github repo
 - history viewing
 
+
+---------------------------------------------------------
+scribbles:
+
+to open a dependent of a node, we need to support multiple incoming links to any given node.
+and that is fine. we just need to pass/store an array of links (possibly zero).
+Interesting +1 for the idea "all pointers are just arrays", innit?
+Let's do that now.
