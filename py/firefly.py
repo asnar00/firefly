@@ -19,7 +19,9 @@ import service
 from typing import List
 import random
 import vectors
-
+import requests
+import shutil
+import zipfile
 
 print("---------------------------------------------------------------------------")
 print("firefly.ps ᕦ(ツ)ᕤ")
@@ -740,24 +742,48 @@ def startFirefly():
     vectors.loadEmbeddings()
     service.start("firefly", 8003, root)
 
-def cloneGithubRepo(repo_url: str, destination_folder: str, token: str):
-    # make sure there's a destination folder
-    os.makedirs(os.path.dirname(destination_folder), exist_ok=True)
-    # Embed the token in the URL for HTTPS Git operations
-    https_url_with_token = repo_url.replace("https://", f"https://{token}@")    
-    try:
-        print("cloning repo", repo_url)
-        subprocess.run(["git", "clone", https_url_with_token, destination_folder])
-        print(f"Successfully cloned {repo_url} into {destination_folder}")
-    except Exception as e:
-        print(f"Failed to clone repository: {e}")
+def getGithubCode(repo_url: str, save_path: str, extract_path: str, pat_token: str):
+
+    # make sure all folders exist
+    os.makedirs(os.path.dirname(save_path), exist_ok=True)
+    os.makedirs(os.path.dirname(extract_path), exist_ok=True)
+
+    # Construct the URL for the ZIP file
+    zip_url = f"{repo_url.rstrip('/')}/archive/refs/heads/main.zip"
+    
+    # Set up the headers for the request, including the PAT
+    headers = {
+        'Authorization': f'token {pat_token}'
+    }
+    
+    # Download the ZIP file
+    print("downloading zip file")
+    print(headers)
+    print(zip_url)
+    response = requests.get(zip_url, headers=headers, stream=True)
+    
+    if response.status_code == 200:
+        with open(save_path, 'wb') as f:
+            response.raw.decode_content = True
+            shutil.copyfileobj(response.raw, f)
+            
+        # Extract the ZIP file
+        with zipfile.ZipFile(save_path, 'r') as zip_ref:
+            zip_ref.extractall(extract_path)
+            
+        # Remove the ZIP file
+        os.remove(save_path)
+        
+    else:
+        print(f"Failed to get file: {response.content}")
+
 
 def testClone():
-    token= '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'
+    token= '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'
     url= 'https://github.com/asnar00/firefly'
-    folder = root + '/data/repos/firefly'
-    cloneGithubRepo(url, folder, token)
-
+    zip = root + '/data/repositories/firefly/code.zip'
+    folder = root + '/data/repositories/firefly/source'
+    getGithubCode(url, zip, folder, token)
 
 def test():
     print("testing...")
