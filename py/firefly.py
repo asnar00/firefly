@@ -740,6 +740,25 @@ def startFirefly():
     vectors.loadEmbeddings()
     service.start("firefly", 8003, root)
 
+def cloneGithubRepo(repo_url: str, destination_folder: str, token: str):
+    # make sure there's a destination folder
+    os.makedirs(os.path.dirname(destination_folder), exist_ok=True)
+    # Embed the token in the URL for HTTPS Git operations
+    https_url_with_token = repo_url.replace("https://", f"https://{token}@")    
+    try:
+        print("cloning repo", repo_url)
+        subprocess.run(["git", "clone", https_url_with_token, destination_folder])
+        print(f"Successfully cloned {repo_url} into {destination_folder}")
+    except Exception as e:
+        print(f"Failed to clone repository: {e}")
+
+def testClone():
+    token= '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'
+    url= 'https://github.com/asnar00/firefly'
+    folder = root + '/data/repos/firefly'
+    cloneGithubRepo(url, folder, token)
+
+
 def test():
     print("testing...")
     cards = importCardsFromFile("firefly", "../ts/firefly.ts")
@@ -759,5 +778,5 @@ def main():
     startFirefly()
 
 if __name__ == "__main__":
-    #test()
-    main()
+    testClone()
+    #main()

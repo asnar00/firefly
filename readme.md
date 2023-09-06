@@ -200,3 +200,33 @@ to open a dependent of a node, we need to support multiple incoming links to any
 and that is fine. we just need to pass/store an array of links (possibly zero).
 Interesting +1 for the idea "all pointers are just arrays", innit?
 Let's do that now.
+
+So the main change now is that when we open a new node, we also have to somehow pass in all links.
+
+chain upwards: search until we find something that's open.
+if we do, we close all children of that node, then attach the new chain.
+
+Graph
+Node
+Edge
+
+
+OK: if there are multiple incoming edges to a class, how should they be sorted?
+answer: in call order. But how do we define that?
+
+There needs to be some sort of vertical sort key.
+For outward edges, we know how to sort.
+For inward edges, it's harder, because we may not be able to trace back.
+So for the moment we could just sort alphabetically on id? That's easiest for now I guess.
+
+OK, so maybe 
+
+
+
+
+personal access token:
+
+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
+
+url:
+https://github.com/asnar00/firefly

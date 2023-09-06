@@ -3,8 +3,10 @@ body {
     margin: 0;
     background-attachment: local;
     background: linear-gradient(to bottom, 
+    #377f72 0%,
     #377f72 50%,
-    #469a8a 50% 
+    #469a8a 50%,
+    #469a8a 100%  
     );
 }
 
