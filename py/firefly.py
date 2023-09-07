@@ -44,13 +44,17 @@ def openRepository(owner, repoName):
     changed = updateRepository(repo)
     cardsFile = folder + f'/cards/{owner}_{repoName}.json'
     vectorsFolder = folder + f'/vectors'
-    vectors.loadEmbeddings(vectorsFolder)
     if changed:
         sourceFolder = f'{folder}/source'
+        if os.path.exists(vectorsFolder):
+            shutil.rmtree(vectorsFolder)
+            os.makedirs(os.path.dirname(vectorsFolder), exist_ok=True)
+        vectors.setEmbeddingFolder(vectorsFolder)
         cards = importAllCards(repoName, [sourceFolder])
         writeJsonToFile(cards, cardsFile)
     else:
         cards = readJsonFromFile(cardsFile)
+        vectors.loadEmbeddings(vectorsFolder)
     writeJsonToFile(repos, path)
     t = time.perf_counter() - p0
     print(f"done! took {t} sec.")
@@ -105,14 +109,10 @@ def saveEmbeddings(cards):
     cardsFromKeys = {}
     for card in cards:
         key = separateWords(card.shortName())
-        vb = ('main' in key)
-        if vb: print("MAIN", card.shortName(), key)
         if not (key in cardsFromKeys):
             cardsFromKeys[key] = [ card ]
-            if vb: print("INIT", [c.uid() for c in cardsFromKeys[key]])
         else:
             cardsFromKeys[key].append(card)
-            if vb: print("APPEND", [c.uid() for c in cardsFromKeys[key]])
     for key, cards in cardsFromKeys.items():
         uids = [c.uid() for c in cards]
         vectors.add(key, uids)
@@ -747,14 +747,15 @@ def findAllFiles(directory, extension):
     return matched_files
 
 def startServer():
+    vectors.loadSbertModel()
     service.start("firefly", 8003, root)
 
 def getGithubCode(repo_url: str, save_path: str, extract_path: str, pat_token: str =''):
     # clean out the destination folder
-    #if os.path.exists(extract_path):
-    #    shutil.rmtree(extract_path)
-    #if os.path.exists(save_path):
-    #    os.remove(save_path)
+    if os.path.exists(extract_path):
+        shutil.rmtree(extract_path)
+    if os.path.exists(save_path):
+        os.remove(save_path)
 
     # make sure all folders exist
     os.makedirs(os.path.dirname(save_path), exist_ok=True)

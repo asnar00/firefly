@@ -69,16 +69,21 @@ def cosine_similarity(v1: np.ndarray, v2: np.ndarray) -> float:
     norm_v2 = np.linalg.norm(v2)
     return (dot_product / (norm_v1 * norm_v2)).item()
 
-def loadEmbeddings(path):
-    global vectorsFolder
-    vectorsFolder = path
-
+def loadSbertModel():
     global sbertModel
     if sbertModel == None:
         print("loading sbert model...")
         sbertModel = SentenceTransformer('paraphrase-MiniLM-L6-v2')
     else:
         print("already loaded sbert model")
+
+def setEmbeddingFolder(path):
+    global vectorsFolder
+    vectorsFolder = path
+
+def loadEmbeddings(path):
+    global vectorsFolder
+    vectorsFolder = path
 
     global embeddings
     if len(embeddings)==0:
