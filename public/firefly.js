@@ -147,7 +147,7 @@ function loadCards() {
         if (s_useLocalFiles) {
             yield importLocalFolder();
         }
-        const jsonObj = yield importFolders("firefly", ["ts", "py"]);
+        const jsonObj = yield openRepository("asnar00", "firefly");
         s_allCards = jsonObj.cards;
         for (const card of s_allCards) {
             s_cardsByUid.set(card.uid, card);
@@ -497,9 +497,9 @@ function animateLogoToLeft() {
         });
     });
 }
-function importFolders(project, folders) {
+function openRepository(owner, repoName) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield remote("@firefly.importFolders", { project: project, folders: folders });
+        return yield remote("@firefly.openRepository", { owner: owner, repoName: repoName });
     });
 }
 // finds the card with the given UID, or null if doesn't exist

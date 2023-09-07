@@ -29,10 +29,32 @@ print("firefly.ps ᕦ(ツ)ᕤ")
 root = "/Users/asnaroo/desktop/experiments/firefly"
 
 @service.register
-def importFolders(project, folders):
-    fullPaths = []
-    for f in folders: fullPaths.append(root + "/" + f)
-    return importAllCards(project, fullPaths)
+def openRepository(owner, repoName):
+    print("open repository", owner, repoName)
+    p0 = time.perf_counter()
+    folder = f'{root}/data/repositories/{owner}/{repoName}'
+    path = root + '/data/repositories.json'
+    repos = readJsonFromFile(path)
+    matching = [r for r in repos if r['owner']==owner and r['repoName']==repoName]
+    if len(matching)==0:
+        return { 'error' : 'unknown repository' }
+    repo = matching[0]
+    owner = repo['owner']
+    repoName = repo['repoName']
+    changed = updateRepository(repo)
+    cardsFile = folder + f'/cards/{owner}_{repoName}.json'
+    vectorsFolder = folder + f'/vectors'
+    vectors.loadEmbeddings(vectorsFolder)
+    if changed:
+        sourceFolder = f'{folder}/source'
+        cards = importAllCards(repoName, [sourceFolder])
+        writeJsonToFile(cards, cardsFile)
+    else:
+        cards = readJsonFromFile(cardsFile)
+    writeJsonToFile(repos, path)
+    t = time.perf_counter() - p0
+    print(f"done! took {t} sec.")
+    return cards
 
 @service.register
 def save(path, obj):
@@ -68,8 +90,8 @@ def readJsonFromFile(filename):
 def importAllCards(project, folders) -> dict:
     cards = []
     for folder in folders:
+        print(f"importAllCards: {folder}")
         files = findAllFiles(folder, ".ts") + findAllFiles(folder, ".py")
-        print("files:", files)
         for file in files:
             cards.extend(importCardsFromFile(project, file))
     removeIndents(cards)
@@ -388,10 +410,6 @@ def importCards(project: str, module: str, text: str, ext: str) -> List[Card]:
 def cardsToJsonDict(cards: List[Card]) -> dict:
     print("cardsToJsonDict:", len(cards), "cards")
     jsonObj = { "cards" : [card_serialiser(c) for c in cards] }
-    jsonStr = json.dumps(jsonObj, indent=4)
-    print("saving...")
-    writeTextToFile(jsonStr, "/Users/asnaroo/desktop/experiments/firefly/data/cards/test.json")
-    print("saved")
     return jsonObj
 
 class Lex:
@@ -698,21 +716,6 @@ def removeIndents(cards: List[Card]):
             lines = [l[minLeadingSpaces:] for l in lines]
         card.code[0].text = '\n'.join(lines)
 
-def findWordInString(word: str, string: str) -> int:    # not part of another word
-    punc = " !@#$%^&*()+-={}[]:\";\',.<>/?\`~"
-    index = 0
-    while index != -1:
-        index = string.find(word, index)
-        if index == -1:
-            return -1
-        end = index + len(word)
-        if (index == 0 or \
-            (string[index-1:index] in punc) or word[0] in punc) and \
-            (string[end:end+1] in punc or word[len(word)-1] in punc):
-            return index
-        else:
-            index = end
-    return -1
 
 def findString(strings: list, target: str) -> int:
     try:
@@ -739,8 +742,7 @@ def findAllFiles(directory, extension):
 
     return matched_files
 
-def startFirefly():
-    vectors.loadEmbeddings()
+def startServer():
     service.start("firefly", 8003, root)
 
 def getGithubCode(repo_url: str, save_path: str, extract_path: str, pat_token: str =''):
@@ -775,6 +777,7 @@ def getGithubCode(repo_url: str, save_path: str, extract_path: str, pat_token: s
             shutil.copyfileobj(response.raw, f)
             
         # Extract the ZIP file
+        print("unzipping...")
         with zipfile.ZipFile(save_path, 'r') as zip_ref:
             zip_ref.extractall(extract_path)
             
@@ -784,29 +787,41 @@ def getGithubCode(repo_url: str, save_path: str, extract_path: str, pat_token: s
     else:
         print(f"Failed to get file: {response.content}")
     
-def downloadRepository(url: str, token: str=''):
-    urlParts = url.split('/')
-    if len(urlParts) < 2:
-        print("url must end with author/repo")
-        return
-    repo = urlParts[-1]
-    author = urlParts[-2]
-    folder = f"{root}/data/repositories/{author}/{repo}"
+def downloadRepository(owner: str, repo: str, token: str=''):
+    folder = f"{root}/data/repositories/{owner}/{repo}"
     zip = folder + '/code.zip'
     source = folder + '/source'
-    p0 = time.perf_counter()
+    url = f"https://github.com/{owner}/{repo}"
     getGithubCode(url, zip, source, token)
-    t = time.perf_counter() - p0
-    print(f"downloaded; took {t} sec")
 
-def testClone():
-    #token= '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'
-    #url= 'https://github.com/asnar00/firefly'
-    #zip = root + '/data/repositories/firefly/code.zip'
-    #folder = root + '/data/repositories/firefly/source'
-    #getGithubCode(url, zip, folder, token)
-    downloadRepository('https://github.com/asnar00/firefly', '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')
-    downloadRepository('https://github.com/graphdeco-inria/gaussian-splatting')
+def getRepositorySHA(owner: str, repoName: str, token: str=''):
+    #print(f"getting SHA for {owner}/{repoName}")
+    repoURL = "https://github.com/{owner}/{repoName}"
+    branch = "main"
+    apiURL = f"https://api.github.com/repos/{owner}/{repoName}/branches/{branch}"
+    headers = { 'Authorization': f'token {token}' } if token != '' else {}
+    response = requests.get(apiURL, headers=headers)
+    if response.status_code == 200:
+        latestSHA = response.json()["commit"]["sha"]
+        #print(latestSHA)
+        return latestSHA
+    else:
+        print("Failed to fetch the latest commit SHA:", response.content)
+        return ''
+
+def updateRepository(repo) -> bool:     # returns True if the code changed
+    owner = repo['owner']
+    repoName = repo['repoName']
+    token = repo['token']
+    print(f"checking repository {owner}/{repoName}...")
+    latestSHA = getRepositorySHA(owner, repoName, token)
+    if latestSHA==repo['SHA']:
+        print("SHA unchanged; nothing to do.")
+        return False
+    else:
+        downloadRepository(owner, repoName, token)
+        repo['SHA'] = latestSHA
+        return True
 
 def test():
     print("testing...")
@@ -823,9 +838,5 @@ def test():
                 words.append(t.shortName())
         print(words)
 
-def main():
-    startFirefly()
-
 if __name__ == "__main__":
-    testClone()
-    #main()
+    startServer()

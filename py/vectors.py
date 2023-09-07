@@ -17,7 +17,8 @@ sbertModel = None
 global embeddings
 embeddings = {} # key => { value, vector }
 
-root = "/Users/asnaroo/desktop/experiments/firefly/data/vectors"
+global vectorsFolder
+vectorsFolder = ''
 
 def add(key: str, value):
     global embeddings
@@ -45,7 +46,10 @@ def search(query: str, nResults: int):
     return { 'results' : similarities[:nResults] }
 
 def save(key: str, data):
-    filename = root + "/" + stringToHash(key) + ".json"
+    global vectorsFolder
+    if vectorsFolder == '':
+        print("can't save vector: no path")
+    filename = vectorsFolder + "/" + stringToHash(key) + ".json"
     #print("saving", filename)
     folder = os.path.dirname(filename)
     if folder != '':
@@ -65,12 +69,13 @@ def cosine_similarity(v1: np.ndarray, v2: np.ndarray) -> float:
     norm_v2 = np.linalg.norm(v2)
     return (dot_product / (norm_v1 * norm_v2)).item()
 
-def loadEmbeddings():
+def loadEmbeddings(path):
+    global vectorsFolder
+    vectorsFolder = path
     print("loading sbert model...")
     global sbertModel
     sbertModel = SentenceTransformer('paraphrase-MiniLM-L6-v2')
     print("loading vectors...")
-    path = root
     try:
         files = os.listdir(path)
     except:

@@ -136,7 +136,7 @@ async function loadCards() {
     if (s_useLocalFiles) {
         await importLocalFolder();
     } 
-    const jsonObj = await importFolders("firefly", ["ts", "py"]);
+    const jsonObj = await openRepository("asnar00", "firefly");
     s_allCards = jsonObj.cards as Card[];
     for(const card of s_allCards) {
         s_cardsByUid.set(card.uid, card);
@@ -481,8 +481,8 @@ async function animateLogoToLeft(): Promise<void> {
     });
 }
 
-async function importFolders(project: string, folders: string[]) {
-    return await remote("@firefly.importFolders", { project: project, folders: folders });
+async function openRepository(owner: string, repoName: string) {
+    return await remote("@firefly.openRepository", { owner: owner, repoName: repoName });
 }
 
 // finds the card with the given UID, or null if doesn't exist
