@@ -22,6 +22,7 @@ import vectors
 import requests
 import shutil
 import zipfile
+import time
 
 print("---------------------------------------------------------------------------")
 print("firefly.ps ᕦ(ツ)ᕤ")
@@ -742,7 +743,12 @@ def startFirefly():
     vectors.loadEmbeddings()
     service.start("firefly", 8003, root)
 
-def getGithubCode(repo_url: str, save_path: str, extract_path: str, pat_token: str):
+def getGithubCode(repo_url: str, save_path: str, extract_path: str, pat_token: str =''):
+    # clean out the destination folder
+    #if os.path.exists(extract_path):
+    #    shutil.rmtree(extract_path)
+    #if os.path.exists(save_path):
+    #    os.remove(save_path)
 
     # make sure all folders exist
     os.makedirs(os.path.dirname(save_path), exist_ok=True)
@@ -752,9 +758,10 @@ def getGithubCode(repo_url: str, save_path: str, extract_path: str, pat_token: s
     zip_url = f"{repo_url.rstrip('/')}/archive/refs/heads/main.zip"
     
     # Set up the headers for the request, including the PAT
-    headers = {
-        'Authorization': f'token {pat_token}'
-    }
+    if pat_token == '':
+        headers = {}
+    else:
+        headers = { 'Authorization': f'token {pat_token}' }
     
     # Download the ZIP file
     print("downloading zip file")
@@ -776,14 +783,30 @@ def getGithubCode(repo_url: str, save_path: str, extract_path: str, pat_token: s
         
     else:
         print(f"Failed to get file: {response.content}")
-
+    
+def downloadRepository(url: str, token: str=''):
+    urlParts = url.split('/')
+    if len(urlParts) < 2:
+        print("url must end with author/repo")
+        return
+    repo = urlParts[-1]
+    author = urlParts[-2]
+    folder = f"{root}/data/repositories/{author}/{repo}"
+    zip = folder + '/code.zip'
+    source = folder + '/source'
+    p0 = time.perf_counter()
+    getGithubCode(url, zip, source, token)
+    t = time.perf_counter() - p0
+    print(f"downloaded; took {t} sec")
 
 def testClone():
-    token= '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'
-    url= 'https://github.com/asnar00/firefly'
-    zip = root + '/data/repositories/firefly/code.zip'
-    folder = root + '/data/repositories/firefly/source'
-    getGithubCode(url, zip, folder, token)
+    #token= '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'
+    #url= 'https://github.com/asnar00/firefly'
+    #zip = root + '/data/repositories/firefly/code.zip'
+    #folder = root + '/data/repositories/firefly/source'
+    #getGithubCode(url, zip, folder, token)
+    downloadRepository('https://github.com/asnar00/firefly', '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')
+    downloadRepository('https://github.com/graphdeco-inria/gaussian-splatting')
 
 def test():
     print("testing...")
