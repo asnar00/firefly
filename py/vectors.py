@@ -72,27 +72,34 @@ def cosine_similarity(v1: np.ndarray, v2: np.ndarray) -> float:
 def loadEmbeddings(path):
     global vectorsFolder
     vectorsFolder = path
-    print("loading sbert model...")
+
     global sbertModel
-    sbertModel = SentenceTransformer('paraphrase-MiniLM-L6-v2')
-    print("loading vectors...")
-    try:
-        files = os.listdir(path)
-    except:
-        files = []
-    print("found", len(files), "objects")
+    if sbertModel == None:
+        print("loading sbert model...")
+        sbertModel = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+    else:
+        print("already loaded sbert model")
+
     global embeddings
-    embeddings = {}
-    for f in files:
-        filepath = path + "/" + f
-        with open(filepath, 'r') as file:
-            obj = json.load(file) # key, data (value, vector)
-            key = obj['key']
-            data = obj['data']
-            value = data['value']
-            list = data['vector']
-            npvector = np.array(list)
-            embeddings[key] = { 'value': value, 'vector': npvector }
+    if len(embeddings)==0:
+        print("loading vectors...")
+        try:
+            files = os.listdir(path)
+        except:
+            files = []
+        print("found", len(files), "objects")
+        for f in files:
+            filepath = path + "/" + f
+            with open(filepath, 'r') as file:
+                obj = json.load(file) # key, data (value, vector)
+                key = obj['key']
+                data = obj['data']
+                value = data['value']
+                list = data['vector']
+                npvector = np.array(list)
+                embeddings[key] = { 'value': value, 'vector': npvector }
+    else:
+        print("already loaded vectors")
 
 def stringToHash(input_string):
     """Convert an arbitrary length string to a unique hash suitable for a filename."""

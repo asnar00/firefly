@@ -45,6 +45,19 @@ The actual code will of course have to call the glue boilerplate;
 but the *link* can be made direct, as long as the editor understands the boilerplate.
 Most likely, we can actually just use a comment or decoration, or something clever with the function names.
 
+MORE PROGRESS:
+- now reads github repo given author / repoName / token (for private)
+- next: refactored graph system, backtrace properly.
+- then: architect for "tools / viewers" so it's all nice and expandable
+- each "tool" can read the output of any other tool, per-card, and look at context "around" any card (callers/callees)
+- first goal: ask questions about the code, get intelligent answers
+    - translate to pseudocode
+    - documentation page: howto etc.
+    - process other documentation pages!
+
+- OK so I should have a nice fat database of every line of every file.
+
+
 NEXT STEPS:
 - had a good chat with Evan + Dean - lots of food for thought. 
 - Key observation is that we can use firefly as a sort of "platform" : to view line-number-led console readout data in situ, within a graph, and visualise any kind of data.
@@ -230,3 +243,17 @@ github_pat_11AO45QBY0SrKRbOc6dpIH_acolyCTRxYuXGPVcW9eH7S9TWRSSzFNeEf03y0pzQDyARR
 
 url:
 https://github.com/asnar00/firefly
+
+
+
+____
+OK let's break down what we're doing now:
+
+when we open a node, we want to show how it connects both upwards and downwards.
+
+in general, we want to start "clean", and show downward and upward call-graphs.
+
+let's start by doing a generic thing: given any node, open it in the center of the screen;
+and then open all callers and callees in supercompact mode, with edges to them from that node.
+
+we'll just do this pure, and clean everything out at all times.

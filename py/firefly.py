@@ -102,15 +102,18 @@ def importAllCards(project, folders) -> dict:
 
 def saveEmbeddings(cards):
     print("saving embeddings")
-    cardsFromShortName = {}
+    cardsFromKeys = {}
     for card in cards:
-        csn = card.shortName()
-        if not (csn in cardsFromShortName):
-            cardsFromShortName[csn] = [ card ]
+        key = separateWords(card.shortName())
+        vb = ('main' in key)
+        if vb: print("MAIN", card.shortName(), key)
+        if not (key in cardsFromKeys):
+            cardsFromKeys[key] = [ card ]
+            if vb: print("INIT", [c.uid() for c in cardsFromKeys[key]])
         else:
-            cardsFromShortName[csn].append(card)
-    for shortName, cards in cardsFromShortName.items():
-        key = separateWords(shortName)
+            cardsFromKeys[key].append(card)
+            if vb: print("APPEND", [c.uid() for c in cardsFromKeys[key]])
+    for key, cards in cardsFromKeys.items():
         uids = [c.uid() for c in cards]
         vectors.add(key, uids)
 
@@ -288,8 +291,9 @@ class Python(Language):
                     else:
                         return ("function", funcName)
                 elif l.startswith("class"):
-                    
                     return ("class", l.split(" ")[1].split(":")[0].split("(")[0])
+                elif l.startswith('if __name__ == "__main__":'):
+                    return ("function", "__main__")
                 else: # could be property (self.blah = ) or global (blah = ..)
                     parts = l.split("=")
                     if "self." in parts[0]:

@@ -11,6 +11,28 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+export class Vec2 {
+    constructor(x = 0, y = 0) {
+        this.x = 0;
+        this.y = 0;
+        this.x = x;
+        this.y = y;
+    }
+    set(x, y) { this.x = x; this.y = y; }
+    plus(v) { return new Vec2(this.x + v.x, this.y + v.y); }
+    minus(v) { return new Vec2(this.x - v.x, this.y - v.y); }
+    times(f) { return new Vec2(this.x * f, this.y * f); }
+    lerpTowards(v, f = 0.1) {
+        const diff = v.minus(this);
+        const x = (Math.abs(diff.x) <= 1) ? v.x : (this.x + diff.x * f);
+        const y = (Math.abs(diff.y) <= 1) ? v.y : (this.y + diff.y * f);
+        return new Vec2(x, y);
+    }
+    equalsTo(v) {
+        return this.x == v.x && this.y == v.y;
+    }
+}
+;
 export class Rect {
     constructor(left, top, right, bottom) {
         this.left = left;
@@ -20,11 +42,44 @@ export class Rect {
     }
     width() { return this.right - this.left; }
     height() { return this.bottom - this.top; }
+    origin() { return new Vec2(this.left, this.top); }
+    size() { return new Vec2(this.right - this.left, this.bottom - this.top); }
+    // update rect so that it surrounds (r), with optional padding
+    extendToFit(r, padding = 0) {
+        this.left = Math.min(this.left, r.left - padding);
+        this.top = Math.min(this.top, r.top - padding);
+        this.right = Math.max(this.right, r.right + padding);
+        this.bottom = Math.max(this.bottom, r.bottom + padding);
+    }
+    // round all values to nearest integers
+    round() {
+        this.left = Math.floor(this.left);
+        this.top = Math.floor(this.top);
+        this.right = Math.ceil(this.right);
+        this.bottom = Math.ceil(this.bottom);
+    }
+    // true if all values are equal
+    isEqualTo(r) {
+        return (this.left == r.left &&
+            this.top == r.top &&
+            this.right == r.right &&
+            this.bottom == r.bottom);
+    }
 }
+// given some HTML, make a DIV from it
 export function element(html) {
     let div = document.createElement('div');
     div.innerHTML = html;
     return div.firstChild;
+}
+// set the position of a DIV
+export function positionDiv(div, pos) {
+    div.style.left = `${pos.x}px`;
+    div.style.top = `${pos.y}px`;
+}
+export function resizeDiv(div, size) {
+    div.style.width = `${size.x}px`;
+    div.style.height = `${size.y}px`;
 }
 // given an element, returns the rectangle relative to document origin
 export function rect(el) {
@@ -96,6 +151,9 @@ export function debounce(func, wait) {
             func.apply(this, args);
         }, wait);
     };
+}
+export function isOnscren(element) {
+    return document.body.contains(element);
 }
 export function getChildNodeIndex(element) {
     return Array.from(element.parentElement.children).indexOf(element);

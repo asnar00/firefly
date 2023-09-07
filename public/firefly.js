@@ -17,18 +17,17 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
     function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
     function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
 };
-import { GraphView } from "./graphview.js";
 import { element } from "./util.js";
 import { debounce } from "./util.js";
 import { remote } from "./util.js";
 import { rect } from "./util.js";
+import { Graph } from "./graph.js";
 window.onload = () => { main(); };
 const s_useLocalFiles = false; // change this to true to enable local file access
 let dirHandle = null;
 var s_allCards;
 let s_cardsByUid = new Map();
-let s_cardChains = new Map();
-var s_graphView;
+var s_graph;
 let s_mainIcon = "icon-search";
 let s_mainOption = "search";
 let s_searchQuery = "";
@@ -96,6 +95,7 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         yield init();
         yield loadCards();
+        removeBusyIcon();
         yield animateLogoToLeft();
         yield openSession();
         searchBox();
@@ -105,40 +105,46 @@ function run() {
 function init() {
     return __awaiter(this, void 0, void 0, function* () {
         logo();
+        busyIcon();
         graph();
         keyboard();
     });
 }
 function logo() {
-    const logo = document.getElementById('logo_and_shadow');
-    let shadow = document.getElementById("logo_shadow");
+    const logo = document.getElementById('logo_etc');
     logo.style.left = `${(window.innerWidth - logo.offsetWidth) / 2}px`;
     logo.style.top = `${(window.innerHeight / 2) - 40}px`;
     logo.style.transition = `top 0.25s`;
-    shadow.style.transition = `top 0.25s`;
+}
+function busyIcon() {
+    const logo = document.getElementById('logo_etc');
+    const busy = element(`<i class="icon-arrows-cw rotating" id="busy-icon"></i>`);
+    logo.append(busy);
+}
+function removeBusyIcon() {
+    const busyIcon = document.getElementById('busy-icon');
+    if (busyIcon)
+        busyIcon.remove();
 }
 function graph() {
     const container = document.getElementById('container');
-    s_graphView = new GraphView(container, cardToHTML, highlightLink);
+    s_graph = new Graph(container);
 }
 function eventLoop() {
-    s_graphView.update();
+    s_graph.update();
     moveLogo();
     updateDetailTags();
     requestAnimationFrame(eventLoop);
 }
 function moveLogo() {
     let xScroll = window.scrollX;
-    let logo = document.getElementById("logo_and_shadow");
-    let shadow = document.getElementById("logo_shadow");
-    let [yMin, yMax] = s_graphView.yRange(xScroll + rect(logo).width() + 50);
+    let logo = document.getElementById("logo_etc");
+    let [yMin, yMax] = s_graph.yRange(xScroll + rect(logo).width() + 50);
     if (yMin && yMax) {
         logo.style.top = `${window.innerHeight - 66}px`;
-        shadow.style.top = `${document.body.clientHeight - yMin - 100}px`;
     }
     else {
         logo.style.top = `${(window.innerHeight / 2) - 40}px`;
-        shadow.style.top = `${45}px`;
     }
 }
 function loadCards() {
@@ -157,24 +163,21 @@ function loadCards() {
 }
 function openSession() {
     return __awaiter(this, void 0, void 0, function* () {
+        console.log("openSession");
         let json = yield load("sessions/test.json");
         if (json.error) {
-            console.log("failed to load session:", json.error);
-            openMain();
+            console.log("ERROR:", json.error);
+            return;
         }
-        else {
-            s_graphView.openJson(json.graph);
-            s_searchQuery = json.ui.search;
-        }
-        computeAllChains();
+        s_searchQuery = json.ui.search;
     });
 }
 function openMain() {
+    console.log("openMain");
+    /*
     openCard(s_mainID, null);
-    const mainCard = findCard(s_mainID);
-}
-function reset() {
-    s_graphView.reset();
+    const mainCard = findCard(s_mainID)!;
+    */
 }
 function searchBox() {
     const searchFieldHTML = `<div class="search-field" id="search-field" contenteditable="true" spellcheck="false"></div>`;
@@ -182,7 +185,6 @@ function searchBox() {
     const icon2HTML = `<i class="icon-right-big" style="padding-top: 6px; padding-right:3px"></i>`;
     const searchResultsHTML = `<div class="search-results" id="search-results"></div>`;
     const searchDivHTML = `<div class="search-box" id="search-box">${iconHTML}${searchFieldHTML}${icon2HTML}${searchResultsHTML}</div>`;
-    const shadow = element(`<div class="shadow"></div>`);
     let searchDiv = element(searchDivHTML);
     document.body.append(searchDiv);
     let searchField = document.getElementById("search-field");
@@ -342,59 +344,12 @@ function onClose(div, func) {
     });
     observer.observe(parentElement, { childList: true });
 }
-function jumpToCard(target) {
-    console.log("jumpTo", shortName(target));
-    let chain = s_cardChains.get(target);
-    if (chain === undefined) {
-        console.log("NO CHAIN!");
-        return;
-    }
-    console.log("CHAIN:");
-    for (const card of chain) {
-        console.log("  ", shortName(card));
-    }
-    for (let i = 1; i < chain.length; i++) {
-        const parentDiv = s_graphView.find(chain[i - 1].uid);
-        const thisDiv = s_graphView.find(chain[i].uid);
-        if (thisDiv == null) {
-            let minimised = (i < chain.length - 1);
-            openCardWithParent(chain[i], chain[i - 1], minimised);
-        }
-    }
-}
-function computeAllChains() {
-    console.log("computeAlLChains");
-    const root = findCard(s_mainID);
-    s_cardChains.set(root, [root]);
-    let toProcess = [root];
-    let safeCount = 1000;
-    console.log("computeAllChains:");
-    while (toProcess.length > 0 && safeCount-- > 0) {
-        toProcess = computeAllChainsRec(toProcess);
-    }
-    console.log("unReached:");
-    for (let card of s_allCards) {
-        if (s_cardChains.get(card) === undefined) {
-            console.log(" ", shortName(card));
-        }
-    }
-}
-function computeAllChainsRec(toProcess) {
-    let next = [];
-    for (let card of toProcess) {
-        const myChain = s_cardChains.get(card);
-        for (let dep of card.dependsOn) {
-            for (let t of dep.targets) {
-                let tc = findCard(t);
-                if (s_cardChains.get(tc) === undefined) {
-                    s_cardChains.set(tc, myChain.concat([tc]));
-                    console.log(shortName(tc), myChain.length + 1);
-                    next.push(tc);
-                }
-            }
-        }
-    }
-    return next;
+function jumpToCard(card) {
+    console.log("jumpTo", shortName(card));
+    let info = new CardView(CardViewState.Compact);
+    let div = cardToHTML(card, info);
+    s_graph.clear(); // for now
+    s_graph.node(div, info);
 }
 // given (card) and (target), checks card.dependsOn and returns index of dependency that matches
 function findDependency(card, target) {
@@ -417,7 +372,7 @@ function search(query) {
 }
 function importLocalFolder() {
     return __awaiter(this, void 0, void 0, function* () {
-        let logo = document.getElementById('logo_and_shadow');
+        let logo = document.getElementById('logo_etc');
         let button = element(`<button id="openDirectory" class="transparent-button" style="display: inline-block;">
                             <h3 style="display: inline-block;">▶︎</h3></button>`);
         logo.insertBefore(button, logo.children[1]);
@@ -476,24 +431,24 @@ function readFileAsText(file) {
         reader.readAsText(file);
     });
 }
-// move the logo and shadow to the left of the window
+// move the logo to the left of the window
 function animateLogoToLeft() {
     return __awaiter(this, void 0, void 0, function* () {
         return new Promise((resolve, reject) => {
-            const logoAndShadow = document.getElementById("logo_and_shadow");
+            const logo = document.getElementById("logo_etc");
             // Set animation properties
-            logoAndShadow.style.animationName = "moveToLeft";
-            logoAndShadow.style.animationDuration = "0.25s";
-            logoAndShadow.style.animationTimingFunction = "ease-in-out";
-            logoAndShadow.style.animationFillMode = "forwards";
+            logo.style.animationName = "moveToLeft";
+            logo.style.animationDuration = "0.25s";
+            logo.style.animationTimingFunction = "ease-in-out";
+            logo.style.animationFillMode = "forwards";
             // Attach the animationend event listener
-            logoAndShadow.addEventListener('animationend', function onAnimationEnd() {
+            logo.addEventListener('animationend', function onAnimationEnd() {
                 // Remove the event listener to prevent memory leaks
-                logoAndShadow.removeEventListener('animationend', onAnimationEnd);
+                logo.removeEventListener('animationend', onAnimationEnd);
                 resolve();
             });
             // Start the animation
-            logoAndShadow.style.left = "0";
+            logo.style.left = "0";
         });
     });
 }
@@ -511,11 +466,7 @@ function findCard(uid) {
     return card;
 }
 // generates HTML for card, but doesn't connect it yet
-function cardToHTML(id, view) {
-    let card = findCard(id);
-    if (!card) {
-        return element(`<div></div>`);
-    }
+function cardToHTML(card, view) {
     let style = "code";
     if (view.state == CardViewState.Fullsize) {
         style += " code-expanded";
@@ -588,7 +539,8 @@ function codeContainer(codeDiv, title) {
     return containerDiv;
 }
 function onTitleBarClick(containerDiv, codeDiv) {
-    const view = s_graphView.getUserObj(containerDiv);
+    console.log("onTitleBarClick");
+    const view = s_graph.userInfo(containerDiv);
     view.minimised = !(view.minimised);
     if (view.minimised) {
         codeDiv.style.display = "none";
@@ -596,7 +548,6 @@ function onTitleBarClick(containerDiv, codeDiv) {
     else {
         codeDiv.style.display = "inline-block";
     }
-    s_graphView.arrangeAll();
 }
 function onMouseOverTitle(titleDiv, buttonDiv, entering) {
     if (entering) {
@@ -607,7 +558,10 @@ function onMouseOverTitle(titleDiv, buttonDiv, entering) {
     }
 }
 function onCloseButtonClick(div) {
-    s_graphView.close(div);
+    console.log("onCloseButton");
+    /*
+    s_graph.close(div);
+    */
 }
 function shortName(card) {
     let result = "";
@@ -635,7 +589,9 @@ function listen(elem, type, func) {
 }
 function expandOrContract(elem) {
     let div = elem.parentElement;
-    let view = s_graphView.userObj(div);
+    let view = s_graph.userInfo(div);
+    if (!view)
+        return;
     if (view.state == CardViewState.Compact) {
         elem.classList.add("code-expanded");
         view.state = CardViewState.Fullsize;
@@ -646,24 +602,24 @@ function expandOrContract(elem) {
         elem.scrollLeft = view.xScroll;
         elem.scrollTop = view.yScroll;
     }
-    s_graphView.emphasize(div, elem.classList.contains("code-expanded"));
-    s_graphView.attention(div);
 }
 function getScrollPos(elem) {
-    let div = elem.parentElement;
-    let view = s_graphView.userObj(div);
+    console.log("getScrollPos");
+    /*
+    let div = elem.parentElement!;
+    let view = s_graph.userObj(div);
     if (view.state == CardViewState.Compact) {
         view.xScroll = div.scrollLeft;
         view.yScroll = div.scrollTop;
     }
+    */
 }
 const debouncedSaveAll = debounce(() => { saveAll(); }, 300);
 function saveAll() {
     return __awaiter(this, void 0, void 0, function* () {
-        //console.log("saveAll");
-        const graphJson = s_graphView.json();
+        console.log("saveAll");
         const uiJson = { search: s_searchQuery };
-        const sessionJson = { ui: uiJson, graph: graphJson };
+        const sessionJson = { ui: uiJson };
         yield save(sessionJson, "sessions/test.json");
     });
 }
@@ -703,47 +659,51 @@ function onLinkButtonPress(button) {
 }
 // closes card if it's open
 function closeCardIfExists(uid) {
-    let existing = s_graphView.find(uid);
+    console.log("closeCardIfExists");
+    /*
+    let existing = s_graph.find(uid);
     if (existing) {
         closeCard(existing);
     }
+    */
 }
 // opens a card, optionally connected to a button element
 function openCard(uid, button, minimised = false) {
+    console.log("openCard");
+    /*
     let linkID = "";
     let parentID = "";
     if (button) {
         linkID = button.id;
-        let parent = s_graphView.findDivContainingLink(button);
-        if (parent)
-            parentID = parent.id;
+        let parent = s_graph.findDivContainingLink(button);
+        if (parent) parentID = parent.id;
     }
-    s_graphView.reopen(uid, linkID, parentID, new CardView(CardViewState.Compact, minimised));
+    s_graph.reopen(uid, linkID, parentID, new CardView(CardViewState.Compact, minimised));
     if (button) {
         highlightLink(button, true);
     }
+    */
 }
 // closes a card
 function closeCard(cardDiv) {
-    let button = s_graphView.findLink(cardDiv);
+    console.log("closeCard");
+    /*
+    let button = s_graph.findLink(cardDiv);
     if (button) {
         highlightLink(button, false);
     }
-    s_graphView.close(cardDiv);
+    s_graph.close(cardDiv);
+    */
 }
 // opens a card when we don't know the link, but we know the parent
 function openCardWithParent(card, parent, minimised = false) {
     console.log("openCardWithParent", shortName(card));
+    /*
     // first find the parent card's div; it should be open
-    let parentDiv = s_graphView.find(parent.uid);
-    if (!parentDiv) {
-        console.log("can't find parent!");
-        return;
-    }
-    const linkDivs = parentDiv.querySelectorAll(`[id*='${card.uid}']`);
-    if (linkDivs.length == 0) {
-        console.log("can't find link!");
-        return;
-    }
-    openCard(card.uid, linkDivs[0], minimised);
+    let parentDiv = s_graph.find(parent.uid);
+    if (!parentDiv) { console.log("can't find parent!"); return; }
+    const linkDivs: NodeListOf<Element> = parentDiv.querySelectorAll(`[id*='${card.uid}']`);
+    if (linkDivs.length==0) { console.log("can't find link!"); return; }
+    openCard(card.uid, linkDivs[0] as HTMLElement, minimised);
+    */
 }

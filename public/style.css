@@ -13,6 +13,9 @@ body {
 .logo {
     position: fixed;
     z-index: 100;
+    display: flex;          /* Enable Flexbox */
+    flex-direction: column; /* Arrange children vertically */
+    align-items: center;    /* Center children horizontally */
 }
 
 .container {
@@ -156,6 +159,19 @@ h3 {
     }
 }
 
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.rotating {
+    animation: rotate 0.5s linear infinite;
+}
+
 .code {
     font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;
     font-size: 9pt;
@@ -183,7 +199,7 @@ h3 {
 
 .code-expanded {
     max-width: 768px;
-    max-height: 768px;
+    max-height: 720px;
     background-color: #a8c9c4;
     border-bottom: 6px;
 }
