@@ -204,12 +204,24 @@ h3 {
     border-bottom: 6px;
 }
 
+.code-minimised {
+    max-width: 0px;
+    max-height: 0px;
+    min-width: 0px;
+    min-height: 0px;
+    padding: 0em;
+    border-bottom: 0px;
+}
+
 .code-container {
-    display: inline-block;
-    border-radius: 6px;
-    overflow: hidden;
     position: absolute;
     transition: width 0.3s, height 0.3s;
+}
+
+.inner-wrapper {
+    border-radius: 6px;
+    overflow: hidden;
+    display: inline-block;
 }
 
 .code-title {    

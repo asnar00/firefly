@@ -85,6 +85,13 @@ export class Graph {
         if (node) return node; else return null;
     }
 
+    // given div somewhere down the tree, return top-level div (child of container)
+    topLevelDiv(div: HTMLElement) : HTMLElement | null {
+        let node = this.findNode(div);
+        if (!node) return null;
+        return node.div;
+    }
+
     // given div, return user info attached to node
     userInfo(div: HTMLElement) : any {
         let node = this.findNode(div);

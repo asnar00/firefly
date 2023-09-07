@@ -257,3 +257,13 @@ let's start by doing a generic thing: given any node, open it in the center of t
 and then open all callers and callees in supercompact mode, with edges to them from that node.
 
 we'll just do this pure, and clean everything out at all times.
+
+OK: where we are now is much, much stronger;
+clearing out cards and vectors etc from the repo whenever it changes: eventually need to track those changes.
+we should really store the active repository information in the session, I guess.
+
+In fact, of course, we need to be able to get specific patches, because that's where we're working.
+but we'll make that more sophisticated later.
+
+Next: we need to get minimise logic nice and smooth : more CSS bullshit.
+

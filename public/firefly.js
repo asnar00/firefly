@@ -329,7 +329,9 @@ function updateDetailTags() {
     }
 }
 function onClose(div, func) {
-    const parentElement = div.parentElement;
+    const parentElement = s_graph.topLevelDiv(div);
+    if (!parentElement)
+        return;
     const observer = new MutationObserver(function (mutations) {
         mutations.forEach(function (mutation) {
             if (mutation.removedNodes) {
@@ -519,6 +521,8 @@ function cardToHTML(card, view) {
 function codeContainer(codeDiv, title) {
     const containerDiv = document.createElement('div');
     containerDiv.className = 'code-container';
+    const wrapperDiv = document.createElement('div');
+    wrapperDiv.className = 'inner-wrapper';
     // Create the title div
     const titleDiv = document.createElement('div');
     titleDiv.className = 'code-title';
@@ -534,19 +538,31 @@ function codeContainer(codeDiv, title) {
         listen(closeButton, 'click', () => { onCloseButtonClick(containerDiv); });
     }
     // Append the title and the code div to the container
-    containerDiv.appendChild(titleDiv);
-    containerDiv.appendChild(codeDiv);
+    wrapperDiv.appendChild(titleDiv);
+    wrapperDiv.appendChild(codeDiv);
+    containerDiv.appendChild(wrapperDiv);
     return containerDiv;
 }
 function onTitleBarClick(containerDiv, codeDiv) {
     console.log("onTitleBarClick");
     const view = s_graph.userInfo(containerDiv);
     view.minimised = !(view.minimised);
+    setViewStyle(containerDiv, view);
+}
+function setViewStyle(div, view) {
+    let codeDiv = div.children[0].children[1]; // TODO:  better way
     if (view.minimised) {
-        codeDiv.style.display = "none";
+        codeDiv.classList.remove("code-expanded");
+        codeDiv.classList.add("code-minimised");
     }
     else {
-        codeDiv.style.display = "inline-block";
+        codeDiv.classList.remove("code-minimised");
+        if (view.state == CardViewState.Compact) {
+            codeDiv.classList.remove("code-expanded");
+        }
+        else if (view.state == CardViewState.Fullsize) {
+            codeDiv.classList.add("code-expanded");
+        }
     }
 }
 function onMouseOverTitle(titleDiv, buttonDiv, entering) {
@@ -588,20 +604,19 @@ function listen(elem, type, func) {
     }));
 }
 function expandOrContract(elem) {
-    let div = elem.parentElement;
+    let div = s_graph.topLevelDiv(elem);
     let view = s_graph.userInfo(div);
     if (!view)
         return;
     if (view.state == CardViewState.Compact) {
-        elem.classList.add("code-expanded");
         view.state = CardViewState.Fullsize;
     }
     else if (view.state == CardViewState.Fullsize) {
-        elem.classList.remove("code-expanded");
         view.state = CardViewState.Compact;
         elem.scrollLeft = view.xScroll;
         elem.scrollTop = view.yScroll;
     }
+    setViewStyle(div, view);
 }
 function getScrollPos(elem) {
     console.log("getScrollPos");
