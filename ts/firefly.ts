@@ -97,6 +97,7 @@ async function init() {
     busyIcon();
     graph();
     keyboard();
+    scroll();
 }
 
 function logo() {
@@ -259,11 +260,30 @@ async function keyboard() {
                 event.preventDefault();
                 onCommandKey();
             } else if (event.key== 'Escape') {
-                console.log("stop eventlog recording; next run will replay");
+                console.log("stop eventlog; next run will replay");
                 event.preventDefault();
                 s_playMode = "replay";
                 saveAll();
             }
+        }
+    });
+}
+
+async function scroll() {
+    window.addEventListener('scroll', (event) => {
+        if (s_playMode == "record") {
+            let sev = {
+                iFrame: s_iFrame,
+                type: "scroll",
+                eventType: event.type,
+                target: "window",
+                data: {
+                   xScroll: window.scrollX,
+                   yScroll: window.scrollY
+                }
+            };
+            s_eventLog.push(sev);
+            debouncedSaveAll();
         }
     });
 }
@@ -620,6 +640,10 @@ function issueEvent(sev: SerialisedEvent) {
     console.log(`frame ${s_iFrame}: ${sev.type}.${sev.eventType}`);
     if (sev.target == "") {
         console.log("WARNING: recorded event has no target");
+        return;
+    }
+    if (sev.target == "window" && sev.type == "scroll") {
+        window.scrollTo(sev.data.xScroll, sev.data.yScroll);
         return;
     }
     const target = document.getElementById(sev.target);
