@@ -97,9 +97,7 @@ def stopRecording(events):
     
 @service.register
 def search(query):
-    print("search", query)
     dict = vectors.search(query, 8)
-    print(dict)
     return dict
 
 def writeJsonToFile(obj, path: str):

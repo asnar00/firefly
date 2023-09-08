@@ -628,7 +628,6 @@ function codeContainer(uid: string, codeDiv: HTMLElement, title: string) : HTMLE
 }
 
 function onTitleBarClick(containerDiv: HTMLElement, codeDiv: HTMLElement) {
-    console.log("onTitleBarClick");
     const view = s_graph.userInfo(containerDiv)! as CardView;
     view.minimised = !(view.minimised);
     setViewStyle(containerDiv, view);
@@ -786,9 +785,6 @@ function logEvent(event: Event, elem: HTMLElement) {
     if (!obj) {
         console.log("failed to serialise event");
         return;
-    }
-    if (obj.eventType=='click') {
-        console.log(obj.eventType, obj.target);
     }
     s_eventLog.push(obj);
 }

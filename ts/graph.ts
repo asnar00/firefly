@@ -641,7 +641,6 @@ class NodeColumns {
         const r0 = (y0 < 0) ? -1 : ((y0 > 0) ? 1 : 0);
         const rn = (yn < 0) ? -1 : ((yn > 0) ? 1 : 0);
         if (r0 < 0 && rn < 0) {
-            console.log("top-right");
             for(let i=0; i < group.length; i++) {                   // arrange around top-right quarter of a circle
                 let r = i / (group.length-1);       // 0 .. 1
                 let theta = (1 - r) * (Math.PI/2);  // pi/2 .. 0
@@ -650,7 +649,7 @@ class NodeColumns {
                 group[i].targetPos.x = x;
             }
         } else if (r0 > 0 && rn > 0) {                              // arrange around bot-right quarter of a circle
-            console.log("bot-right");
+            
             for(let i=0; i < group.length; i++) {
                 let r = 1 - (i / (group.length-1));         // 1 .. 0
                 let theta = (1 - r) * (Math.PI/2);          // 0 .. pi/2
@@ -659,7 +658,6 @@ class NodeColumns {
                 group[i].targetPos.x = x;
             }
         } else {    
-            console.log("right half");
             for(let i=0; i < group.length; i++) {                   // arrange around right half of a circle
                 let r = i / (group.length-1);       // 0 .. 1
                 let theta = (Math.PI/2) - r * (Math.PI);

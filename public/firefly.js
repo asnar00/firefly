@@ -656,7 +656,6 @@ function codeContainer(uid, codeDiv, title) {
     return containerDiv;
 }
 function onTitleBarClick(containerDiv, codeDiv) {
-    console.log("onTitleBarClick");
     const view = s_graph.userInfo(containerDiv);
     view.minimised = !(view.minimised);
     setViewStyle(containerDiv, view);
@@ -803,9 +802,6 @@ function logEvent(event, elem) {
     if (!obj) {
         console.log("failed to serialise event");
         return;
-    }
-    if (obj.eventType == 'click') {
-        console.log(obj.eventType, obj.target);
     }
     s_eventLog.push(obj);
 }
