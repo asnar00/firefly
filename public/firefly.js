@@ -37,6 +37,7 @@ let s_playMode = "record"; // or "replay"
 let s_iEventReplay = 0;
 const s_mainID = "ts_firefly_firefly_function_main";
 var s_mousePointer;
+let s_nRetries = 0;
 class CodeBlock {
     constructor(code, language, iLine) {
         this.text = ""; // actual code text
@@ -118,11 +119,7 @@ function init() {
     });
 }
 function mouse() {
-    document.addEventListener('mousemove', (event) => {
-        if (s_playMode == "record") {
-            logEvent(event, document.body);
-        }
-    });
+    // nothing atm
 }
 function logo() {
     const logo = document.getElementById('logo_etc');
@@ -383,7 +380,7 @@ function showSearchResults(results) {
             if (card) {
                 let name = shortName(card);
                 if (card.kind == "function" || card.kind == "method" || card.kind == "class") {
-                    let searchResultDiv = element(`<div class="search-result" id="search_result_${name}">${name}</div>`);
+                    let searchResultDiv = element(`<div class="search-result" id="search_result_${card.uid}">${name}</div>`);
                     listen(searchResultDiv, 'click', () => { jumpToCard(card); });
                     searchResultsDiv.append(searchResultDiv);
                     addDetailTag(searchResultDiv, `${card.module}.${card.language}`);
@@ -730,10 +727,19 @@ function updateReplay() {
         }
         return;
     }
-    while (s_iEventReplay < s_eventLog.length &&
-        s_iFrame >= s_eventLog[s_iEventReplay].iFrame) {
-        issueEvent(s_eventLog[s_iEventReplay]);
-        s_iEventReplay++;
+    // just issue as fast as possible
+    if (s_iEventReplay < s_eventLog.length) {
+        if (issueEvent(s_eventLog[s_iEventReplay]) == true) {
+            s_iEventReplay++;
+            s_nRetries = 0;
+        }
+        else {
+            s_nRetries++;
+            if (s_nRetries > 100) {
+                console.log("playback failed");
+                stopPlayback();
+            }
+        }
     }
 }
 function issueEvent(sev) {
@@ -742,16 +748,16 @@ function issueEvent(sev) {
     }
     if (sev.target == "") {
         console.log("WARNING: recorded event has no target");
-        return;
+        return false;
     }
     if (sev.target == "window" && sev.type == "scroll") {
         window.scrollTo(sev.data.xScroll, sev.data.yScroll);
-        return;
+        return true;
     }
     const target = document.getElementById(sev.target);
     if (!target) {
         console.log(`WARNING: Element with ID ${sev.target} not found.`);
-        return;
+        return false;
     }
     let event;
     switch (sev.type) {
@@ -780,7 +786,7 @@ function issueEvent(sev) {
         case "scroll":
             target.scrollLeft = sev.data.xScroll;
             target.scrollTop = sev.data.yScroll;
-            return; // Since we've manually set the scroll, we don't need to dispatch an event
+            return true; // Since we've manually set the scroll, we don't need to dispatch an event
             break;
         case "input":
             target.innerText = sev.data.value;
@@ -792,10 +798,11 @@ function issueEvent(sev) {
             break;
         default:
             console.error(`Unknown event type: ${sev.type}`);
-            return;
+            return false;
     }
     event.synthetic = true;
     target.dispatchEvent(event);
+    return true;
 }
 function logEvent(event, elem) {
     let obj = serialiseEvent(event, elem);

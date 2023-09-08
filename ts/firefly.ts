@@ -25,6 +25,7 @@ let s_playMode = "record";          // or "replay"
 let s_iEventReplay = 0;
 const s_mainID = "ts_firefly_firefly_function_main";
 var s_mousePointer : HTMLElement | null;
+let s_nRetries = 0;
 
 class CodeBlock {
     text: string = "";                  // actual code text
@@ -103,11 +104,7 @@ async function init() {
 }
 
 function mouse() {
-    document.addEventListener('mousemove', (event) => {
-        if (s_playMode == "record") {
-            logEvent(event, document.body);
-        }
-    });
+    // nothing atm
 }
 
 function logo() {
@@ -360,7 +357,7 @@ function showSearchResults(results: any) {
             if (card) {
                 let name = shortName(card);
                 if (card.kind == "function" || card.kind == "method" || card.kind == "class") {
-                    let searchResultDiv = element(`<div class="search-result" id="search_result_${name}">${name}</div>`);
+                    let searchResultDiv = element(`<div class="search-result" id="search_result_${card.uid}">${name}</div>`);
                     listen(searchResultDiv, 'click', () => { jumpToCard(card)});
                     searchResultsDiv.append(searchResultDiv);
                     addDetailTag(searchResultDiv, `${card.module}.${card.language}`);
@@ -700,29 +697,37 @@ function updateReplay() {
         }
         return;
     }
-    while(s_iEventReplay < s_eventLog.length &&
-        s_iFrame >= s_eventLog[s_iEventReplay].iFrame) {
-        issueEvent(s_eventLog[s_iEventReplay]);
-        s_iEventReplay++;
+    // just issue as fast as possible
+    if (s_iEventReplay < s_eventLog.length) {
+        if (issueEvent(s_eventLog[s_iEventReplay]) == true) {
+            s_iEventReplay++;
+            s_nRetries=0;
+        } else {
+            s_nRetries++;
+            if (s_nRetries > 100) {
+                console.log("playback failed");
+                stopPlayback();
+            }
+        }
     }
 }
 
-function issueEvent(sev: SerialisedEvent) {
+function issueEvent(sev: SerialisedEvent) : boolean {
     if (sev.eventType != 'mousemove') {
         //console.log(`frame ${s_iFrame}: ${sev.type}.${sev.eventType}`);
     }
     if (sev.target == "") {
         console.log("WARNING: recorded event has no target");
-        return;
+        return false;
     }
     if (sev.target == "window" && sev.type == "scroll") {
         window.scrollTo(sev.data.xScroll, sev.data.yScroll);
-        return;
+        return true;
     }
     const target = document.getElementById(sev.target);
     if (!target) {
         console.log(`WARNING: Element with ID ${sev.target} not found.`);
-        return;
+        return false;
     }
     let event: Event;
     switch (sev.type) {
@@ -753,7 +758,7 @@ function issueEvent(sev: SerialisedEvent) {
         case "scroll":
             target.scrollLeft = sev.data.xScroll;
             target.scrollTop = sev.data.yScroll;
-            return;  // Since we've manually set the scroll, we don't need to dispatch an event
+            return true;  // Since we've manually set the scroll, we don't need to dispatch an event
             break;
 
         case "input":
@@ -766,10 +771,11 @@ function issueEvent(sev: SerialisedEvent) {
 
         default:
             console.error(`Unknown event type: ${sev.type}`);
-            return;
+            return false;
     }
     (event as any).synthetic = true;
     target.dispatchEvent(event);
+    return true;
 }
 
 interface SerialisedEvent {
