@@ -716,17 +716,21 @@ function listen(elem, type, func) {
             logEvent(event, elem);
         }
         yield func(event);
+        event.stopPropagation();
         if (s_playMode == "record") {
-            event.stopPropagation();
             debouncedSaveAll();
         }
     }));
 }
 function updateReplay() {
-    if (s_playMode != "replay")
+    if (s_playMode != "replay" || s_iEventReplay >= s_eventLog.length) {
+        if (s_mousePointer) {
+            s_mousePointer.remove();
+            s_mousePointer = null;
+            console.log("end of event playback");
+        }
         return;
-    if (s_iEventReplay >= s_eventLog.length)
-        return;
+    }
     while (s_iEventReplay < s_eventLog.length &&
         s_iFrame >= s_eventLog[s_iEventReplay].iFrame) {
         issueEvent(s_eventLog[s_iEventReplay]);
@@ -734,7 +738,9 @@ function updateReplay() {
     }
 }
 function issueEvent(sev) {
-    console.log(`frame ${s_iFrame}: ${sev.type}.${sev.eventType}`);
+    if (sev.eventType != 'mousemove') {
+        //console.log(`frame ${s_iFrame}: ${sev.type}.${sev.eventType}`);
+    }
     if (sev.target == "") {
         console.log("WARNING: recorded event has no target");
         return;
@@ -752,7 +758,7 @@ function issueEvent(sev) {
     switch (sev.type) {
         case "mouse":
             event = new MouseEvent(sev.eventType, {
-                bubbles: true,
+                bubbles: false,
                 cancelable: true,
                 view: window,
                 button: sev.data.button,
@@ -797,6 +803,9 @@ function logEvent(event, elem) {
     if (!obj) {
         console.log("failed to serialise event");
         return;
+    }
+    if (obj.eventType == 'click') {
+        console.log(obj.eventType, obj.target);
     }
     s_eventLog.push(obj);
 }

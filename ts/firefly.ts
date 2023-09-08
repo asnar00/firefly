@@ -24,7 +24,7 @@ let s_iFrame = 0;
 let s_playMode = "record";          // or "replay"
 let s_iEventReplay = 0;
 const s_mainID = "ts_firefly_firefly_function_main";
-var s_mousePointer : HTMLElement;
+var s_mousePointer : HTMLElement | null;
 
 class CodeBlock {
     text: string = "";                  // actual code text
@@ -685,17 +685,22 @@ function listen(elem: HTMLElement, type: string, func: Function) {
             logEvent(event, elem);
         }
         await func(event); 
+        event.stopPropagation();
         if (s_playMode == "record") {
-            event.stopPropagation();
             debouncedSaveAll();
         }
     });
 }
 
 function updateReplay() {
-    if (s_playMode != "replay") return;
-    if (s_iEventReplay >= s_eventLog.length) return;
-
+    if (s_playMode != "replay" || s_iEventReplay >= s_eventLog.length) {
+        if (s_mousePointer) {
+            s_mousePointer.remove();
+            s_mousePointer = null;
+            console.log("end of event playback");
+        }
+        return;
+    }
     while(s_iEventReplay < s_eventLog.length &&
         s_iFrame >= s_eventLog[s_iEventReplay].iFrame) {
         issueEvent(s_eventLog[s_iEventReplay]);
@@ -704,7 +709,9 @@ function updateReplay() {
 }
 
 function issueEvent(sev: SerialisedEvent) {
-    console.log(`frame ${s_iFrame}: ${sev.type}.${sev.eventType}`);
+    if (sev.eventType != 'mousemove') {
+        //console.log(`frame ${s_iFrame}: ${sev.type}.${sev.eventType}`);
+    }
     if (sev.target == "") {
         console.log("WARNING: recorded event has no target");
         return;
@@ -722,17 +729,17 @@ function issueEvent(sev: SerialisedEvent) {
     switch (sev.type) {
         case "mouse":
             event = new MouseEvent(sev.eventType, {
-                bubbles: true,
+                bubbles: false,
                 cancelable: true,
                 view: window,
                 button: sev.data.button,
                 clientX: sev.data.pageX - window.scrollX,
                 clientY: sev.data.pageY - window.scrollY
             });
-            s_mousePointer.style.zIndex = `1000`;
-            s_mousePointer.style.transform = `rotate(-45deg)`;
-            s_mousePointer.style.left = `${sev.data.pageX - window.scrollX}px`;
-            s_mousePointer.style.top = `${sev.data.pageY - window.scrollY}px`;
+            s_mousePointer!.style.zIndex = `1000`;
+            s_mousePointer!.style.transform = `rotate(-45deg)`;
+            s_mousePointer!.style.left = `${sev.data.pageX - window.scrollX}px`;
+            s_mousePointer!.style.top = `${sev.data.pageY - window.scrollY}px`;
             break;
         
         case "keyboard":
@@ -779,6 +786,9 @@ function logEvent(event: Event, elem: HTMLElement) {
     if (!obj) {
         console.log("failed to serialise event");
         return;
+    }
+    if (obj.eventType=='click') {
+        console.log(obj.eventType, obj.target);
     }
     s_eventLog.push(obj);
 }
