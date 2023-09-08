@@ -10,6 +10,7 @@ import service
 import hashlib
 import os
 import json
+import shutil
 
 global sbertModel
 sbertModel = None
@@ -19,6 +20,14 @@ embeddings = {} # key => { value, vector }
 
 global vectorsFolder
 vectorsFolder = ''
+
+def clear():
+    global embeddings
+    embeddings = {}
+    global vectorsFolder
+    if os.path.exists(vectorsFolder):
+        shutil.rmtree(vectorsFolder)
+        os.makedirs(os.path.dirname(vectorsFolder), exist_ok=True)
 
 def add(key: str, value):
     global embeddings

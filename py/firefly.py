@@ -49,10 +49,8 @@ def openRepository(owner, repoName):
     vectorsFolder = folder + f'/vectors'
     if changed:
         sourceFolder = f'{folder}/source'
-        if os.path.exists(vectorsFolder):
-            shutil.rmtree(vectorsFolder)
-            os.makedirs(os.path.dirname(vectorsFolder), exist_ok=True)
         vectors.setEmbeddingFolder(vectorsFolder)
+        vectors.clear()
         cards = importAllCards(repoName, [sourceFolder])
         writeJsonToFile(cards, cardsFile)
     else:
