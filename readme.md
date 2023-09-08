@@ -274,3 +274,10 @@ development speed would increase if there was a simple replay function.
 and of course there is ! we already discussed it.
 listen() is already doing everything;
 we need a "replayable log" which delivers the same sequence of events to the application.
+
+and, about an hour later, we have a passable working record/playback system.
+deficiencies:
+- we record by default, use cmd-esc to signal "keep eventlog, switch to replay on next run";
+- there needs to be a better interface to switch back; right now I have to edit the json session file
+- we need visual feedback about where the mouse cursor is, and where we are in the log
+- I guess random seeking would be great too, too much to ask?

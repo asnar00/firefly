@@ -24,6 +24,7 @@ let s_iFrame = 0;
 let s_playMode = "record";          // or "replay"
 let s_iEventReplay = 0;
 const s_mainID = "ts_firefly_firefly_function_main";
+var s_mousePointer : HTMLElement;
 
 class CodeBlock {
     text: string = "";                  // actual code text
@@ -169,6 +170,8 @@ async function openSession() {
         if (s_playMode == "replay") {
             s_eventLog = json.log as SerialisedEvent[];
             console.log(`${s_eventLog.length} events`);
+            s_mousePointer = element(`<i class="icon-target" style="position: absolute;"></i>`);
+            document.body.append(s_mousePointer);
         }
     }
     s_searchQuery = json.ui.search;
@@ -662,6 +665,9 @@ function issueEvent(sev: SerialisedEvent) {
                 clientX: sev.data.pageX - window.scrollX,
                 clientY: sev.data.pageY - window.scrollY
             });
+            s_mousePointer.style.zIndex = `1000`;
+            s_mousePointer.style.left = `${sev.data.pageX - window.scrollX - 12}px`;
+            s_mousePointer.style.top = `${sev.data.pageY - window.scrollY - 12}px`;
             break;
         
         case "keyboard":
