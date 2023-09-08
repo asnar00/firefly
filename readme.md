@@ -267,3 +267,10 @@ but we'll make that more sophisticated later.
 
 Next: we need to get minimise logic nice and smooth : more CSS bullshit.
 
+_____ 
+silly scribbles!
+
+development speed would increase if there was a simple replay function.
+and of course there is ! we already discussed it.
+listen() is already doing everything;
+we need a "replayable log" which delivers the same sequence of events to the application.

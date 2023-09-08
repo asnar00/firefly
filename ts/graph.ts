@@ -358,7 +358,8 @@ export class Node {
 
     targetRect() : Rect {
         const r = rect(this.div);
-        return new Rect(this.targetPos.x, this.targetPos.y, r.width(), r.height());
+        return new Rect(this.targetPos.x, this.targetPos.y, 
+            this.targetPos.x + r.width(), this.targetPos.y + r.height());
     }
 
     centerLine() : number {
@@ -402,10 +403,7 @@ export class Edge {
         if (!fromDiv || !toDiv) { this.removeFromSVG(); return; }
         this.fromDiv = fromDiv; this.toDiv = toDiv;
         let parentDiv = fromDiv.parentElement!;
-        if (window.getComputedStyle(parentDiv).display == 'none') {
-            parentDiv = parentDiv.parentElement!;
-        }
-
+        while(parentDiv && parentDiv.parentElement != s_graph.container) { parentDiv = parentDiv.parentElement!; }
         const parentRect = rect(parentDiv);
         const linkRect = rect(fromDiv);
         const targetRect = rect(toDiv);
@@ -518,8 +516,9 @@ class NodeColumns {
     spaceNodesVerticallyInGroups() {
         for(let groups of this.groups) {
             for(let group of groups) {
+
                 // first find the total height of the group, plus padding
-                let sumHeight = (group.length-1) * s_graph.padding;
+                let sumHeight = (group.length-1) * (s_graph.padding/2);
                 for(const node of group) {
                     sumHeight += node.targetRect().height();
                 }
@@ -533,7 +532,7 @@ class NodeColumns {
                 for (let i = 0; i < group.length; i++) {
                     let node = group[i];
                     node.targetPos.y = yPos;
-                    yPos += node.targetRect().height() + s_graph.padding;
+                    yPos += node.targetRect().height() + (s_graph.padding/2);
                 }
             }
         }
@@ -597,7 +596,7 @@ class NodeColumns {
         // compute widths
         let columnWidths: number[] = [];
         for(const column of this.columns) {
-            let bounds = new Rect(0,0,0,0);
+            let bounds = column[0].targetRect();
             for(const node of column) {
                 bounds.extendToFit(node.targetRect());
             }
@@ -611,10 +610,11 @@ class NodeColumns {
             let xNew = xPos + prevWidth + s_graph.padding;
             let xAdd = 0;
             for(let group of this.groups[i]) {
-                xAdd = Math.max(xAdd, this.setGroupFanoutPos(group, xPos, +1));
+                xAdd = Math.max(xAdd, this.setGroupFanoutPos(group, xNew, +1));
             }
             xPos = xNew + xAdd;
         }
+
         // leftwards pass from (zeroIndex-1)
         xPos = this.columns[this.zeroIndex][0].targetPos.x;
         for(let i= this.zeroIndex-1; i >= 0; i--) {
@@ -622,7 +622,7 @@ class NodeColumns {
             let xNew = xPos - width - s_graph.padding;
             let xAdd = 0;
             for(let group of this.groups[i]) {
-                xAdd = Math.max(xAdd, this.setGroupFanoutPos(group, xPos, -1));
+                xAdd = Math.max(xAdd, this.setGroupFanoutPos(group, xNew, -1));
             }
             xPos = xNew - xAdd;
         }
@@ -631,8 +631,8 @@ class NodeColumns {
     // sets group x-positions to "fan out" around parent centerline; returns padding or 0
     setGroupFanoutPos(group: Node[], xPos: number, dir: number) : number {
         if (group.length==1) {
-            group[0].targetPos.x = xPos;
-            return 0;
+            group[0].targetPos.x = xPos + s_graph.padding;
+            return s_graph.padding;
         }
         const parent = group[0].parentNode!;
         const centerLine = parent.centerLine();
@@ -641,30 +641,33 @@ class NodeColumns {
         const r0 = (y0 < 0) ? -1 : ((y0 > 0) ? 1 : 0);
         const rn = (yn < 0) ? -1 : ((yn > 0) ? 1 : 0);
         if (r0 < 0 && rn < 0) {
+            console.log("top-right");
             for(let i=0; i < group.length; i++) {                   // arrange around top-right quarter of a circle
                 let r = i / (group.length-1);       // 0 .. 1
                 let theta = (1 - r) * (Math.PI/2);  // pi/2 .. 0
                 let c = Math.cos(theta);
-                let x = xPos + (c * s_graph.padding * dir);
+                let x = xPos + (c * s_graph.padding * dir) + s_graph.padding;
                 group[i].targetPos.x = x;
             }
         } else if (r0 > 0 && rn > 0) {                              // arrange around bot-right quarter of a circle
+            console.log("bot-right");
             for(let i=0; i < group.length; i++) {
                 let r = 1 - (i / (group.length-1));         // 1 .. 0
                 let theta = (1 - r) * (Math.PI/2);          // 0 .. pi/2
-                let x = xPos + (r * s_graph.padding * dir);
                 let c = Math.cos(theta);
+                let x = xPos + (c * s_graph.padding * dir) + s_graph.padding;
                 group[i].targetPos.x = x;
             }
         } else {    
+            console.log("right half");
             for(let i=0; i < group.length; i++) {                   // arrange around right half of a circle
                 let r = i / (group.length-1);       // 0 .. 1
-                let theta = (1 - r) * (Math.PI);  // pi/2 .. -pi/2
+                let theta = (Math.PI/2) - r * (Math.PI);
                 let c = Math.cos(theta);
-                let x = xPos + (r * s_graph.padding * dir);
+                let x = xPos + (c * s_graph.padding * dir) + s_graph.padding;
                 group[i].targetPos.x = x;
             }
         }
-        return s_graph.padding;
+        return s_graph.padding * 2;
     }
 }

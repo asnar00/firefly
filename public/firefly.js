@@ -31,6 +31,10 @@ var s_graph;
 let s_mainIcon = "icon-search";
 let s_mainOption = "search";
 let s_searchQuery = "";
+let s_eventLog = [];
+let s_iFrame = 0;
+let s_playMode = "record"; // or "replay"
+let s_iEventReplay = 0;
 const s_mainID = "ts_firefly_firefly_function_main";
 class CodeBlock {
     constructor(code, language, iLine) {
@@ -131,10 +135,13 @@ function graph() {
     s_graph = new Graph(container);
 }
 function eventLoop() {
+    if (s_playMode == "replay")
+        updateReplay();
     s_graph.update();
     moveLogo();
     updateDetailTags();
     requestAnimationFrame(eventLoop);
+    s_iFrame++;
 }
 function moveLogo() {
     let xScroll = window.scrollX;
@@ -168,6 +175,14 @@ function openSession() {
         if (json.error) {
             console.log("ERROR:", json.error);
             return;
+        }
+        if (json.ui.playMode) {
+            s_playMode = json.ui.playMode;
+            console.log(s_playMode);
+            if (s_playMode == "replay") {
+                s_eventLog = json.log;
+                console.log(`${s_eventLog.length} events`);
+            }
         }
         s_searchQuery = json.ui.search;
     });
@@ -256,9 +271,17 @@ function changeSearchOption(optionName, iconName) {
 function keyboard() {
     return __awaiter(this, void 0, void 0, function* () {
         listen(document.body, 'keydown', (event) => __awaiter(this, void 0, void 0, function* () {
-            if (event.metaKey && event.key == 'f') {
-                event.preventDefault();
-                yield onCommandKey();
+            if (event.metaKey) {
+                if (event.key == 'f') {
+                    event.preventDefault();
+                    onCommandKey();
+                }
+                else if (event.key == 'Escape') {
+                    console.log("stop eventlog recording; next run will replay");
+                    event.preventDefault();
+                    s_playMode = "replay";
+                    saveAll();
+                }
             }
         }));
     });
@@ -282,7 +305,7 @@ function showSearchResults(results) {
             if (card) {
                 let name = shortName(card);
                 if (card.kind == "function" || card.kind == "method" || card.kind == "class") {
-                    let searchResultDiv = element(`<div class="search-result">${name}</div>`);
+                    let searchResultDiv = element(`<div class="search-result" id="search_result_${name}">${name}</div>`);
                     listen(searchResultDiv, 'click', () => { jumpToCard(card); });
                     searchResultsDiv.append(searchResultDiv);
                     addDetailTag(searchResultDiv, `${card.module}.${card.language}`);
@@ -511,26 +534,28 @@ function cardToHTML(card, view) {
     setTimeout(() => { elem.scrollLeft = view.xScroll; elem.scrollTop = view.yScroll; }, 0);
     listen(elem, 'click', function () { expandOrContract(elem); });
     listen(elem, 'scroll', function (event) { getScrollPos(elem); });
-    let container = codeContainer(elem, shortName(card));
-    container.id = card.uid;
+    let container = codeContainer(card.uid, elem, shortName(card));
     if (view.minimised) {
         elem.style.display = "none";
     }
     return container;
 }
-function codeContainer(codeDiv, title) {
-    const containerDiv = document.createElement('div');
+function codeContainer(uid, codeDiv, title) {
+    let containerDiv = document.createElement('div');
+    containerDiv.id = uid;
     containerDiv.className = 'code-container';
     const wrapperDiv = document.createElement('div');
     wrapperDiv.className = 'inner-wrapper';
     // Create the title div
     const titleDiv = document.createElement('div');
     titleDiv.className = 'code-title';
+    titleDiv.id = `${containerDiv.id}_title_bar`;
     titleDiv.textContent = title;
     listen(titleDiv, 'click', () => { onTitleBarClick(containerDiv, codeDiv); });
     // close button (eventually multiple)
     if (title != "main()") { // todo: better way of finding the root node
         let closeButton = element(`<i class="icon-cancel"></i>`);
+        closeButton.id = `${containerDiv.id}_close_button`;
         closeButton.style.visibility = "hidden";
         titleDiv.append(closeButton);
         listen(titleDiv, 'mouseenter', () => { onMouseOverTitle(titleDiv, closeButton, true); });
@@ -597,11 +622,117 @@ function highlightLink(linkDiv, highlight) {
 }
 function listen(elem, type, func) {
     elem.addEventListener(type, (event) => __awaiter(this, void 0, void 0, function* () {
-        //console.log(`${type}: ${elem.id}`);
+        if (elem.id == "") {
+            console.log("WARNING: event from element with no ID");
+        }
+        if (s_playMode == "record") {
+            logEvent(event, elem);
+        }
         yield func(event);
         event.stopPropagation();
-        debouncedSaveAll();
+        if (s_playMode == "record") {
+            debouncedSaveAll();
+        }
     }));
+}
+function updateReplay() {
+    while (s_iEventReplay < s_eventLog.length &&
+        s_iFrame >= s_eventLog[s_iEventReplay].iFrame) {
+        issueEvent(s_eventLog[s_iEventReplay]);
+        s_iEventReplay++;
+    }
+}
+function issueEvent(sev) {
+    console.log(`frame ${s_iFrame}: ${sev.type}.${sev.eventType}`);
+    if (sev.target == "") {
+        console.log("WARNING: recorded event has no target");
+        return;
+    }
+    const target = document.getElementById(sev.target);
+    if (!target) {
+        console.log(`WARNING: Element with ID ${sev.target} not found.`);
+        return;
+    }
+    let event;
+    switch (sev.type) {
+        case "mouse":
+            event = new MouseEvent(sev.eventType, {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+                button: sev.data.button,
+                clientX: sev.data.pageX - window.scrollX,
+                clientY: sev.data.pageY - window.scrollY
+            });
+            break;
+        case "keyboard":
+            event = new KeyboardEvent(sev.eventType, {
+                bubbles: true,
+                cancelable: true,
+                key: sev.data.key,
+                metaKey: sev.data.metaKey
+            });
+            break;
+        case "scroll":
+            target.scrollLeft = sev.data.xScroll;
+            target.scrollTop = sev.data.yScroll;
+            return; // Since we've manually set the scroll, we don't need to dispatch an event
+            break;
+        default:
+            console.error(`Unknown event type: ${sev.type}`);
+            return;
+    }
+    target.dispatchEvent(event);
+}
+function logEvent(event, elem) {
+    let obj = serialiseEvent(event, elem);
+    if (!obj) {
+        console.log("failed to serialise event");
+        return;
+    }
+    s_eventLog.push(obj);
+}
+function serialiseEvent(event, target) {
+    if (event instanceof MouseEvent) {
+        return {
+            iFrame: s_iFrame,
+            type: "mouse",
+            eventType: event.type,
+            target: target.id,
+            data: {
+                pageX: event.pageX,
+                pageY: event.pageY,
+                button: event.button
+            }
+        };
+    }
+    else if (event instanceof KeyboardEvent) {
+        return {
+            iFrame: s_iFrame,
+            type: "keyboard",
+            eventType: event.type,
+            target: target.id,
+            data: {
+                key: event.key,
+                metaKey: event.metaKey
+            }
+        };
+    }
+    else if (event.type === "scroll") {
+        return {
+            iFrame: s_iFrame,
+            type: "scroll",
+            eventType: event.type,
+            target: target.id,
+            data: {
+                xScroll: target.scrollLeft,
+                yScroll: target.scrollTop
+            }
+        };
+    }
+    // Add more event types as needed
+    console.log("event type", typeof (event));
+    return null;
 }
 function expandOrContract(elem) {
     let div = s_graph.topLevelDiv(elem);
@@ -633,9 +764,9 @@ const debouncedSaveAll = debounce(() => { saveAll(); }, 300);
 function saveAll() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("saveAll");
-        const uiJson = { search: s_searchQuery };
-        const sessionJson = { ui: uiJson };
-        yield save(sessionJson, "sessions/test.json");
+        const uiJson = { playMode: s_playMode, search: s_searchQuery };
+        const sessionJson = { ui: uiJson, log: s_eventLog };
+        save(sessionJson, "sessions/test.json");
     });
 }
 function save(json, path) {
@@ -685,19 +816,15 @@ function closeCardIfExists(uid) {
 // opens a card, optionally connected to a button element
 function openCard(uid, button, minimised = false) {
     console.log("openCard");
-    /*
-    let linkID = "";
-    let parentID = "";
+    let card = findCard(uid);
+    if (!card)
+        return;
+    let view = new CardView(CardViewState.Compact);
+    let div = cardToHTML(card, view);
+    s_graph.node(div, view);
     if (button) {
-        linkID = button.id;
-        let parent = s_graph.findDivContainingLink(button);
-        if (parent) parentID = parent.id;
+        s_graph.edge(button, div);
     }
-    s_graph.reopen(uid, linkID, parentID, new CardView(CardViewState.Compact, minimised));
-    if (button) {
-        highlightLink(button, true);
-    }
-    */
 }
 // closes a card
 function closeCard(cardDiv) {
