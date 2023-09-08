@@ -28,6 +28,9 @@ print("-------------------------------------------------------------------------
 print("firefly.ps ᕦ(ツ)ᕤ")
 root = "/Users/asnaroo/desktop/experiments/firefly"
 
+global eventLog
+eventLog = []
+
 @service.register
 def openRepository(owner, repoName):
     print("open repository", owner, repoName)
@@ -75,10 +78,31 @@ def load(path):
         return json
     else:
         return { "error" : f"{path.replace(root, '')} not found" }
+
+@service.register
+def startEventRecording():
+    global eventLog
+    eventLog = []
+    return { "success" : True }
+
+@service.register
+def saveEventLog(events):
+    global eventLog
+    eventLog.extend(events)
+    return { "success" : True }
+
+@service.register
+def stopRecording(events):
+    global eventLog
+    writeJsonToFile(eventLog, f"{root}/data/eventlog/eventlog.json")
+    return { "success" : True }
     
 @service.register
 def search(query):
-    return vectors.search(query, 8)
+    print("search", query)
+    dict = vectors.search(query, 8)
+    print(dict)
+    return dict
 
 def writeJsonToFile(obj, path: str):
     os.makedirs(os.path.dirname(path), exist_ok=True)

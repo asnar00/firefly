@@ -280,4 +280,19 @@ deficiencies:
 - we record by default, use cmd-esc to signal "keep eventlog, switch to replay on next run";
 - there needs to be a better interface to switch back; right now I have to edit the json session file
 - we need visual feedback about where the mouse cursor is, and where we are in the log
-- I guess random seeking would be great too, too much to ask?
+- I guess random seeking would be great too, not necessary for now.
+
+The main thing is that we can run the code and re-run it instantly to replicate a fault.
+Cool, cool, cool. Now we can debug arrangement logic much quicker. TOMORROW!
+
+still not working: replaying keystrokes into the search box, for some reason.
+TOMORROW. Then finish debugging new layout code.
+
+OK. this logging system is daft in many ways:
+
+1- super inefficient because of every-frame mouse-coords. but that's OK, I guess.
+2- saves the ENTIRE log every frame, fuck that. (although debounce helps)
+
+I think it's better to send a message to the server with the new serialised-event, rather than trying to save as part of the session.
+
+logEvent(blah) => adds to end of json array; saves when it can.

@@ -99,6 +99,15 @@ async function init() {
     graph();
     keyboard();
     scroll();
+    mouse();
+}
+
+function mouse() {
+    document.addEventListener('mousemove', (event) => {
+        if (s_playMode == "record") {
+            logEvent(event, document.body);
+        }
+    });
 }
 
 function logo() {
@@ -125,7 +134,7 @@ function graph() {
 }
 
 function eventLoop() {
-    if (s_playMode == "replay") updateReplay();
+    updateReplay();
     s_graph.update();
     moveLogo();
     updateDetailTags();
@@ -168,13 +177,21 @@ async function openSession() {
         s_playMode = json.ui.playMode;
         console.log(s_playMode);
         if (s_playMode == "replay") {
-            s_eventLog = json.log as SerialisedEvent[];
+            console.log("loading eventlog");
+            s_eventLog = await load("eventlog/eventlog.json");
             console.log(`${s_eventLog.length} events`);
-            s_mousePointer = element(`<i class="icon-target" style="position: absolute;"></i>`);
+            s_mousePointer = element(`<i class="icon-up-circled" style="position: absolute;"></i>`);
             document.body.append(s_mousePointer);
+        } else if (s_playMode == "record") {
+            s_eventLog = [];
+            startRecordingEvents();
         }
     }
     s_searchQuery = json.ui.search;
+}
+
+async function startRecordingEvents() {
+    await remote("@firefly.startEventRecording", {});
 }
 
 function openMain() {
@@ -194,10 +211,11 @@ function searchBox() {
     let searchDiv = element(searchDivHTML);
     document.body.append(searchDiv);
     let searchField = document.getElementById("search-field")!;
-    searchField.addEventListener('keydown', async (event) => {
-        await updateSearch(searchField);
+    listen(searchField, 'keydown', async (event : KeyboardEvent) => {
         if (event.key == 'Enter') { event.preventDefault(); }
-        debouncedSaveAll();
+    });
+    listen(searchField, 'input', async (event : InputEvent) => {
+        updateSearch(searchField);
     });
     let searchButton = document.getElementById("search-button")!;
     searchButton.style.cursor = 'pointer';
@@ -222,6 +240,7 @@ async function updateSearch(searchField: HTMLElement) {
 }
 
 async function searchFor(query: string) {
+    console.log("searchFor", query);
     const results = await search(s_searchQuery);
     if (results) {
         showSearchResults(results);
@@ -262,14 +281,46 @@ async function keyboard() {
             if(event.key == 'f') {
                 event.preventDefault();
                 onCommandKey();
-            } else if (event.key== 'Escape') {
-                console.log("stop eventlog; next run will replay");
+            } else if (event.key== '.') {
                 event.preventDefault();
-                s_playMode = "replay";
-                saveAll();
+                let synthetic = (event as any).synthetic;
+                if (s_playMode == "record" && synthetic===undefined) {
+                    stopRecording();
+                } else if (s_playMode == "replay") {
+                    if (synthetic===undefined) {
+                        setRecordMode();
+                    } else {
+                        stopPlayback();
+                    }
+                }
             }
         }
     });
+}
+
+async function stopRecording() {
+    console.log("stop eventlog; next run will replay");
+    s_playMode = "replay";
+    s_iEventReplay = s_eventLog.length; 
+    saveAll();
+    remote("@firefly.stopRecording", { events: s_eventLog });
+}
+
+function stopPlayback() {
+    console.log("end of event playback");
+    s_iEventReplay = s_eventLog.length;
+    if (s_mousePointer) {
+        s_mousePointer.remove();
+    }
+}
+
+async function setRecordMode() {
+    console.log("next run will record");
+    s_playMode = "record";    
+    saveAll();
+    if (s_mousePointer) {
+        s_mousePointer.remove();
+    }
 }
 
 async function scroll() {
@@ -402,7 +453,17 @@ function clearSearchResults() {
 
 async function search(query: string) : Promise<any> {
     if (query.trim() == "") return null;
-    return await remote("@firefly.search", { query });
+    return await remote("@firefly.search", { query: query });
+}
+
+function setCursorToEnd(contentEditableElem: HTMLElement) {
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(contentEditableElem);
+    range.collapse(false); // Collapse the range to the end point. false means collapse to end rather than the start
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+    contentEditableElem.focus();
 }
 
 async function importLocalFolder() {
@@ -624,14 +685,17 @@ function listen(elem: HTMLElement, type: string, func: Function) {
             logEvent(event, elem);
         }
         await func(event); 
-        event.stopPropagation();
         if (s_playMode == "record") {
+            event.stopPropagation();
             debouncedSaveAll();
         }
     });
 }
 
 function updateReplay() {
+    if (s_playMode != "replay") return;
+    if (s_iEventReplay >= s_eventLog.length) return;
+
     while(s_iEventReplay < s_eventLog.length &&
         s_iFrame >= s_eventLog[s_iEventReplay].iFrame) {
         issueEvent(s_eventLog[s_iEventReplay]);
@@ -666,8 +730,9 @@ function issueEvent(sev: SerialisedEvent) {
                 clientY: sev.data.pageY - window.scrollY
             });
             s_mousePointer.style.zIndex = `1000`;
-            s_mousePointer.style.left = `${sev.data.pageX - window.scrollX - 12}px`;
-            s_mousePointer.style.top = `${sev.data.pageY - window.scrollY - 12}px`;
+            s_mousePointer.style.transform = `rotate(-45deg)`;
+            s_mousePointer.style.left = `${sev.data.pageX - window.scrollX}px`;
+            s_mousePointer.style.top = `${sev.data.pageY - window.scrollY}px`;
             break;
         
         case "keyboard":
@@ -685,11 +750,19 @@ function issueEvent(sev: SerialisedEvent) {
             return;  // Since we've manually set the scroll, we don't need to dispatch an event
             break;
 
+        case "input":
+            target.innerText = sev.data.value;
+            setCursorToEnd(target);
+            event = new InputEvent(sev.eventType, {
+                bubbles: true,
+                cancelable: true});
+            break;
+
         default:
             console.error(`Unknown event type: ${sev.type}`);
             return;
     }
-
+    (event as any).synthetic = true;
     target.dispatchEvent(event);
 }
 
@@ -745,15 +818,21 @@ function serialiseEvent(event: Event, target: HTMLElement): SerialisedEvent | nu
                yScroll: target.scrollTop
             }
         };
+    } else if (event instanceof InputEvent) {
+        return {
+            iFrame: s_iFrame,
+            type: "input",
+            eventType: event.type,
+            target: target.id,
+            data: {
+                value: target.innerText
+            }
+        };
     }
     // Add more event types as needed
     console.log("event type", typeof(event));
     return null;
 }
-
-
-
-
 
 function expandOrContract(elem : HTMLElement) {
     let div = s_graph.topLevelDiv(elem)!;
@@ -787,16 +866,24 @@ const debouncedSaveAll = debounce(() => { saveAll() }, 300);
 async function saveAll() {
     console.log("saveAll");
     const uiJson = { playMode: s_playMode, search: s_searchQuery };
-    const sessionJson = { ui: uiJson, log: s_eventLog };
+    const sessionJson = { ui: uiJson };
     save(sessionJson, "sessions/test.json");
+    if (s_playMode == "record") {
+        saveEventLog();
+    }
 }
 
 async function save(json: any, path: string) {
     await remote("@firefly.save", { path: path, obj: json });
 }
 
+async function saveEventLog() {
+    await remote("@firefly.saveEventLog", { events: s_eventLog });
+    s_eventLog = [];
+}
+
 async function load(path: string) : Promise<any> {
-    return await remote("@firefly.load", { path: "sessions/test.json"});
+    return await remote("@firefly.load", { path: path});
 }
 
 // link button pressed
