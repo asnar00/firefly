@@ -191,6 +191,7 @@ function openSession() {
                 console.log(`${s_eventLog.length} events`);
                 s_mousePointer = element(`<i class="icon-up-circled" style="position: absolute;"></i>`);
                 document.body.append(s_mousePointer);
+                say("replaying eventlog");
             }
             else if (s_playMode == "record") {
                 s_eventLog = [];
@@ -254,7 +255,6 @@ function updateSearch(searchField) {
 }
 function searchFor(query) {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("searchFor", query);
         const results = yield search(s_searchQuery);
         if (results) {
             showSearchResults(results);
@@ -317,7 +317,7 @@ function keyboard() {
 }
 function stopRecording() {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("stop eventlog; next run will replay");
+        say("stop eventlog; next run will replay");
         s_playMode = "replay";
         s_iEventReplay = s_eventLog.length;
         saveAll();
@@ -325,7 +325,7 @@ function stopRecording() {
     });
 }
 function stopPlayback() {
-    console.log("end of event playback");
+    say("end of event playback");
     s_iEventReplay = s_eventLog.length;
     if (s_mousePointer) {
         s_mousePointer.remove();
@@ -333,7 +333,7 @@ function stopPlayback() {
 }
 function setRecordMode() {
     return __awaiter(this, void 0, void 0, function* () {
-        console.log("next run will record");
+        say("next run will record");
         s_playMode = "record";
         saveAll();
         if (s_mousePointer) {
@@ -388,6 +388,21 @@ function showSearchResults(results) {
             }
         }
     }
+}
+function say(message, timeSec = 2) {
+    console.log(message);
+    let div = element(`<div class="speech-bubble">${message}</div>`);
+    document.body.appendChild(div);
+    let logo = document.getElementById('logo_etc');
+    setTimeout(() => {
+        let r = rect(logo);
+        console.log("logo r", r);
+        div.style.left = `${r.left + 13}px`;
+        div.style.top = `${r.top - div.clientHeight - 16}px`;
+    }, 0);
+    setTimeout(() => {
+        div.remove();
+    }, timeSec * 1000);
 }
 class DetailTag {
     constructor(div, msg) {
@@ -445,7 +460,6 @@ function onClose(div, func) {
     observer.observe(parentElement, { childList: true });
 }
 function jumpToCard(card) {
-    console.log("jumpTo", shortName(card));
     let info = new CardView(CardViewState.Compact);
     let div = cardToHTML(card, info);
     s_graph.clear(); // for now
@@ -723,20 +737,21 @@ function updateReplay() {
         if (s_mousePointer) {
             s_mousePointer.remove();
             s_mousePointer = null;
-            console.log("end of event playback");
+            say("end of event playback");
         }
         return;
     }
     // just issue as fast as possible
     if (s_iEventReplay < s_eventLog.length) {
-        if (issueEvent(s_eventLog[s_iEventReplay]) == true) {
+        let failure = issueEvent(s_eventLog[s_iEventReplay]);
+        if (failure == "") {
             s_iEventReplay++;
             s_nRetries = 0;
         }
         else {
             s_nRetries++;
             if (s_nRetries > 100) {
-                console.log("playback failed");
+                say("playback failed : " + failure);
                 stopPlayback();
             }
         }
@@ -747,17 +762,15 @@ function issueEvent(sev) {
         //console.log(`frame ${s_iFrame}: ${sev.type}.${sev.eventType}`);
     }
     if (sev.target == "") {
-        console.log("WARNING: recorded event has no target");
-        return false;
+        return "WARNING: recorded event has no target";
     }
     if (sev.target == "window" && sev.type == "scroll") {
         window.scrollTo(sev.data.xScroll, sev.data.yScroll);
-        return true;
+        return "";
     }
     const target = document.getElementById(sev.target);
     if (!target) {
-        console.log(`WARNING: Element with ID ${sev.target} not found.`);
-        return false;
+        return `WARNING: Element with ID ${sev.target} not found.`;
     }
     let event;
     switch (sev.type) {
@@ -786,7 +799,7 @@ function issueEvent(sev) {
         case "scroll":
             target.scrollLeft = sev.data.xScroll;
             target.scrollTop = sev.data.yScroll;
-            return true; // Since we've manually set the scroll, we don't need to dispatch an event
+            return ""; // Since we've manually set the scroll, we don't need to dispatch an event
             break;
         case "input":
             target.innerText = sev.data.value;
@@ -797,12 +810,11 @@ function issueEvent(sev) {
             });
             break;
         default:
-            console.error(`Unknown event type: ${sev.type}`);
-            return false;
+            return `Unknown event type: ${sev.type}`;
     }
     event.synthetic = true;
     target.dispatchEvent(event);
-    return true;
+    return "";
 }
 function logEvent(event, elem) {
     let obj = serialiseEvent(event, elem);
@@ -881,15 +893,11 @@ function expandOrContract(elem) {
     setViewStyle(div, view);
 }
 function getScrollPos(elem) {
-    console.log("getScrollPos");
-    /*
-    let div = elem.parentElement!;
-    let view = s_graph.userObj(div);
+    let view = s_graph.userInfo(elem);
     if (view.state == CardViewState.Compact) {
-        view.xScroll = div.scrollLeft;
-        view.yScroll = div.scrollTop;
+        view.xScroll = elem.scrollLeft;
+        view.yScroll = elem.scrollTop;
     }
-    */
 }
 const debouncedSaveAll = debounce(() => { saveAll(); }, 300);
 function saveAll() {
@@ -955,7 +963,6 @@ function closeCardIfExists(uid) {
 }
 // opens a card, optionally connected to a button element
 function openCard(uid, button, minimised = false) {
-    console.log("openCard");
     let card = findCard(uid);
     if (!card)
         return;

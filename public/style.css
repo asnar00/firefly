@@ -265,3 +265,30 @@ background-color: #84afa6; /* light gray */
     margin: 0 0px;
     vertical-align: text-top;
 }
+
+.speech-bubble {
+    position: absolute;
+    max-width: 256px;
+    width: fit-content; /* This makes the div size to its content up to its maximum width */
+    height: fit-content; /* This makes the div size to its content up to its maximum height */
+    padding: 10px;
+    border-radius: 8px;
+    font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;font-weight: 400;
+    font-size: 9pt;
+    background-color: #74aaa0;
+  }
+  
+  /* Arrow pointing downward */
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    top: 100%; /* Positioned at the bottom of the bubble */
+    left: 7px; /* Adjust this to move the arrow left or right */
+    width: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #74aaa0; /* Same color as the bubble background */
+    border-bottom: 0;
+    color: #74aaa0;
+    background-color: transparent;
+  }

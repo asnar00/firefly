@@ -337,7 +337,7 @@ export class Node {
     }
     center() {
         let size = new Vec2(this.div.offsetWidth, this.div.offsetHeight);
-        let wsize = new Vec2(document.body.clientWidth, document.body.clientHeight);
+        let wsize = new Vec2(window.innerWidth, window.innerHeight);
         let pos = (wsize.minus(size)).times(0.5);
         this.setTargetPos(pos);
         this.setPos(pos);
