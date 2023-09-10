@@ -374,7 +374,6 @@ function say(message: string, timeSec: number = 2) {
     let logo = document.getElementById('logo_etc')!;
     setTimeout(() => { 
         let r = rect(logo);
-        console.log("logo r", r);
         div.style.left = `${r.left + 13}px`;
         div.style.top = `${r.top - div.clientHeight - 16}px`;
     }, 0);
