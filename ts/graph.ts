@@ -643,7 +643,7 @@ class NodeColumns {
         xPos = this.columns[this.zeroIndex][0].targetPos.x;
         for(let i= this.zeroIndex-1; i >= 0; i--) {
             let width = columnWidths[i];
-            let xNew = xPos - width - (s_graph.padding * 2);
+            let xNew = xPos - width - (s_graph.padding * 3);
             let xAdd = 0;
             for(let group of this.groups[i]) {
                 xAdd = Math.max(xAdd, this.setGroupFanoutPos(group, xNew, -1));

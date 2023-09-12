@@ -965,7 +965,11 @@ function onLinkButtonPress(button: HTMLElement) {
 // open all cards pointed to by (button)
 function openCardsFromButton(button: HTMLElement, minimised: boolean= false) {
     let cards = getTargetCards(button);
-    for(let c of cards) { openCardFrom(c.uid, button, minimised); }
+    for(let c of cards) {
+        if (!s_graph.findDiv(c.uid)) {
+            openCardFrom(c.uid, button, minimised);
+        }
+    }
     highlightLink(button, true);
 }
 
