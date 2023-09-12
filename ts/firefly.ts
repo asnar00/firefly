@@ -929,7 +929,7 @@ function onLinkButtonPress(button: HTMLElement) {
 // closes card if it's open
 function closeCardIfExists(uid: string) {
     console.log("closeCardIfExists");
-    /*
+/*
     let existing = s_graph.find(uid);
     if (existing) {
         closeCard(existing);

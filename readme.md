@@ -296,3 +296,9 @@ OK. this logging system is daft in many ways:
 I think it's better to send a message to the server with the new serialised-event, rather than trying to save as part of the session.
 
 logEvent(blah) => adds to end of json array; saves when it can.
+
+___________________________________________________
+modified: we now have a better event-logging system.
+
+ok: think about how we want this to work. I'd like to have multiple tabs open, in each of which I'm doing different things.
+An open tab is a session. So the question is: how do I create a "unique identifier" for the current tab?

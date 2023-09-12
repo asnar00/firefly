@@ -494,21 +494,23 @@ class NodeColumns {
     groupNodesByParent() {
         this.groups = [];
         for(let i=0; i < this.columns.length; i++) {
-            s_graph.newVisit();
+            let groups : Node[][] = [];
             let column = this.columns[i];
-            for(const node of column) {
-                let groups: Node[][] = [];
-                const parent = node.parentNode!;
-                if (parent && (!parent.visited())) {
-                    parent.visit();
-                    const group = [];
-                    for(const n of column) {
-                        if (n.parentNode === parent) group.push(n);
+            let parents : (Node | null) [] = [];
+            for(let node of column) {
+                let parent = node.parentNode;
+                if (parents.indexOf(parent) == -1) {
+                    parents.push(parent);
+                    let group : Node[] = [];
+                    for(let n of column) {
+                        if (n.parentNode === parent) {
+                            group.push(n);
+                        }
                     }
-                    if (group.length > 0) groups.push(group);
+                    groups.push(group);
                 }
-                this.groups.push(groups);
             }
+            this.groups.push(groups);
         }
     }
 
@@ -516,6 +518,8 @@ class NodeColumns {
     spaceNodesVerticallyInGroups() {
         for(let groups of this.groups) {
             for(let group of groups) {
+                let parent = group[0].parentNode;
+                if (!parent) continue;
 
                 // first find the total height of the group, plus padding
                 let sumHeight = (group.length-1) * (s_graph.padding/2);
@@ -524,7 +528,7 @@ class NodeColumns {
                 }
 
                 // then find the centerline of the group's parent
-                const parentRect = group[0].parentNode!.targetRect();
+                const parentRect = parent.targetRect();
                 const centerLine = (parentRect.top + parentRect.bottom)/2;
 
                 // now space group out vertically around the centerline
@@ -562,10 +566,12 @@ class NodeColumns {
 
     // center a group vertically around the center-line of its parent
     centerGroupVertically(group: Node[]) {
+        const parent = group[0].parentNode;
+        if (!parent) return;
         const top = group[0].targetRect().top;
         const bottom = group[group.length-1].targetRect().bottom;
         const height = (bottom - top);
-        const parentRect = group[0].parentNode!.targetRect();
+        const parentRect = parent.targetRect();
         const centerLine = (parentRect.top + parentRect.bottom)/2;
         const newTop = centerLine - (height/2);
         const yMove = newTop - top;
@@ -631,7 +637,7 @@ class NodeColumns {
     // sets group x-positions to "fan out" around parent centerline; returns padding or 0
     setGroupFanoutPos(group: Node[], xPos: number, dir: number) : number {
         if (group.length==1) {
-            group[0].targetPos.x = xPos + s_graph.padding;
+            group[0].targetPos.x = xPos;
             return s_graph.padding;
         }
         const parent = group[0].parentNode!;

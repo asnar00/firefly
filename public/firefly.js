@@ -954,11 +954,11 @@ function onLinkButtonPress(button) {
 function closeCardIfExists(uid) {
     console.log("closeCardIfExists");
     /*
-    let existing = s_graph.find(uid);
-    if (existing) {
-        closeCard(existing);
-    }
-    */
+        let existing = s_graph.find(uid);
+        if (existing) {
+            closeCard(existing);
+        }
+        */
 }
 // opens a card, optionally connected to a button element
 function openCard(uid, button, minimised = false) {
