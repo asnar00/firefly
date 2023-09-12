@@ -459,11 +459,34 @@ function onClose(div, func) {
     observer.observe(parentElement, { childList: true });
 }
 function jumpToCard(card) {
+    console.log("jumpToCard");
     let info = new CardView(CardViewState.Compact);
     let div = cardToHTML(card, info);
     s_graph.clear(); // for now
     s_graph.node(div, info);
     document.title = superShortName(card);
+    const codeDiv = div.children[0].children[1]; // TODO: do better :-)
+    for (let iDep = 0; iDep < card.dependsOn.length; iDep++) {
+        const dep = card.dependsOn[iDep];
+        let shouldOpen = false;
+        for (let tuid of dep.targets) {
+            let target = findCard(tuid);
+            if (target && (target.kind == 'function' || target.kind == 'method')) {
+                shouldOpen = true;
+            }
+        }
+        if (shouldOpen) {
+            let linkId = linkID(dep, iDep);
+            let buttons = codeDiv.querySelectorAll(`[id="${linkId}"]`);
+            if (buttons.length > 0) {
+                openCardsFromButton(buttons[0], true);
+            }
+        }
+    }
+    /*
+    ok, this is silly: how do we do this?
+    well, we need to generate the link ID for each dep, right?
+    */
 }
 // given (card) and (target), checks card.dependsOn and returns index of dependency that matches
 function findDependency(card, target) {
@@ -602,18 +625,15 @@ function cardToHTML(card, view) {
     else {
         let iChar = 0;
         let iLink = 0;
-        for (const dep of card.dependsOn) {
+        for (let iDep = 0; iDep < card.dependsOn.length; iDep++) {
+            const dep = card.dependsOn[iDep];
             // add text-node going from (iChar) to (dep.iChar)
             if (dep.iChar > iChar) {
                 elem.appendChild(document.createTextNode(text.slice(iChar, dep.iChar)));
             }
             // add span containing the link
             const link = text.slice(dep.iChar, dep.jChar);
-            let linkId = `linkto__${iLink}__` + dep.targets[0];
-            iLink++;
-            for (let i = 1; i < dep.targets.length; i++) {
-                linkId += "__" + dep.targets[i];
-            }
+            let linkId = linkID(dep, iDep);
             const child = element(`<span class="tag" id="${linkId}">${link}</span>`);
             listen(child, 'click', function (event) {
                 return __awaiter(this, void 0, void 0, function* () {
@@ -633,10 +653,15 @@ function cardToHTML(card, view) {
     listen(elem, 'click', function () { expandOrContract(elem); });
     listen(elem, 'scroll', function (event) { getScrollPos(elem); });
     let container = codeContainer(card.uid, elem, shortName(card));
-    if (view.minimised) {
-        elem.style.display = "none";
-    }
+    setViewStyle(container, view);
     return container;
+}
+function linkID(dep, iDep) {
+    let linkId = `linkto__${iDep}__` + dep.targets[0];
+    for (let i = 1; i < dep.targets.length; i++) {
+        linkId += "__" + dep.targets[i];
+    }
+    return linkId;
 }
 function codeContainer(uid, codeDiv, title) {
     let containerDiv = document.createElement('div');
@@ -933,6 +958,32 @@ function load(path) {
 }
 // link button pressed
 function onLinkButtonPress(button) {
+    let highlighted = button.classList.contains("tag-highlight");
+    if (highlighted) {
+        closeCardsFromButton(button);
+    }
+    else {
+        openCardsFromButton(button);
+    }
+}
+// open all cards pointed to by (button)
+function openCardsFromButton(button, minimised = false) {
+    let cards = getTargetCards(button);
+    for (let c of cards) {
+        openCard(c.uid, button, minimised);
+    }
+    highlightLink(button, true);
+}
+// close all cards pointed to by (button)
+function closeCardsFromButton(button) {
+    let cards = getTargetCards(button);
+    for (let c of cards) {
+        closeCard(c.uid);
+    }
+    highlightLink(button, false);
+}
+// given a link button, return all cards it points to
+function getTargetCards(button) {
     const linkIDs = button.id.split("__"); // linkto__number__link1__link2__ etc.
     let cards = [];
     for (let i = 2; i < linkIDs.length; i++) {
@@ -941,19 +992,7 @@ function onLinkButtonPress(button) {
         if (card)
             cards.push(card);
     }
-    let highlighted = button.classList.contains("tag-highlight");
-    if (highlighted) {
-        for (let c of cards) {
-            closeCard(c.uid);
-        }
-        highlightLink(button, false);
-    }
-    else {
-        for (let c of cards) {
-            openCard(c.uid, button);
-        }
-        highlightLink(button, true);
-    }
+    return cards;
 }
 // closes card if it's open
 function closeCard(uid) {
@@ -967,7 +1006,7 @@ function openCard(uid, button, minimised = false) {
     let card = findCard(uid);
     if (!card)
         return;
-    let view = new CardView(CardViewState.Compact);
+    let view = new CardView(CardViewState.Compact, minimised);
     let div = cardToHTML(card, view);
     s_graph.node(div, view);
     if (button) {

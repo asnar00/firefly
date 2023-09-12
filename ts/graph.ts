@@ -166,9 +166,9 @@ export class Graph {
 
     // set root node to (node), set position to center of window
     setRootNode(node: Node) {
+        this.rootNode = node;
         requestAnimationFrame(() => {
-            this.rootNode = node;
-            this.rootNode.center();
+            this.rootNode!.center();
         });  
     }
 
@@ -211,9 +211,9 @@ export class Graph {
 
     // sort nodes into columns (horizontally and vertically)
     sortNodesIntoColumns() {
-        this.newVisit();
+                this.newVisit();
         this.columns = new NodeColumns();
-        this.columns.addNode(this.rootNode!, 0);
+                this.columns.addNode(this.rootNode!, 0);
         this.rootNode!.sortIndex = "000";
         this.rootNode!.visit();
         this.forwardPassRec(this.rootNode!);
@@ -223,13 +223,13 @@ export class Graph {
 
     // for each outward edge, add to-node to the next column, recursively
     forwardPassRec(node: Node) {
-        for(const edge of node.edgesOut) {
+                for(const edge of node.edgesOut) {
             let toNode = edge.toNode();
-            if (!toNode.visited()) {
+                        if (!toNode.visited()) {
                 toNode.visit();
                 toNode.parentNode = node;
                 this.columns.addNode(toNode, node.iColumn+1);
-                this.forwardPassRec(toNode);
+                                this.forwardPassRec(toNode);
                 const index = getChildNodeIndex(edge.fromDiv);
                 toNode.sortIndex = node.sortIndex + '.' + index.toString().padStart(3, '0'); // call order
             }
@@ -620,7 +620,7 @@ class NodeColumns {
         let xPos = this.columns[this.zeroIndex][0].targetPos.x;
         for(let i= this.zeroIndex+1; i < this.columns.length; i++) {
             let prevWidth = columnWidths[i-1];
-            let xNew = xPos + prevWidth + s_graph.padding;
+            let xNew = xPos + prevWidth + (s_graph.padding * 2);
             let xAdd = 0;
             for(let group of this.groups[i]) {
                 xAdd = Math.max(xAdd, this.setGroupFanoutPos(group, xNew, +1));
@@ -632,7 +632,7 @@ class NodeColumns {
         xPos = this.columns[this.zeroIndex][0].targetPos.x;
         for(let i= this.zeroIndex-1; i >= 0; i--) {
             let width = columnWidths[i];
-            let xNew = xPos - width - s_graph.padding;
+            let xNew = xPos - width - (s_graph.padding * 2);
             let xAdd = 0;
             for(let group of this.groups[i]) {
                 xAdd = Math.max(xAdd, this.setGroupFanoutPos(group, xNew, -1));
