@@ -456,6 +456,15 @@ class NodeColumns {
         this.groups = []; // for each column, an array of node-groups (grouped by parent)
         this.zeroIndex = 0; // logical index [0] => physical index [zeroIndex], so we can do -ve logical indices
     }
+    log() {
+        console.log("COLUMNS:");
+        for (let i = 0; i < this.columns.length; i++) {
+            console.log("column", i - this.zeroIndex);
+            for (const node of this.columns[i]) {
+                console.log(" ", node.div.id);
+            }
+        }
+    }
     addNode(node, iColumn) {
         let physIndex = this.zeroIndex + iColumn;
         if (physIndex >= this.columns.length) {
@@ -466,9 +475,8 @@ class NodeColumns {
         else if (physIndex < 0) {
             let pad = [];
             for (let i = 0; i < (-physIndex); i++) {
-                pad.push([]);
+                this.columns.unshift([]);
             }
-            this.columns = this.columns.concat(pad, this.columns);
             this.zeroIndex -= physIndex;
             physIndex = 0;
         }

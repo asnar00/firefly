@@ -223,9 +223,9 @@ export class Graph {
 
     // for each outward edge, add to-node to the next column, recursively
     forwardPassRec(node: Node) {
-                for(const edge of node.edgesOut) {
+        for(const edge of node.edgesOut) {
             let toNode = edge.toNode();
-                        if (!toNode.visited()) {
+            if (!toNode.visited()) {
                 toNode.visit();
                 toNode.parentNode = node;
                 this.columns.addNode(toNode, node.iColumn+1);
@@ -473,6 +473,16 @@ class NodeColumns {
     groups: Node[][][] = [];        // for each column, an array of node-groups (grouped by parent)
     zeroIndex: number = 0;          // logical index [0] => physical index [zeroIndex], so we can do -ve logical indices
 
+    log() {
+        console.log("COLUMNS:");
+        for(let i=0; i < this.columns.length; i++) {
+            console.log("column", i-this.zeroIndex);
+            for(const node of this.columns[i]) {
+                console.log(" ", node.div.id);
+            }
+        }
+    }
+
     addNode(node: Node, iColumn: number) {
         let physIndex = this.zeroIndex + iColumn;
         if (physIndex >= this.columns.length) {
@@ -481,8 +491,9 @@ class NodeColumns {
             }
         } else if (physIndex < 0) {
             let pad : Node[][] = [];
-            for(let i = 0; i < (-physIndex); i++) { pad.push([]); }
-            this.columns = this.columns.concat(pad, this.columns);
+            for(let i = 0; i < (-physIndex); i++){
+                this.columns.unshift([]);
+            }
             this.zeroIndex -= physIndex;
             physIndex = 0;
         }

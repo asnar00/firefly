@@ -195,7 +195,7 @@ async function startRecordingEvents() {
 function openMain() {
     console.log("openMain");
     /*
-    openCard(s_mainID, null);
+    openCardFrom(s_mainID, null);
     const mainCard = findCard(s_mainID)!;
     */
 }
@@ -322,20 +322,7 @@ async function setRecordMode() {
 
 async function scroll() {
     window.addEventListener('scroll', (event) => {
-        if (s_playMode == "record") {
-            let sev = {
-                iFrame: s_iFrame,
-                type: "scroll",
-                eventType: event.type,
-                target: "window",
-                data: {
-                   xScroll: window.scrollX,
-                   yScroll: window.scrollY
-                }
-            };
-            s_eventLog.push(sev);
-            debouncedSaveAll();
-        }
+        debouncedSaveScrollEvent(event.type, window.scrollX, window.scrollY);
     });
 }
 
@@ -449,6 +436,8 @@ function jumpToCard(card: Card) {
     s_graph.node(div, info);
     document.title = superShortName(card);
     const codeDiv = div.children[0].children[1];    // TODO: do better :-)
+
+    // open all cards we call, minimised
     for(let iDep=0; iDep < card.dependsOn.length; iDep++) {
         const dep = card.dependsOn[iDep];
         let shouldOpen: boolean = false;
@@ -464,6 +453,13 @@ function jumpToCard(card: Card) {
             if (buttons.length > 0) {
                 openCardsFromButton(buttons[0] as HTMLElement, true);
             }
+        }
+    }
+    // open all cards that call us, also minimised (if we're callable obvs)
+    if (card.kind == "function" || card.kind == "method") {
+        for(let iDep=0; iDep < card.dependents.length; iDep++) {
+            const dep = card.dependents[iDep];
+            openCardTo(dep.targets[0], div, true);
         }
     }
 
@@ -914,6 +910,25 @@ function getScrollPos(elem: HTMLElement) {
 
 const debouncedSaveAll = debounce(() => { saveAll() }, 300);
 
+const debouncedSaveScrollEvent = debounce((type,x,y) => { saveScrollEvent(type, x, y); }, 300);
+
+function saveScrollEvent(eventType: string, x: number, y: number) {
+    if (s_playMode == "record") {
+        let sev : SerialisedEvent = {
+            iFrame: s_iFrame,
+            type: "scroll",
+            eventType: eventType,
+            target: "window",
+            data: {
+               xScroll: window.scrollX,
+               yScroll: window.scrollY
+            }
+        };
+        s_eventLog.push(sev);
+    }
+    saveAll();
+}
+
 async function saveAll() {
     console.log("saveAll");
     const uiJson = { playMode: s_playMode, search: s_searchQuery };
@@ -950,7 +965,7 @@ function onLinkButtonPress(button: HTMLElement) {
 // open all cards pointed to by (button)
 function openCardsFromButton(button: HTMLElement, minimised: boolean= false) {
     let cards = getTargetCards(button);
-    for(let c of cards) { openCard(c.uid, button, minimised); }
+    for(let c of cards) { openCardFrom(c.uid, button, minimised); }
     highlightLink(button, true);
 }
 
@@ -982,7 +997,7 @@ function closeCard(uid: string) {
 }
 
 // opens a card, optionally connected to a button element
-function openCard(uid: string, button: HTMLElement | null, minimised: boolean=false) {
+function openCardFrom(uid: string, button: HTMLElement | null, minimised: boolean=false) {
     let card = findCard(uid);
     if (!card) return;
     let view = new CardView(CardViewState.Compact, minimised);
@@ -993,15 +1008,28 @@ function openCard(uid: string, button: HTMLElement | null, minimised: boolean=fa
     }
 }
 
-// opens a card when we don't know the link, but we know the parent
-function openCardWithParent(card: Card, parent: Card, minimised: boolean=false) {
-    console.log("openCardWithParent", shortName(card));
-    /*
-    // first find the parent card's div; it should be open
-    let parentDiv = s_graph.find(parent.uid);
-    if (!parentDiv) { console.log("can't find parent!"); return; }
-    const linkDivs: NodeListOf<Element> = parentDiv.querySelectorAll(`[id*='${card.uid}']`);
-    if (linkDivs.length==0) { console.log("can't find link!"); return; }
-    openCard(card.uid, linkDivs[0] as HTMLElement, minimised);
-    */
+// opens a card that calls to an existing element
+function openCardTo(uid: string, toDiv: HTMLElement, minimised: boolean=false) {
+    let card = findCard(uid);
+    if (!card) return;
+    let view = new CardView(CardViewState.Compact, minimised);
+    let div = cardToHTML(card, view);
+    s_graph.node(div, view);
+    let linkButtons = findLinkButtonsTo(toDiv, div);
+    for(let button of linkButtons) {
+        s_graph.edge(button, toDiv);
+        highlightLink(button, true);
+    }
+}
+
+// returns array of all buttons in "div" that link to "toDiv"
+function findLinkButtonsTo(toDiv: HTMLElement, fromDiv: HTMLElement) : HTMLElement[] {
+    let buttons = fromDiv.querySelectorAll('span.tag');
+    let results : HTMLElement[] = [];
+    buttons.forEach((button) => {
+        if (button.id.indexOf(toDiv.id) >= 0) {
+            results.push(button as HTMLElement);
+        }
+    });
+    return results;
 }
