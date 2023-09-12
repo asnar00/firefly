@@ -66,7 +66,7 @@ export class Graph {
         this.edges.set(`${fromDiv.id}_${toDiv.id}`, edge);
         this.findNode(fromDiv)!.edgesOut.push(edge);
         this.findNode(toDiv)!.edgesIn.push(edge);
-        return edge;
+                return edge;
     }
 
     // focus on a specific node; it keeps same position, others move around it
@@ -211,12 +211,14 @@ export class Graph {
 
     // sort nodes into columns (horizontally and vertically)
     sortNodesIntoColumns() {
-                this.newVisit();
         this.columns = new NodeColumns();
-                this.columns.addNode(this.rootNode!, 0);
+        this.columns.addNode(this.rootNode!, 0);
         this.rootNode!.sortIndex = "000";
+        this.newVisit();
         this.rootNode!.visit();
         this.forwardPassRec(this.rootNode!);
+        this.newVisit();
+        this.rootNode!.visit();
         this.backwardPassRec(this.rootNode!);
         this.columns.sortVertically();
     }
@@ -238,11 +240,15 @@ export class Graph {
 
     // for each inward edge, add from-node to the prev column, recursively
     backwardPassRec(node: Node) {
+        //console.log("backwardPassRec", node.div.id);
+        //console.log("edgesIn:", node.edgesIn.length);
         for(const edge of node.edgesIn) {
             let fromNode = edge.fromNode();
+            //console.log(" source", fromNode.div.id);
             if (!fromNode.visited()) {
                 fromNode.visit();
                 fromNode.parentNode = node;
+                //console.log(" adding", fromNode.div.id, node.iColumn-1);
                 this.columns.addNode(fromNode, node.iColumn-1);
                 this.backwardPassRec(fromNode);
                 fromNode.sortIndex = node.sortIndex + '.' + fromNode.div.id; // for now. TODO: do better

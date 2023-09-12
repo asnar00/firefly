@@ -216,3 +216,19 @@ This is how we're going to build the workflow.
 Ideally, we'd like to be able to use the IDE to fix the IDE, even if the edits are done in VSCode.
 This means we need better session management. In particular, one tab should be in replay-mode, while the other is just in normal-use.
 So we need "tabs"
+
+END OF PLAY FOR TODAY (except for evening work)
+
+next: clearly, the recursive tree-explore functionality, both upwards and downwards.
+click on minimised => compact, open children (upwards or downwards direction?)
+we should also look at how class exploration works.
+then next major thing will be integrating multiple search results.
+
+once we can explore up and down the source tree nicely, and create nice charts of how things relate to each other,
+then maybe we look into AI stuff.
+
+We need unique Link IDs. Which is super annoying, really. But not that hard to do.
+Let's make link IDs work better! 
+But they have to work for parsing, as well. That's kind of horrid.
+Anyhoo, let's figure it out.
+we just need a "from__id__linkto__blah";

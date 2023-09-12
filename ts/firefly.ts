@@ -435,8 +435,14 @@ function jumpToCard(card: Card) {
     s_graph.clear();        // for now
     s_graph.node(div, info);
     document.title = superShortName(card);
-    const codeDiv = div.children[0].children[1];    // TODO: do better :-)
+    openAllCallees(card);
+    openAllCallers(card);
+}
 
+function openAllCallees(card: Card) {
+    const div = s_graph.findDiv(card.uid);
+    if (!div) return;
+    const codeDiv = div.children[0].children[1];    // TODO: do better :-)
     // open all cards we call, minimised
     for(let iDep=0; iDep < card.dependsOn.length; iDep++) {
         const dep = card.dependsOn[iDep];
@@ -448,25 +454,26 @@ function jumpToCard(card: Card) {
             }
         }
         if (shouldOpen) {
-            let linkId = linkID(dep, iDep);
+            let linkId = linkID(card.uid, dep, iDep);
             let buttons = codeDiv.querySelectorAll(`[id="${linkId}"]`);
             if (buttons.length > 0) {
                 openCardsFromButton(buttons[0] as HTMLElement, true);
             }
         }
     }
+}
+
+function openAllCallers(card: Card) {
+    const div = s_graph.findDiv(card.uid);
+    if (!div) return;
     // open all cards that call us, also minimised (if we're callable obvs)
     if (card.kind == "function" || card.kind == "method") {
         for(let iDep=0; iDep < card.dependents.length; iDep++) {
             const dep = card.dependents[iDep];
-            openCardTo(dep.targets[0], div, true);
+            const caller = dep.targets[0]
+            openCardTo(caller, div, true);
         }
     }
-
-    /*
-    ok, this is silly: how do we do this? 
-    well, we need to generate the link ID for each dep, right? 
-    */
 }
 
 // given (card) and (target), checks card.dependsOn and returns index of dependency that matches
@@ -598,7 +605,7 @@ function cardToHTML(card: Card, view: CardView) : HTMLElement {
             }
             // add span containing the link
             const link = text.slice(dep.iChar, dep.jChar);
-            let linkId = linkID(dep, iDep);
+            let linkId = linkID(card.uid, dep, iDep);
             const child = element(`<span class="tag" id="${linkId}">${link}</span>`);
             listen(child, 'click', async function(event: any) {
                 onLinkButtonPress(child);
@@ -620,8 +627,8 @@ function cardToHTML(card: Card, view: CardView) : HTMLElement {
     return container;
 }
 
-function linkID(dep: Dependency, iDep: number) : string {
-    let linkId = `linkto__${iDep}__` + dep.targets[0];
+function linkID(sourceId: string, dep: Dependency, iDep: number) : string {
+    let linkId = `from__${sourceId}__linkto__${iDep}__` + dep.targets[0];
     for(let i = 1; i < dep.targets.length; i++) {
         linkId += "__" + dep.targets[i];
     }
@@ -982,9 +989,9 @@ function closeCardsFromButton(button: HTMLElement) {
 
 // given a link button, return all cards it points to
 function getTargetCards(button: HTMLElement): Card[] {
-    const linkIDs = button.id.split("__"); // linkto__number__link1__link2__ etc.
+    const linkIDs = button.id.split("__"); // from__source__linkto__number__link1__link2__ etc.
     let cards: Card[] = [];
-    for(let i = 2; i < linkIDs.length; i++) {
+    for(let i = 4; i < linkIDs.length; i++) {
         const cardUid = linkIDs[i];
         const card = findCard(cardUid);
         if (card) cards.push(card);
@@ -1014,6 +1021,8 @@ function openCardFrom(uid: string, button: HTMLElement | null, minimised: boolea
 
 // opens a card that calls to an existing element
 function openCardTo(uid: string, toDiv: HTMLElement, minimised: boolean=false) {
+    let existingDiv = s_graph.findDiv(uid);
+    if (existingDiv) return;
     let card = findCard(uid);
     if (!card) return;
     let view = new CardView(CardViewState.Compact, minimised);

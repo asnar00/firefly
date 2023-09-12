@@ -536,6 +536,10 @@ def computeDependencies(cards: List[Card]):         # this is a bit of a behemot
         for i in range(0, len(ls)-1):
             if ls[i].type == 'identifier' and ls[i+1] != '(' and len(ls[i].targets) > 1:
                 ls[i].targets = [t for t in ls[i].targets if t.kind != 'function' and t.kind != 'method']
+        # 4.1 - if you matched a function or global but there's a dot before, remove it
+        for i in range(1, len(ls)-1):
+            if ls[i].type == 'identifier' and ls[i-1] == '.':
+                ls[i].targets = [t for t in ls[i].targets if t.kind != 'function' and t.kind != 'global']
         # 5- if you matched something in a different language, remove it (TBC)
         for l in ls:
             if l.type == 'identifier':
