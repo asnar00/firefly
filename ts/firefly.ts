@@ -471,7 +471,10 @@ function openAllCallers(card: Card) {
         for(let iDep=0; iDep < card.dependents.length; iDep++) {
             const dep = card.dependents[iDep];
             const caller = dep.targets[0]
-            openCardTo(caller, div, true);
+            const callerCard = findCard(caller);
+            if (callerCard && (callerCard.kind == "function" || callerCard.kind == "method")) {
+                openCardTo(caller, div, true);
+            }
         }
     }
 }
