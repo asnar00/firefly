@@ -99,6 +99,13 @@ export class Graph {
         return node.userInfo;
     }
 
+    // find div given identifier
+    findDiv(id: string) : HTMLElement | null {
+        let node: Node | null = this.findNodeFromID(id);
+        if (node) { return node.div; }
+        return null;
+    }
+
     // find node given identifier
     findNodeFromID(id: string) : Node | null {
         const elements = Array.from(this.container.querySelectorAll(`#${id}`));

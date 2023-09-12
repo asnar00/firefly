@@ -206,99 +206,13 @@ NEXT:
 - history viewing
 
 
----------------------------------------------------------
-scribbles:
+______________________________________________
+Event Logging and You
 
-to open a dependent of a node, we need to support multiple incoming links to any given node.
-and that is fine. we just need to pass/store an array of links (possibly zero).
-Interesting +1 for the idea "all pointers are just arrays", innit?
-Let's do that now.
+So let's think about the workflow implications of this.
+The ideal thing is to actually start to leverage the IDE to find bugs in the IDE code (woo).
+This is how we're going to build the workflow.
 
-So the main change now is that when we open a new node, we also have to somehow pass in all links.
-
-chain upwards: search until we find something that's open.
-if we do, we close all children of that node, then attach the new chain.
-
-Graph
-Node
-Edge
-
-
-OK: if there are multiple incoming edges to a class, how should they be sorted?
-answer: in call order. But how do we define that?
-
-There needs to be some sort of vertical sort key.
-For outward edges, we know how to sort.
-For inward edges, it's harder, because we may not be able to trace back.
-So for the moment we could just sort alphabetically on id? That's easiest for now I guess.
-
-OK, so maybe 
-
-
-
-
-personal access token:
-
-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
-
-url:
-https://github.com/asnar00/firefly
-
-
-
-____
-OK let's break down what we're doing now:
-
-when we open a node, we want to show how it connects both upwards and downwards.
-
-in general, we want to start "clean", and show downward and upward call-graphs.
-
-let's start by doing a generic thing: given any node, open it in the center of the screen;
-and then open all callers and callees in supercompact mode, with edges to them from that node.
-
-we'll just do this pure, and clean everything out at all times.
-
-OK: where we are now is much, much stronger;
-clearing out cards and vectors etc from the repo whenever it changes: eventually need to track those changes.
-we should really store the active repository information in the session, I guess.
-
-In fact, of course, we need to be able to get specific patches, because that's where we're working.
-but we'll make that more sophisticated later.
-
-Next: we need to get minimise logic nice and smooth : more CSS bullshit.
-
-_____ 
-silly scribbles!
-
-development speed would increase if there was a simple replay function.
-and of course there is ! we already discussed it.
-listen() is already doing everything;
-we need a "replayable log" which delivers the same sequence of events to the application.
-
-and, about an hour later, we have a passable working record/playback system.
-deficiencies:
-- we record by default, use cmd-esc to signal "keep eventlog, switch to replay on next run";
-- there needs to be a better interface to switch back; right now I have to edit the json session file
-- we need visual feedback about where the mouse cursor is, and where we are in the log
-- I guess random seeking would be great too, not necessary for now.
-
-The main thing is that we can run the code and re-run it instantly to replicate a fault.
-Cool, cool, cool. Now we can debug arrangement logic much quicker. TOMORROW!
-
-still not working: replaying keystrokes into the search box, for some reason.
-TOMORROW. Then finish debugging new layout code.
-
-OK. this logging system is daft in many ways:
-
-1- super inefficient because of every-frame mouse-coords. but that's OK, I guess.
-2- saves the ENTIRE log every frame, fuck that. (although debounce helps)
-
-I think it's better to send a message to the server with the new serialised-event, rather than trying to save as part of the session.
-
-logEvent(blah) => adds to end of json array; saves when it can.
-
-___________________________________________________
-modified: we now have a better event-logging system.
-
-ok: think about how we want this to work. I'd like to have multiple tabs open, in each of which I'm doing different things.
-An open tab is a session. So the question is: how do I create a "unique identifier" for the current tab?
+Ideally, we'd like to be able to use the IDE to fix the IDE, even if the edits are done in VSCode.
+This means we need better session management. In particular, one tab should be in replay-mode, while the other is just in normal-use.
+So we need "tabs"

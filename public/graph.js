@@ -95,6 +95,14 @@ export class Graph {
             return null;
         return node.userInfo;
     }
+    // find div given identifier
+    findDiv(id) {
+        let node = this.findNodeFromID(id);
+        if (node) {
+            return node.div;
+        }
+        return null;
+    }
     // find node given identifier
     findNodeFromID(id) {
         const elements = Array.from(this.container.querySelectorAll(`#${id}`));

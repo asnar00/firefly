@@ -268,7 +268,6 @@ background-color: #84afa6; /* light gray */
 
 .speech-bubble {
     position: absolute;
-    max-width: 256px;
     width: fit-content; /* This makes the div size to its content up to its maximum width */
     height: fit-content; /* This makes the div size to its content up to its maximum height */
     padding: 10px;

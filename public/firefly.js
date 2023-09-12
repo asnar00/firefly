@@ -463,6 +463,7 @@ function jumpToCard(card) {
     let div = cardToHTML(card, info);
     s_graph.clear(); // for now
     s_graph.node(div, info);
+    document.title = superShortName(card);
 }
 // given (card) and (target), checks card.dependsOn and returns index of dependency that matches
 function findDependency(card, target) {
@@ -696,9 +697,7 @@ function onMouseOverTitle(titleDiv, buttonDiv, entering) {
 }
 function onCloseButtonClick(div) {
     console.log("onCloseButton");
-    /*
-    s_graph.close(div);
-    */
+    closeCard(div.id);
 }
 function shortName(card) {
     let result = "";
@@ -706,6 +705,12 @@ function shortName(card) {
         result += findCard(card.parent).name + ".";
     }
     result += card.name;
+    if (card.kind == "method" || card.kind == "function")
+        result += "()";
+    return result;
+}
+function superShortName(card) {
+    let result = card.name;
     if (card.kind == "method" || card.kind == "function")
         result += "()";
     return result;
@@ -939,7 +944,7 @@ function onLinkButtonPress(button) {
     let highlighted = button.classList.contains("tag-highlight");
     if (highlighted) {
         for (let c of cards) {
-            closeCardIfExists(c.uid);
+            closeCard(c.uid);
         }
         highlightLink(button, false);
     }
@@ -951,14 +956,11 @@ function onLinkButtonPress(button) {
     }
 }
 // closes card if it's open
-function closeCardIfExists(uid) {
-    console.log("closeCardIfExists");
-    /*
-        let existing = s_graph.find(uid);
-        if (existing) {
-            closeCard(existing);
-        }
-        */
+function closeCard(uid) {
+    let div = s_graph.findDiv(uid);
+    if (div) {
+        s_graph.remove(div);
+    }
 }
 // opens a card, optionally connected to a button element
 function openCard(uid, button, minimised = false) {
@@ -971,17 +973,6 @@ function openCard(uid, button, minimised = false) {
     if (button) {
         s_graph.edge(button, div);
     }
-}
-// closes a card
-function closeCard(cardDiv) {
-    console.log("closeCard");
-    /*
-    let button = s_graph.findLink(cardDiv);
-    if (button) {
-        highlightLink(button, false);
-    }
-    s_graph.close(cardDiv);
-    */
 }
 // opens a card when we don't know the link, but we know the parent
 function openCardWithParent(card, parent, minimised = false) {
