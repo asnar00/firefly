@@ -22,6 +22,7 @@ import { debounce } from "./util.js";
 import { remote } from "./util.js";
 import { rect } from "./util.js";
 import { Graph } from "./graph.js";
+import { EventLog } from "./events.js";
 window.onload = () => { main(); };
 const s_useLocalFiles = false; // change this to true to enable local file access
 let dirHandle = null;
@@ -31,13 +32,9 @@ var s_graph;
 let s_mainIcon = "icon-search";
 let s_mainOption = "search";
 let s_searchQuery = "";
-let s_eventLog = [];
-let s_iFrame = 0;
-let s_playMode = "record"; // or "replay"
-let s_iEventReplay = 0;
 const s_mainID = "ts_firefly_firefly_function_main";
-var s_mousePointer;
-let s_nRetries = 0;
+let s_playMode = "record";
+let s_eventLog = new EventLog();
 class CodeBlock {
     constructor(code, language, iLine) {
         this.text = ""; // actual code text
@@ -114,7 +111,6 @@ function init() {
         busyIcon();
         graph();
         keyboard();
-        scroll();
         mouse();
     });
 }
@@ -142,12 +138,11 @@ function graph() {
     s_graph = new Graph(container);
 }
 function eventLoop() {
-    updateReplay();
+    s_eventLog.update();
     s_graph.update();
     moveLogo();
     updateDetailTags();
     requestAnimationFrame(eventLoop);
-    s_iFrame++;
 }
 function moveLogo() {
     let xScroll = window.scrollX;
@@ -186,16 +181,12 @@ function openSession() {
             s_playMode = json.ui.playMode;
             console.log(s_playMode);
             if (s_playMode == "replay") {
-                console.log("loading eventlog");
-                s_eventLog = yield load("eventlog/eventlog.json");
-                console.log(`${s_eventLog.length} events`);
-                s_mousePointer = element(`<i class="icon-up-circled" style="position: absolute;"></i>`);
-                document.body.append(s_mousePointer);
                 say("replaying eventlog");
+                yield s_eventLog.replay("eventlog/eventlog.json");
             }
             else if (s_playMode == "record") {
-                s_eventLog = [];
-                startRecordingEvents();
+                say("recording eventlog");
+                yield s_eventLog.record();
             }
         }
         s_searchQuery = json.ui.search;
@@ -319,33 +310,19 @@ function stopRecording() {
     return __awaiter(this, void 0, void 0, function* () {
         say("stop eventlog; next run will replay");
         s_playMode = "replay";
-        s_iEventReplay = s_eventLog.length;
+        s_eventLog.stop();
         saveAll();
-        remote("@firefly.stopRecording", { events: s_eventLog });
     });
 }
 function stopPlayback() {
     say("end of event playback");
-    s_iEventReplay = s_eventLog.length;
-    if (s_mousePointer) {
-        s_mousePointer.remove();
-    }
+    s_eventLog.stop();
 }
 function setRecordMode() {
     return __awaiter(this, void 0, void 0, function* () {
         say("next run will record");
         s_playMode = "record";
         saveAll();
-        if (s_mousePointer) {
-            s_mousePointer.remove();
-        }
-    });
-}
-function scroll() {
-    return __awaiter(this, void 0, void 0, function* () {
-        window.addEventListener('scroll', (event) => {
-            debouncedSaveScrollEvent(event.type, window.scrollX, window.scrollY);
-        });
     });
 }
 function onCommandKey() {
@@ -513,15 +490,6 @@ function search(query) {
             return null;
         return yield remote("@firefly.search", { query: query });
     });
-}
-function setCursorToEnd(contentEditableElem) {
-    const range = document.createRange();
-    const sel = window.getSelection();
-    range.selectNodeContents(contentEditableElem);
-    range.collapse(false); // Collapse the range to the end point. false means collapse to end rather than the start
-    sel === null || sel === void 0 ? void 0 : sel.removeAllRanges();
-    sel === null || sel === void 0 ? void 0 : sel.addRange(range);
-    contentEditableElem.focus();
 }
 function importLocalFolder() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -759,7 +727,7 @@ function listen(elem, type, func) {
             console.log("WARNING: event from element with no ID");
         }
         if (s_playMode == "record") {
-            logEvent(event, elem);
+            s_eventLog.log(event, elem);
         }
         yield func(event);
         event.stopPropagation();
@@ -767,151 +735,6 @@ function listen(elem, type, func) {
             debouncedSaveAll();
         }
     }));
-}
-function updateReplay() {
-    if (s_playMode != "replay" || s_iEventReplay >= s_eventLog.length) {
-        if (s_mousePointer) {
-            s_mousePointer.remove();
-            s_mousePointer = null;
-            say("end of event playback");
-        }
-        return;
-    }
-    // just issue as fast as possible
-    if (s_iEventReplay < s_eventLog.length) {
-        let failure = issueEvent(s_eventLog[s_iEventReplay]);
-        if (failure == "") {
-            s_iEventReplay++;
-            s_nRetries = 0;
-        }
-        else {
-            s_nRetries++;
-            if (s_nRetries > 100) {
-                say("playback failed : " + failure);
-                stopPlayback();
-            }
-        }
-    }
-}
-function issueEvent(sev) {
-    if (sev.eventType != 'mousemove') {
-        //console.log(`frame ${s_iFrame}: ${sev.type}.${sev.eventType}`);
-    }
-    if (sev.target == "") {
-        return "WARNING: recorded event has no target";
-    }
-    if (sev.target == "window" && sev.type == "scroll") {
-        window.scrollTo(sev.data.xScroll, sev.data.yScroll);
-        return "";
-    }
-    const target = document.getElementById(sev.target);
-    if (!target) {
-        return `WARNING: Element with ID ${sev.target} not found.`;
-    }
-    let event;
-    switch (sev.type) {
-        case "mouse":
-            event = new MouseEvent(sev.eventType, {
-                bubbles: false,
-                cancelable: true,
-                view: window,
-                button: sev.data.button,
-                clientX: sev.data.pageX - window.scrollX,
-                clientY: sev.data.pageY - window.scrollY
-            });
-            s_mousePointer.style.zIndex = `1000`;
-            s_mousePointer.style.transform = `rotate(-45deg)`;
-            s_mousePointer.style.left = `${sev.data.pageX - window.scrollX}px`;
-            s_mousePointer.style.top = `${sev.data.pageY - window.scrollY}px`;
-            break;
-        case "keyboard":
-            event = new KeyboardEvent(sev.eventType, {
-                bubbles: true,
-                cancelable: true,
-                key: sev.data.key,
-                metaKey: sev.data.metaKey
-            });
-            break;
-        case "scroll":
-            target.scrollLeft = sev.data.xScroll;
-            target.scrollTop = sev.data.yScroll;
-            return ""; // Since we've manually set the scroll, we don't need to dispatch an event
-            break;
-        case "input":
-            target.innerText = sev.data.value;
-            setCursorToEnd(target);
-            event = new InputEvent(sev.eventType, {
-                bubbles: true,
-                cancelable: true
-            });
-            break;
-        default:
-            return `Unknown event type: ${sev.type}`;
-    }
-    event.synthetic = true;
-    target.dispatchEvent(event);
-    return "";
-}
-function logEvent(event, elem) {
-    let obj = serialiseEvent(event, elem);
-    if (!obj) {
-        console.log("failed to serialise event");
-        return;
-    }
-    s_eventLog.push(obj);
-}
-function serialiseEvent(event, target) {
-    if (event instanceof MouseEvent) {
-        return {
-            iFrame: s_iFrame,
-            type: "mouse",
-            eventType: event.type,
-            target: target.id,
-            data: {
-                pageX: event.pageX,
-                pageY: event.pageY,
-                button: event.button
-            }
-        };
-    }
-    else if (event instanceof KeyboardEvent) {
-        return {
-            iFrame: s_iFrame,
-            type: "keyboard",
-            eventType: event.type,
-            target: target.id,
-            data: {
-                key: event.key,
-                metaKey: event.metaKey
-            }
-        };
-    }
-    else if (event.type === "scroll") {
-        return {
-            iFrame: s_iFrame,
-            type: "scroll",
-            eventType: event.type,
-            target: target.id,
-            data: {
-                xScroll: target.scrollLeft,
-                yScroll: target.scrollTop
-            }
-        };
-    }
-    else if (event instanceof InputEvent) {
-        return {
-            iFrame: s_iFrame,
-            type: "input",
-            eventType: event.type,
-            target: target.id,
-            data: {
-                value: target.innerText
-            }
-        };
-    }
-    // Add more event types as needed
-    console.log("event type", typeof (event));
-    return null;
 }
 function expandOrContract(elem) {
     let div = s_graph.topLevelDiv(elem);
@@ -936,43 +759,18 @@ function getScrollPos(elem) {
     }
 }
 const debouncedSaveAll = debounce(() => { saveAll(); }, 300);
-const debouncedSaveScrollEvent = debounce((type, x, y) => { saveScrollEvent(type, x, y); }, 300);
-function saveScrollEvent(eventType, x, y) {
-    if (s_playMode == "record") {
-        let sev = {
-            iFrame: s_iFrame,
-            type: "scroll",
-            eventType: eventType,
-            target: "window",
-            data: {
-                xScroll: window.scrollX,
-                yScroll: window.scrollY
-            }
-        };
-        s_eventLog.push(sev);
-    }
-    saveAll();
-}
 function saveAll() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("saveAll");
         const uiJson = { playMode: s_playMode, search: s_searchQuery };
         const sessionJson = { ui: uiJson };
         save(sessionJson, "sessions/test.json");
-        if (s_playMode == "record") {
-            saveEventLog();
-        }
+        s_eventLog.flush();
     });
 }
 function save(json, path) {
     return __awaiter(this, void 0, void 0, function* () {
         yield remote("@firefly.save", { path: path, obj: json });
-    });
-}
-function saveEventLog() {
-    return __awaiter(this, void 0, void 0, function* () {
-        yield remote("@firefly.saveEventLog", { events: s_eventLog });
-        s_eventLog = [];
     });
 }
 function load(path) {

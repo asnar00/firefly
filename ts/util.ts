@@ -189,3 +189,13 @@ export async function remote(endpointAndFunc: string, args: any) : Promise<any> 
     }
     return [];
 }
+
+export function setCursorToEnd(contentEditableElem: HTMLElement) {
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(contentEditableElem);
+    range.collapse(false); // Collapse the range to the end point. false means collapse to end rather than the start
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+    contentEditableElem.focus();
+}

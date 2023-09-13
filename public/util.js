@@ -185,3 +185,12 @@ export function remote(endpointAndFunc, args) {
         return [];
     });
 }
+export function setCursorToEnd(contentEditableElem) {
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(contentEditableElem);
+    range.collapse(false); // Collapse the range to the end point. false means collapse to end rather than the start
+    sel === null || sel === void 0 ? void 0 : sel.removeAllRanges();
+    sel === null || sel === void 0 ? void 0 : sel.addRange(range);
+    contentEditableElem.focus();
+}

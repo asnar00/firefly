@@ -8,6 +8,7 @@ import {debounce} from "./util.js";
 import {remote} from "./util.js";
 import {rect} from "./util.js";
 import {Graph} from "./graph.js";
+import {EventLog} from "./events.js";
 
 window.onload = () => { main(); };
 
@@ -19,13 +20,9 @@ var s_graph : Graph;
 let s_mainIcon = "icon-search";
 let s_mainOption = "search";
 let s_searchQuery = "";
-let s_eventLog: SerialisedEvent[] = [];
-let s_iFrame = 0;
-let s_playMode = "record";          // or "replay"
-let s_iEventReplay = 0;
 const s_mainID = "ts_firefly_firefly_function_main";
-var s_mousePointer : HTMLElement | null;
-let s_nRetries = 0;
+let s_playMode: string = "record";
+let s_eventLog: EventLog = new EventLog();
 
 class CodeBlock {
     text: string = "";                  // actual code text
@@ -99,7 +96,6 @@ async function init() {
     busyIcon();
     graph();
     keyboard();
-    scroll();
     mouse();
 }
 
@@ -131,12 +127,11 @@ function graph() {
 }
 
 function eventLoop() {
-    updateReplay();
+    s_eventLog.update();
     s_graph.update();
     moveLogo();
     updateDetailTags();
     requestAnimationFrame(eventLoop);
-    s_iFrame ++;
 }
 
 function moveLogo() {
@@ -174,15 +169,11 @@ async function openSession() {
         s_playMode = json.ui.playMode;
         console.log(s_playMode);
         if (s_playMode == "replay") {
-            console.log("loading eventlog");
-            s_eventLog = await load("eventlog/eventlog.json");
-            console.log(`${s_eventLog.length} events`);
-            s_mousePointer = element(`<i class="icon-up-circled" style="position: absolute;"></i>`);
-            document.body.append(s_mousePointer);
             say("replaying eventlog");
+            await s_eventLog.replay("eventlog/eventlog.json");
         } else if (s_playMode == "record") {
-            s_eventLog = [];
-            startRecordingEvents();
+            say("recording eventlog");
+            await s_eventLog.record();
         }
     }
     s_searchQuery = json.ui.search;
@@ -298,32 +289,19 @@ async function keyboard() {
 async function stopRecording() {
     say("stop eventlog; next run will replay");
     s_playMode = "replay";
-    s_iEventReplay = s_eventLog.length; 
+    s_eventLog.stop();
     saveAll();
-    remote("@firefly.stopRecording", { events: s_eventLog });
 }
 
 function stopPlayback() {
     say("end of event playback");
-    s_iEventReplay = s_eventLog.length;
-    if (s_mousePointer) {
-        s_mousePointer.remove();
-    }
+    s_eventLog.stop();
 }
 
 async function setRecordMode() {
     say("next run will record");
     s_playMode = "record";    
     saveAll();
-    if (s_mousePointer) {
-        s_mousePointer.remove();
-    }
-}
-
-async function scroll() {
-    window.addEventListener('scroll', (event) => {
-        debouncedSaveScrollEvent(event.type, window.scrollX, window.scrollY);
-    });
 }
 
 async function onCommandKey() {
@@ -496,16 +474,6 @@ function clearSearchResults() {
 async function search(query: string) : Promise<any> {
     if (query.trim() == "") return null;
     return await remote("@firefly.search", { query: query });
-}
-
-function setCursorToEnd(contentEditableElem: HTMLElement) {
-    const range = document.createRange();
-    const sel = window.getSelection();
-    range.selectNodeContents(contentEditableElem);
-    range.collapse(false); // Collapse the range to the end point. false means collapse to end rather than the start
-    sel?.removeAllRanges();
-    sel?.addRange(range);
-    contentEditableElem.focus();
 }
 
 async function importLocalFolder() {
@@ -729,7 +697,7 @@ function listen(elem: HTMLElement, type: string, func: Function) {
             console.log("WARNING: event from element with no ID");
         }
         if (s_playMode == "record") {
-            logEvent(event, elem);
+            s_eventLog.log(event, elem);
         }
         await func(event); 
         event.stopPropagation();
@@ -737,162 +705,6 @@ function listen(elem: HTMLElement, type: string, func: Function) {
             debouncedSaveAll();
         }
     });
-}
-
-function updateReplay() {
-    if (s_playMode != "replay" || s_iEventReplay >= s_eventLog.length) {
-        if (s_mousePointer) {
-            s_mousePointer.remove();
-            s_mousePointer = null;
-            say("end of event playback");
-        }
-        return;
-    }
-    // just issue as fast as possible
-    if (s_iEventReplay < s_eventLog.length) {
-        let failure = issueEvent(s_eventLog[s_iEventReplay]);
-        if (failure == "") {
-            s_iEventReplay++;
-            s_nRetries=0;
-        } else {
-            s_nRetries++;
-            if (s_nRetries > 100) {
-                say("playback failed : " + failure);
-                stopPlayback();
-            }
-        }
-    }
-}
-
-function issueEvent(sev: SerialisedEvent) : string {
-    if (sev.eventType != 'mousemove') {
-        //console.log(`frame ${s_iFrame}: ${sev.type}.${sev.eventType}`);
-    }
-    if (sev.target == "") {
-        return "WARNING: recorded event has no target";
-    }
-    if (sev.target == "window" && sev.type == "scroll") {
-        window.scrollTo(sev.data.xScroll, sev.data.yScroll);
-        return "";
-    }
-    const target = document.getElementById(sev.target);
-    if (!target) {
-        return `WARNING: Element with ID ${sev.target} not found.`;
-    }
-    let event: Event;
-    switch (sev.type) {
-        case "mouse":
-            event = new MouseEvent(sev.eventType, {
-                bubbles: false,
-                cancelable: true,
-                view: window,
-                button: sev.data.button,
-                clientX: sev.data.pageX - window.scrollX,
-                clientY: sev.data.pageY - window.scrollY
-            });
-            s_mousePointer!.style.zIndex = `1000`;
-            s_mousePointer!.style.transform = `rotate(-45deg)`;
-            s_mousePointer!.style.left = `${sev.data.pageX - window.scrollX}px`;
-            s_mousePointer!.style.top = `${sev.data.pageY - window.scrollY}px`;
-            break;
-        
-        case "keyboard":
-            event = new KeyboardEvent(sev.eventType, {
-                bubbles: true,
-                cancelable: true,
-                key: sev.data.key,
-                metaKey: sev.data.metaKey
-            });
-            break;
-
-        case "scroll":
-            target.scrollLeft = sev.data.xScroll;
-            target.scrollTop = sev.data.yScroll;
-            return "";  // Since we've manually set the scroll, we don't need to dispatch an event
-            break;
-
-        case "input":
-            target.innerText = sev.data.value;
-            setCursorToEnd(target);
-            event = new InputEvent(sev.eventType, {
-                bubbles: true,
-                cancelable: true});
-            break;
-
-        default:
-            return `Unknown event type: ${sev.type}`;
-    }
-    (event as any).synthetic = true;
-    target.dispatchEvent(event);
-    return "";
-}
-
-interface SerialisedEvent {
-    iFrame: number;  // s_iFrame when event was generated
-    type: string; // "mouse", "keyboard", etc.
-    eventType: string; // "click", "keydown", etc.
-    target: string; // id of element that generated this
-    data: any; // Data specific to the event type
-}
-
-function logEvent(event: Event, elem: HTMLElement) {
-    let obj = serialiseEvent(event, elem);
-    if (!obj) {
-        console.log("failed to serialise event");
-        return;
-    }
-    s_eventLog.push(obj);
-}
-
-function serialiseEvent(event: Event, target: HTMLElement): SerialisedEvent | null {
-    if (event instanceof MouseEvent) {
-        return {
-            iFrame: s_iFrame,
-            type: "mouse",
-            eventType: event.type,
-            target: target.id,
-            data: {
-                pageX: event.pageX,
-                pageY: event.pageY,
-                button: event.button
-            }
-        };
-    } else if (event instanceof KeyboardEvent) {
-        return {
-            iFrame: s_iFrame,
-            type: "keyboard",
-            eventType: event.type,
-            target: target.id,
-            data: {
-                key: event.key,
-                metaKey: event.metaKey
-            }
-        };
-    } else if (event.type === "scroll") {
-        return {
-            iFrame: s_iFrame,
-            type: "scroll",
-            eventType: event.type,
-            target: target.id,
-            data: {
-               xScroll: target.scrollLeft,
-               yScroll: target.scrollTop
-            }
-        };
-    } else if (event instanceof InputEvent) {
-        return {
-            iFrame: s_iFrame,
-            type: "input",
-            eventType: event.type,
-            target: target.id,
-            data: {
-                value: target.innerText
-            }
-        };
-    }
-    // Add more event types as needed
-    console.log("event type", typeof(event));
-    return null;
 }
 
 function expandOrContract(elem : HTMLElement) {
@@ -920,42 +732,16 @@ function getScrollPos(elem: HTMLElement) {
 
 const debouncedSaveAll = debounce(() => { saveAll() }, 300);
 
-const debouncedSaveScrollEvent = debounce((type,x,y) => { saveScrollEvent(type, x, y); }, 300);
-
-function saveScrollEvent(eventType: string, x: number, y: number) {
-    if (s_playMode == "record") {
-        let sev : SerialisedEvent = {
-            iFrame: s_iFrame,
-            type: "scroll",
-            eventType: eventType,
-            target: "window",
-            data: {
-               xScroll: window.scrollX,
-               yScroll: window.scrollY
-            }
-        };
-        s_eventLog.push(sev);
-    }
-    saveAll();
-}
-
 async function saveAll() {
     console.log("saveAll");
     const uiJson = { playMode: s_playMode, search: s_searchQuery };
     const sessionJson = { ui: uiJson };
     save(sessionJson, "sessions/test.json");
-    if (s_playMode == "record") {
-        saveEventLog();
-    }
+    s_eventLog.flush();
 }
 
 async function save(json: any, path: string) {
     await remote("@firefly.save", { path: path, obj: json });
-}
-
-async function saveEventLog() {
-    await remote("@firefly.saveEventLog", { events: s_eventLog });
-    s_eventLog = [];
 }
 
 async function load(path: string) : Promise<any> {
