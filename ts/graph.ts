@@ -192,8 +192,8 @@ export class Graph {
 
     arrangeAll() {
         if (!(this.forceArrange || this.anyNodeSizeChanged())) return;
-        this.rootNode!.center();
         this.sortNodesIntoColumns();
+        this.rootNode!.center();
         this.columns.groupNodesByParent();
         this.columns.spaceNodesVerticallyInGroups();
         this.columns.spaceGroupsVertically();
@@ -611,6 +611,18 @@ class NodeColumns {
 
     // moves nodes horizontally
     spaceNodesHorizontally() {
+        // center column (zeroIndex) based on widest
+        let windowWidth = window.innerWidth;
+        let maxWidth=0;
+        for(const node of this.columns[this.zeroIndex]) {
+            maxWidth = Math.max(maxWidth, rect(node.div).width());
+        }
+        let xPos = (windowWidth - maxWidth) / 2;
+        for(let node of this.columns[this.zeroIndex]) {
+            node.targetPos.x = xPos;
+            node.pos.x = xPos;
+        }
+
         // compute widths
         let columnWidths: number[] = [];
         for(const column of this.columns) {
@@ -622,7 +634,7 @@ class NodeColumns {
         }
 
         // rightwards pass from (zeroIndex+1)
-        let xPos = this.columns[this.zeroIndex][0].targetPos.x;
+        xPos = this.columns[this.zeroIndex][0].targetPos.x;
         for(let i= this.zeroIndex+1; i < this.columns.length; i++) {
             let prevWidth = columnWidths[i-1];
             let xNew = xPos + prevWidth + (s_graph.padding * 2);
