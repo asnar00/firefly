@@ -467,7 +467,7 @@ class NodeColumns {
     groups: Node[][][] = [];        // for each column, an array of node-groups (grouped by parent)
     zeroIndex: number = 0;          // logical index [0] => physical index [zeroIndex], so we can do -ve logical indices
 
-    log() {
+    showLog() {
         console.log("COLUMNS:");
         for(let i=0; i < this.columns.length; i++) {
             console.log("column", i-this.zeroIndex);

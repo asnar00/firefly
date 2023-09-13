@@ -31,7 +31,7 @@ export class EventLog {
         });
     }
 
-    log(event: Event, elem: HTMLElement) {
+    logEvent(event: Event, elem: HTMLElement) {
         let obj = this.serialiseEvent(event, elem);
         if (!obj) {
             console.log("failed to serialise event");

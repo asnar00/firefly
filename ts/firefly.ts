@@ -697,7 +697,7 @@ function listen(elem: HTMLElement, type: string, func: Function) {
             console.log("WARNING: event from element with no ID");
         }
         if (s_playMode == "record") {
-            s_eventLog.log(event, elem);
+            s_eventLog.logEvent(event, elem);
         }
         await func(event); 
         event.stopPropagation();
