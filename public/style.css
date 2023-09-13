@@ -237,6 +237,15 @@ h3 {
     cursor: pointer;
 }
 
+.buttons {
+    display: flex;
+    flex-wrap: nowrap;
+    font-family: SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace;
+    font-size: 9pt;
+    background-color: #6aa299;
+    color: #000000;
+}
+
 [contenteditable]:focus {
 outline: none;
 background-color: #84afa6; /* light gray */

@@ -140,15 +140,27 @@ export class Graph {
         if (!node)
             return;
         for (let e of node.edgesIn) {
-            this.removeEdge(e);
+            this.removeEdgeIn(e);
         }
         for (let e of node.edgesOut) {
-            this.removeEdge(e);
+            this.removeEdgeOut(e);
         }
         this.nodes.delete(node.div.id);
         div.remove();
         node.delete();
         this.requestArrange();
+    }
+    // remove an incoming edge (remove edge from source node)
+    removeEdgeIn(edge) {
+        let source = edge.fromNode();
+        source.edgesOut = source.edgesOut.filter((e) => e !== edge);
+        this.removeEdge(edge);
+    }
+    // remove an outgoing edge (remove edge from dest node)
+    removeEdgeOut(edge) {
+        let dest = edge.toNode();
+        dest.edgesIn = dest.edgesIn.filter((e) => e !== edge);
+        this.removeEdge(edge);
     }
     // remove an edge
     removeEdge(edge) {

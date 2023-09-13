@@ -429,10 +429,10 @@ function jumpToCard(card) {
     s_graph.clear(); // for now
     s_graph.node(div, info);
     document.title = superShortName(card);
-    openAllCallees(card);
-    openAllCallers(card);
+    openCallees(card);
+    openCallers(card);
 }
-function openAllCallees(card) {
+function openCallees(card) {
     const div = s_graph.findDiv(card.uid);
     if (!div)
         return;
@@ -456,7 +456,8 @@ function openAllCallees(card) {
         }
     }
 }
-function openAllCallers(card) {
+function openCallers(card) {
+    console.log("openCallers", shortName(card));
     const div = s_graph.findDiv(card.uid);
     if (!div)
         return;
@@ -467,6 +468,7 @@ function openAllCallers(card) {
             const caller = dep.targets[0];
             const callerCard = findCard(caller);
             if (callerCard && (callerCard.kind == "function" || callerCard.kind == "method")) {
+                console.log("caller:", shortName(callerCard));
                 openCardTo(caller, div, true);
             }
         }
@@ -652,13 +654,19 @@ function codeContainer(uid, codeDiv, title) {
     listen(titleDiv, 'click', () => { onTitleBarClick(containerDiv, codeDiv); });
     // close button (eventually multiple)
     if (title != "main()") { // todo: better way of finding the root node
-        let closeButton = element(`<i class="icon-cancel"></i>`);
-        closeButton.id = `${containerDiv.id}_close_button`;
-        closeButton.style.visibility = "hidden";
-        titleDiv.append(closeButton);
-        listen(titleDiv, 'mouseenter', () => { onMouseOverTitle(titleDiv, closeButton, true); });
-        listen(titleDiv, 'mouseleave', () => { onMouseOverTitle(titleDiv, closeButton, false); });
+        let buttons = element(`<div class="buttons" style="visibility:hidden;"></div>`);
+        titleDiv.append(buttons);
+        let closeButton = element(`<i class="icon-cancel" id="${containerDiv.id}_close_button"></i>`);
+        let leftButton = element(`<i class="icon-angle-circled-left" id="${containerDiv.id}_left_button"></i>`);
+        let rightButton = element(`<i class="icon-angle-circled-right" id="${containerDiv.id}_right_button"></i>`);
+        buttons.append(leftButton);
+        buttons.append(rightButton);
+        buttons.append(closeButton);
+        listen(titleDiv, 'mouseenter', () => { onMouseOverTitle(titleDiv, buttons, true); });
+        listen(titleDiv, 'mouseleave', () => { onMouseOverTitle(titleDiv, buttons, false); });
         listen(closeButton, 'click', () => { onCloseButtonClick(containerDiv); });
+        listen(leftButton, 'click', () => { openCallers(findCard(containerDiv.id)); });
+        listen(rightButton, 'click', () => { openCallees(findCard(containerDiv.id)); });
     }
     // Append the title and the code div to the container
     wrapperDiv.appendChild(titleDiv);
@@ -792,9 +800,7 @@ function onLinkButtonPress(button) {
 function openCardsFromButton(button, minimised = false) {
     let cards = getTargetCards(button);
     for (let c of cards) {
-        if (!s_graph.findDiv(c.uid)) {
-            openCardFrom(c.uid, button, minimised);
-        }
+        openCardFrom(c.uid, button, minimised);
     }
     highlightLink(button, true);
 }
@@ -831,23 +837,26 @@ function openCardFrom(uid, button, minimised = false) {
     if (!card)
         return;
     let view = new CardView(CardViewState.Compact, minimised);
-    let div = cardToHTML(card, view);
-    s_graph.node(div, view);
+    let div = s_graph.findDiv(uid);
+    if (!div) {
+        div = cardToHTML(card, view);
+        s_graph.node(div, view);
+    }
     if (button) {
         s_graph.edge(button, div);
     }
 }
 // opens a card that calls to an existing element
 function openCardTo(uid, toDiv, minimised = false) {
-    let existingDiv = s_graph.findDiv(uid);
-    if (existingDiv)
-        return;
+    let div = s_graph.findDiv(uid);
     let card = findCard(uid);
     if (!card)
         return;
     let view = new CardView(CardViewState.Compact, minimised);
-    let div = cardToHTML(card, view);
-    s_graph.node(div, view);
+    if (!div) {
+        div = cardToHTML(card, view);
+        s_graph.node(div, view);
+    }
     let linkButtons = findLinkButtonsTo(toDiv, div);
     for (let button of linkButtons) {
         s_graph.edge(button, toDiv);
