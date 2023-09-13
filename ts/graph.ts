@@ -211,51 +211,39 @@ export class Graph {
 
     // sort nodes into columns (horizontally and vertically)
     sortNodesIntoColumns() {
+        if (!this.rootNode) { console.log("sortNodesIntoColumns: no root node!"); return; }
         this.columns = new NodeColumns();
-        this.columns.addNode(this.rootNode!, 0);
-        this.rootNode!.sortIndex = "000";
+        this.rootNode.sortIndex = "000";
         this.newVisit();
-        this.rootNode!.visit();
-        this.forwardPassRec(this.rootNode!);
-        this.newVisit();
-        this.rootNode!.visit();
-        this.backwardPassRec(this.rootNode!);
+        this.assignNodeRec(this.rootNode);
         this.columns.sortVertically();
     }
 
-    // for each outward edge, add to-node to the next column, recursively
-    forwardPassRec(node: Node) {
-        for(const edge of node.edgesOut) {
-            let toNode = edge.toNode();
-            if (!toNode.visited()) {
-                toNode.visit();
-                toNode.parentNode = node;
-                this.columns.addNode(toNode, node.iColumn+1);
-                                this.forwardPassRec(toNode);
-                const index = getChildNodeIndex(edge.fromDiv);
-                toNode.sortIndex = node.sortIndex + '.' + index.toString().padStart(3, '0'); // call order
+    // assign node to column (iCol), assign all callers and callees
+    assignNodeRec(node: Node, iCol: number=0, fromNode: Node|null =null, forward:boolean=false) {
+        if (node.visited()) return;
+        node.visit();
+        this.columns.addNode(node, iCol);
+
+        // set sort-index based on who called us and which direction we're going; TODO: make better
+        if (!fromNode) {
+        } else {
+            node.parentNode = fromNode;
+            if (forward) {
+                const index = getChildNodeIndex(fromNode.div);
+                node.sortIndex = fromNode.sortIndex + '.' + index.toString().padStart(3, '0'); // call order
+            } else {
+                node.sortIndex = fromNode.sortIndex + '.' + node.div.id;    // TODO: find a better metric
             }
         }
-    }
-
-    // for each inward edge, add from-node to the prev column, recursively
-    backwardPassRec(node: Node) {
-        //console.log("backwardPassRec", node.div.id);
-        //console.log("edgesIn:", node.edgesIn.length);
-        for(const edge of node.edgesIn) {
-            let fromNode = edge.fromNode();
-            //console.log(" source", fromNode.div.id);
-            if (!fromNode.visited()) {
-                fromNode.visit();
-                fromNode.parentNode = node;
-                //console.log(" adding", fromNode.div.id, node.iColumn-1);
-                this.columns.addNode(fromNode, node.iColumn-1);
-                this.backwardPassRec(fromNode);
-                fromNode.sortIndex = node.sortIndex + '.' + fromNode.div.id; // for now. TODO: do better
-            }
+        // repeat for nodes connected through all outgoing and incoming edges
+        for(const edge of node.edgesOut) { // callees
+            this.assignNodeRec(edge.toNode(), iCol+1, node, true);
+        }
+        for(const edge of node.edgesIn) { // callers
+            this.assignNodeRec(edge.fromNode(), iCol-1, node, false);
         }
     }
-
 
     // we're about to start a new recursive visitation round
     newVisit() {
