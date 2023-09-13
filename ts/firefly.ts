@@ -437,22 +437,43 @@ function openCallees(card: Card) {
     }
 }
 
+function callees(card: Card) : Card[] {
+    let calleeCards: Card[] = [];
+    for(let iDep=0; iDep < card.dependsOn.length; iDep++) {
+        const dep = card.dependsOn[iDep];
+        let shouldOpen: boolean = false;
+        for(let tuid of dep.targets) {
+            let target = findCard(tuid);
+            if (target && (target.kind=='function' || target.kind=='method')) {
+                calleeCards.push(target);
+            }
+        }
+    }
+    return calleeCards;
+}
+
 function openCallers(card: Card) {
     console.log("openCallers", shortName(card));
     const div = s_graph.findDiv(card.uid);
     if (!div) return;
-    // open all cards that call us, also minimised (if we're callable obvs)
+    for (let caller of callers(card)) {
+        openCardTo(caller.uid, div, true);
+    }
+}
+
+function callers(card: Card) : Card[] {
+    let callers: Card[] = [];
     if (card.kind == "function" || card.kind == "method") {
         for(let iDep=0; iDep < card.dependents.length; iDep++) {
             const dep = card.dependents[iDep];
             const caller = dep.targets[0]
             const callerCard = findCard(caller);
             if (callerCard && (callerCard.kind == "function" || callerCard.kind == "method")) {
-                console.log("caller:", shortName(callerCard));
-                openCardTo(caller, div, true);
+                callers.push(callerCard);
             }
         }
     }
+    return callers;
 }
 
 // given (card) and (target), checks card.dependsOn and returns index of dependency that matches
@@ -619,22 +640,31 @@ function codeContainer(uid: string, codeDiv: HTMLElement, title: string) : HTMLE
     titleDiv.textContent = title;
     listen(titleDiv, 'click', () => { onTitleBarClick(containerDiv, codeDiv); });
 
+    let card = findCard(containerDiv.id)!;
+
     // close button (eventually multiple)
     if (title != "main()") { // todo: better way of finding the root node
         let buttons = element(`<div class="buttons" style="visibility:hidden;"></div>`);
         titleDiv.append(buttons);
 
+        if (callers(card).length > 0) {
+            let leftButton = element(`<i class="icon-angle-circled-left" id="${containerDiv.id}_left_button"></i>`)!;
+            listen(leftButton, 'click', () => { openCallers(card); });
+            buttons.append(leftButton);
+        }
+
+        if (callees(card).length > 0) {
+            let rightButton = element(`<i class="icon-angle-circled-right" id="${containerDiv.id}_right_button"></i>`)!;
+            listen(rightButton, 'click', () => { openCallees(card); });
+            buttons.append(rightButton);
+        }
+
         let closeButton = element(`<i class="icon-cancel" id="${containerDiv.id}_close_button"></i>`)!;
-        let leftButton = element(`<i class="icon-angle-circled-left" id="${containerDiv.id}_left_button"></i>`)!;
-        let rightButton = element(`<i class="icon-angle-circled-right" id="${containerDiv.id}_right_button"></i>`)!;
-        buttons.append(leftButton);
-        buttons.append(rightButton);
+        listen(closeButton, 'click', () => { onCloseButtonClick(containerDiv); });
         buttons.append(closeButton);
+
         listen(titleDiv, 'mouseenter', () => { onMouseOverTitle(titleDiv, buttons, true); });
         listen(titleDiv, 'mouseleave', () => { onMouseOverTitle(titleDiv, buttons, false); });
-        listen(closeButton, 'click', () => { onCloseButtonClick(containerDiv); });
-        listen(leftButton, 'click', () => { openCallers(findCard(containerDiv.id)!); });
-        listen(rightButton, 'click', () => { openCallees(findCard(containerDiv.id)!); });
     }
 
     // Append the title and the code div to the container

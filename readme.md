@@ -207,28 +207,18 @@ NEXT:
 
 
 ______________________________________________
-Event Logging and You
+So rearrange logic for DAGs is interesting.
 
-So let's think about the workflow implications of this.
-The ideal thing is to actually start to leverage the IDE to find bugs in the IDE code (woo).
-This is how we're going to build the workflow.
+If we have A, B, C
 
-Ideally, we'd like to be able to use the IDE to fix the IDE, even if the edits are done in VSCode.
-This means we need better session management. In particular, one tab should be in replay-mode, while the other is just in normal-use.
-So we need "tabs"
+and A calls B and C
+and B calls C
 
-END OF PLAY FOR TODAY (except for evening work)
+we want to see
 
-next: clearly, the recursive tree-explore functionality, both upwards and downwards.
-click on minimised => compact, open children (upwards or downwards direction?)
-we should also look at how class exploration works.
-then next major thing will be integrating multiple search results.
+    A --------> C
+      \-> B --/
 
-once we can explore up and down the source tree nicely, and create nice charts of how things relate to each other,
-then maybe we look into AI stuff.
-
-We need unique Link IDs. Which is super annoying, really. But not that hard to do.
-Let's make link IDs work better! 
-But they have to work for parsing, as well. That's kind of horrid.
-Anyhoo, let's figure it out.
-we just need a "from__id__linkto__blah";
+Fundamentally, we have a bunch of edges and nodes.
+And we've kept them pretty decent.
+But the "sort into columns" logic has to change again.
