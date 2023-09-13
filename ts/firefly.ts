@@ -179,10 +179,6 @@ async function openSession() {
     s_searchQuery = json.ui.search;
 }
 
-async function startRecordingEvents() {
-    await remote("@firefly.startEventRecording", {});
-}
-
 function openMain() {
     console.log("openMain");
     /*
