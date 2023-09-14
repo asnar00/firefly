@@ -371,6 +371,7 @@ class Typescript(Language):
             icom = l.find("//")
             if icom>=0: l = l[0 : icom]
             if l != "":
+                l = l.replace("async ", "")
                 w = l.split(" ")
                 classIndex = findString(w, "class")
                 if classIndex >= 0:
@@ -514,7 +515,6 @@ def computeDependencies(cards: List[Card]):         # this is a bit of a behemot
                     for i in range(0, len(gls)-2):
                         if gls[i].type == 'identifier' and gls[i] == t.name and gls[i+1] == ':' and gls[i+2].type=='identifier':
                             typeFromVar[l.text] = gls[i+2].text
-
         # now whittle down the potentials list using various filters
         # 1- remove the targets for the definition
         for l in ls:
@@ -528,7 +528,7 @@ def computeDependencies(cards: List[Card]):         # this is a bit of a behemot
                 if pred.text in typeFromVar:
                     predType = typeFromVar[pred.text]
                     ls[i].targets = [t for t in ls[i].targets if t.parent and (t.parent.name == predType or (t.parent.superclass and t.parent.superclass.name == predType))]
-        # 3- if you matched a property or method but there's no dot before, get rid
+         # 3- if you matched a property or method but there's no dot before, get rid
         for i in range(1, len(ls)):
             if ls[i].type == 'identifier' and ls[i-1] != '.':
                 ls[i].targets = [t for t in ls[i].targets if t.kind != 'method' and t.kind != 'property']
@@ -580,6 +580,15 @@ def computeDependencies(cards: List[Card]):         # this is a bit of a behemot
                     if t != card:
                         t.dependents.append(Dependency(l.ic, l.jc, [card]))
             
+def printLs(msg, ls): 
+    print(msg)
+    for l in ls:
+        out = '[ '
+        for t in l.targets:
+            out += f"{t.shortName()} "
+        out += ']'
+        print(' ', l.text, out)
+
 def processLexemes(code: str, lang: Language) -> List[Lex]:
     mlc = lang.multiLineComment()
     elmc = lang.endMultiLineComment()
