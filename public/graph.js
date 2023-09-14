@@ -234,7 +234,7 @@ export class Graph {
         for (let node of this.nodes.values()) {
             node.iColumn = 0;
         }
-        let nodes = [{ node: this.rootNode, iCol: 0, fromNode: null, forward: false, indent: 0 }];
+        let nodes = [{ node: this.rootNode, iCol: 0, fromNode: null, dir: 0, indent: 0 }];
         this.assignNodeRec(nodes);
         this.columns = new NodeColumns();
         for (let node of this.nodes.values()) {
@@ -250,14 +250,14 @@ export class Graph {
             let node = d.node;
             let iCol = d.iCol;
             let fromNode = d.fromNode;
-            let forward = d.forward;
+            let dir = d.dir;
             let indent = d.indent;
             // set column and sort-index based on who called us and which direction we're going; TODO: make better
             if (!fromNode) {
             }
             else {
                 node.parentNode = fromNode;
-                if (forward) {
+                if (d.dir >= 0) {
                     node.iColumn = Math.max(node.iColumn, iCol);
                     const index = getChildNodeIndex(fromNode.div);
                     node.sortIndex = fromNode.sortIndex + '.' + index.toString().padStart(3, '0'); // call order
@@ -267,18 +267,22 @@ export class Graph {
                     node.sortIndex = fromNode.sortIndex + '.' + node.div.id; // TODO: find a better metric
                 }
             }
-            console.log(' '.repeat(indent), node.div.id, node.iColumn);
-            // repeat for nodes connected through all outgoing and incoming edges
-            for (let edge of node.edgesOut) { // callees
-                if (!edge.visited()) {
-                    edge.visit();
-                    doNodes.push({ node: edge.toNode(), iCol: node.iColumn + 1, fromNode: node, forward: true, indent: indent + 1 });
+            console.log(' '.repeat(indent), ((dir > 0) ? "=>" : ((dir < 0) ? "<=" : "")), node.div.id, node.iColumn);
+            if (dir >= 0) {
+                // repeat for nodes connected through all outgoing and incoming edges
+                for (let edge of node.edgesOut) { // callees
+                    if (!edge.visited()) {
+                        edge.visit();
+                        doNodes.push({ node: edge.toNode(), iCol: node.iColumn + 1, fromNode: node, dir: 1, indent: indent + 1 });
+                    }
                 }
             }
-            for (let edge of node.edgesIn) { // callers
-                if (!edge.visited()) {
-                    edge.visit();
-                    doNodes.push({ node: edge.toNode(), iCol: node.iColumn - 1, fromNode: node, forward: false, indent: indent + 1 });
+            if (dir <= 0) {
+                for (let edge of node.edgesIn) { // callers
+                    if (!edge.visited()) {
+                        edge.visit();
+                        doNodes.push({ node: edge.fromNode(), iCol: node.iColumn - 1, fromNode: node, dir: -1, indent: indent + 1 });
+                    }
                 }
             }
         }
