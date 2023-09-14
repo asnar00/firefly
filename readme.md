@@ -207,18 +207,34 @@ NEXT:
 
 
 ______________________________________________
-So rearrange logic for DAGs is interesting.
+This is fucking awesome.
+BUT it has to be flawless and delightful, perfect in every detail.
+The feature set can be small, but it has to be AWESOMELY GREAT.
+ATTENTION TO DETAIL is literally everything.
+Small, simple, and delightful. That's what this must feel like.
 
-If we have A, B, C
+"Software as performance"
 
-and A calls B and C
-and B calls C
+The discovery of a new piece of software is a journey, a story, a performance.
+We need to exercise *showmanship*.
 
-we want to see
+novice
 
-    A --------> C
-      \-> B --/
+Things to fix tomorrow: 
 
-Fundamentally, we have a bunch of edges and nodes.
-And we've kept them pretty decent.
-But the "sort into columns" logic has to change again.
+1- breadth-first layout sort-routine
+2- vertical layout is so super fucked
+3- it's coool, keep going!
+
+Things to think about:
+Watch this video:
+https://www.youtube.com/watch?v=pJwR5pv0_gs
+
+Obviously this is the "agent" structure that we want : multi-agent.
+It also showed me how actually we want to able to look at JSON data within firefly;
+the ability to display structured data like this in a neat way is a KILLER FEATURE.
+So it should be possible to take any JSON file and make it into a graph.
+In other words, JSON is just another tree structure.
+
+OK, cool, that's interesting, hadn't thought of that.
+

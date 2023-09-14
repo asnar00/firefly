@@ -471,6 +471,7 @@ function openCallers(card) {
     if (!div)
         return;
     for (let caller of callers(card)) {
+        console.log(" ", shortName(caller));
         openCardTo(caller.uid, div, true);
     }
 }

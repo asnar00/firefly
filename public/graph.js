@@ -57,6 +57,7 @@ export class Graph {
         this.edges.set(`${fromDiv.id}_${toDiv.id}`, edge);
         this.findNode(fromDiv).edgesOut.push(edge);
         this.findNode(toDiv).edgesIn.push(edge);
+        this.requestArrange();
         return edge;
     }
     // focus on a specific node; it keeps same position, others move around it
@@ -206,8 +207,8 @@ export class Graph {
     arrangeAll() {
         if (!(this.forceArrange || this.anyNodeSizeChanged()))
             return;
-        this.sortNodesIntoColumns();
         this.rootNode.center();
+        this.sortNodesIntoColumns();
         this.columns.groupNodesByParent();
         this.columns.spaceNodesVerticallyInGroups();
         this.columns.spaceGroupsVertically();
@@ -227,37 +228,59 @@ export class Graph {
             console.log("sortNodesIntoColumns: no root node!");
             return;
         }
-        this.columns = new NodeColumns();
         this.rootNode.sortIndex = "000";
         this.newVisit();
-        this.assignNodeRec(this.rootNode);
+        console.log("------------------------------");
+        for (let node of this.nodes.values()) {
+            node.iColumn = 0;
+        }
+        let nodes = [{ node: this.rootNode, iCol: 0, fromNode: null, forward: false, indent: 0 }];
+        this.assignNodeRec(nodes);
+        this.columns = new NodeColumns();
+        for (let node of this.nodes.values()) {
+            this.columns.addNode(node, node.iColumn);
+        }
         this.columns.sortVertically();
     }
-    // assign node to column (iCol), assign all callers and callees
-    assignNodeRec(node, iCol = 0, fromNode = null, forward = false) {
-        if (node.visited())
-            return;
-        node.visit();
-        this.columns.addNode(node, iCol);
-        // set sort-index based on who called us and which direction we're going; TODO: make better
-        if (!fromNode) {
-        }
-        else {
-            node.parentNode = fromNode;
-            if (forward) {
-                const index = getChildNodeIndex(fromNode.div);
-                node.sortIndex = fromNode.sortIndex + '.' + index.toString().padStart(3, '0'); // call order
+    // breadth-first graph-walk: assign (node) to column (iCol), assign all callers and callees
+    assignNodeRec(doNodes) {
+        while (doNodes.length > 0) {
+            let d = doNodes[0];
+            doNodes.shift();
+            let node = d.node;
+            let iCol = d.iCol;
+            let fromNode = d.fromNode;
+            let forward = d.forward;
+            let indent = d.indent;
+            // set column and sort-index based on who called us and which direction we're going; TODO: make better
+            if (!fromNode) {
             }
             else {
-                node.sortIndex = fromNode.sortIndex + '.' + node.div.id; // TODO: find a better metric
+                node.parentNode = fromNode;
+                if (forward) {
+                    node.iColumn = Math.max(node.iColumn, iCol);
+                    const index = getChildNodeIndex(fromNode.div);
+                    node.sortIndex = fromNode.sortIndex + '.' + index.toString().padStart(3, '0'); // call order
+                }
+                else {
+                    node.iColumn = Math.min(node.iColumn, iCol);
+                    node.sortIndex = fromNode.sortIndex + '.' + node.div.id; // TODO: find a better metric
+                }
             }
-        }
-        // repeat for nodes connected through all outgoing and incoming edges
-        for (const edge of node.edgesOut) { // callees
-            this.assignNodeRec(edge.toNode(), iCol + 1, node, true);
-        }
-        for (const edge of node.edgesIn) { // callers
-            this.assignNodeRec(edge.fromNode(), iCol - 1, node, false);
+            console.log(' '.repeat(indent), node.div.id, node.iColumn);
+            // repeat for nodes connected through all outgoing and incoming edges
+            for (let edge of node.edgesOut) { // callees
+                if (!edge.visited()) {
+                    edge.visit();
+                    doNodes.push({ node: edge.toNode(), iCol: node.iColumn + 1, fromNode: node, forward: true, indent: indent + 1 });
+                }
+            }
+            for (let edge of node.edgesIn) { // callers
+                if (!edge.visited()) {
+                    edge.visit();
+                    doNodes.push({ node: edge.toNode(), iCol: node.iColumn - 1, fromNode: node, forward: false, indent: indent + 1 });
+                }
+            }
         }
     }
     // we're about to start a new recursive visitation round
@@ -386,6 +409,7 @@ export class Node {
 export class Edge {
     constructor(fromDiv, toDiv, userInfo = null) {
         this.userInfo = null; // user info
+        this.visitCount = 0;
         this.fromDiv = fromDiv;
         this.toDiv = toDiv;
         this.userInfo = userInfo;
@@ -454,6 +478,8 @@ export class Edge {
     delete() {
         this.removeFromSVG();
     }
+    visit() { this.visitCount = s_graph.visitCount; }
+    visited() { return (this.visitCount == s_graph.visitCount); }
 }
 function refind(div) {
     if (s_graph.container.contains(div))
@@ -527,19 +553,31 @@ class NodeColumns {
     }
     // vertically spaces nodes within each group to be as close to the centerline of their parent as possible
     spaceNodesVerticallyInGroups() {
-        for (let groups of this.groups) {
+        let ig = [];
+        for (let i = this.zeroIndex; i < this.groups.length; i++)
+            ig.push(i);
+        for (let i = this.zeroIndex - 1; i >= 0; i--)
+            ig.push(i);
+        for (let i of ig) {
+            let groups = this.groups[i];
             for (let group of groups) {
-                let parent = group[0].parentNode;
-                if (!parent)
-                    continue;
                 // first find the total height of the group, plus padding
                 let sumHeight = (group.length - 1) * (s_graph.padding / 2);
                 for (const node of group) {
                     sumHeight += node.targetRect().height();
                 }
-                // then find the centerline of the group's parent
-                const parentRect = parent.targetRect();
-                const centerLine = (parentRect.top + parentRect.bottom) / 2;
+                // then find the centerline of the group's parent, or window if root-column
+                let centerLine = 0;
+                if (i == this.zeroIndex) {
+                    centerLine = window.innerHeight / 2;
+                }
+                else {
+                    let parent = group[0].parentNode;
+                    if (!parent)
+                        continue;
+                    const parentRect = parent.targetRect();
+                    centerLine = (parentRect.top + parentRect.bottom) / 2;
+                }
                 // now space group out vertically around the centerline
                 let yPos = centerLine - (sumHeight / 2);
                 for (let i = 0; i < group.length; i++) {
