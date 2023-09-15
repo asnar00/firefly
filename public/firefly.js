@@ -451,12 +451,10 @@ function callees(card) {
     return calleeCards;
 }
 function openCallers(card) {
-    console.log("openCallers", shortName(card));
     const div = s_graph.findDiv(card.uid);
     if (!div)
         return;
     for (let caller of callers(card)) {
-        console.log(" ", shortName(caller));
         openCardTo(caller.uid, div, true);
     }
 }
@@ -654,26 +652,24 @@ function codeContainer(uid, codeDiv, title) {
     titleDiv.textContent = title;
     listen(titleDiv, 'click', () => { onTitleBarClick(containerDiv, codeDiv); });
     let card = findCard(containerDiv.id);
-    // close button (eventually multiple)
-    if (title != "main()") { // todo: better way of finding the root node
-        let buttons = element(`<div class="buttons" style="visibility:hidden;"></div>`);
-        titleDiv.append(buttons);
-        if (callers(card).length > 0) {
-            let leftButton = element(`<i class="icon-angle-circled-left" id="${containerDiv.id}_left_button"></i>`);
-            listen(leftButton, 'click', () => { openCallers(card); });
-            buttons.append(leftButton);
-        }
-        if (callees(card).length > 0) {
-            let rightButton = element(`<i class="icon-angle-circled-right" id="${containerDiv.id}_right_button"></i>`);
-            listen(rightButton, 'click', () => { openCallees(card); });
-            buttons.append(rightButton);
-        }
-        let closeButton = element(`<i class="icon-cancel" id="${containerDiv.id}_close_button"></i>`);
-        listen(closeButton, 'click', () => { onCloseButtonClick(containerDiv); });
-        buttons.append(closeButton);
-        listen(titleDiv, 'mouseenter', () => { onMouseOverTitle(titleDiv, buttons, true); });
-        listen(titleDiv, 'mouseleave', () => { onMouseOverTitle(titleDiv, buttons, false); });
+    // buttons
+    let buttons = element(`<div class="buttons" style="visibility:hidden;"></div>`);
+    titleDiv.append(buttons);
+    if (callers(card).length > 0) {
+        let leftButton = element(`<i class="icon-angle-circled-left" "style=filter:invert(1);" id="${containerDiv.id}_left_button"></i>`);
+        listen(leftButton, 'click', () => { openCallers(card); });
+        buttons.append(leftButton);
     }
+    if (callees(card).length > 0) {
+        let rightButton = element(`<i class="icon-angle-circled-right" id="${containerDiv.id}_right_button"></i>`);
+        listen(rightButton, 'click', () => { openCallees(card); });
+        buttons.append(rightButton);
+    }
+    let closeButton = element(`<i class="icon-cancel" id="${containerDiv.id}_close_button"></i>`);
+    listen(closeButton, 'click', () => { onCloseButtonClick(containerDiv); });
+    buttons.append(closeButton);
+    listen(titleDiv, 'mouseenter', () => { onMouseOverTitle(titleDiv, buttons, true); });
+    listen(titleDiv, 'mouseleave', () => { onMouseOverTitle(titleDiv, buttons, false); });
     // Append the title and the code div to the container
     wrapperDiv.appendChild(titleDiv);
     wrapperDiv.appendChild(codeDiv);
@@ -710,7 +706,6 @@ function onMouseOverTitle(titleDiv, buttonDiv, entering) {
     }
 }
 function onCloseButtonClick(div) {
-    console.log("onCloseButton");
     closeCard(div.id);
 }
 function shortName(card) {

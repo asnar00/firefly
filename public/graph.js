@@ -140,16 +140,35 @@ export class Graph {
         let node = this.findNode(div);
         if (!node)
             return;
+        this.newVisit();
+        this.removeNodeRec(node);
+        this.requestArrange();
+    }
+    removeNodeRec(node) {
+        if (node.visited())
+            return;
+        node.visit();
+        let closeNodes = [];
         for (let e of node.edgesIn) {
+            let fromNode = e.fromNode();
+            if (fromNode.parentNode == node && closeNodes.indexOf(fromNode) == -1) {
+                closeNodes.push(fromNode);
+            }
             this.removeEdgeIn(e);
         }
         for (let e of node.edgesOut) {
+            let toNode = e.toNode();
+            if (toNode.parentNode == node && closeNodes.indexOf(toNode) == -1) {
+                closeNodes.push(toNode);
+            }
             this.removeEdgeOut(e);
         }
         this.nodes.delete(node.div.id);
-        div.remove();
+        node.div.remove();
         node.delete();
-        this.requestArrange();
+        for (let node of closeNodes) {
+            this.removeNodeRec(node);
+        }
     }
     // remove an incoming edge (remove edge from source node)
     removeEdgeIn(edge) {
@@ -236,17 +255,7 @@ export class Graph {
         let doNodes = [{ node: this.rootNode, iCol: 0, fromNode: null, dir: 0, indent: 0 }];
         let safeCount = 0;
         while ((safeCount++) < 100 && doNodes.length > 0) {
-            console.log("--------------- round", safeCount);
             let remaining = this.assignNodeRec(doNodes);
-            if (remaining.length > 0) {
-                console.log("remaining", remaining.length);
-                for (let d of remaining) {
-                    console.log(" ", d.node.div.id, ((d.dir > 0) ? "=>" : ((d.dir < 0) ? "<=" : "")), d.iCol);
-                }
-            }
-            else {
-                console.log("none remaining.");
-            }
             doNodes = remaining;
         }
         this.columns = new NodeColumns();
@@ -289,7 +298,7 @@ export class Graph {
                     node.sortIndex = fromNode.sortIndex + '.' + node.div.id; // TODO: find a better metric
                 }
             }
-            console.log(' '.repeat(indent), ((dir > 0) ? "=>" : ((dir < 0) ? "<=" : "")), node.div.id, node.iColumn);
+            //console.log(' '.repeat(indent), ((dir>0)? "=>" : ((dir<0)? "<=":"")), node.div.id, node.iColumn);
             if (dir >= 0) {
                 // repeat for nodes connected through all outgoing and incoming edges
                 for (let edge of node.edgesOut) { // callees
@@ -311,7 +320,7 @@ export class Graph {
                 for (let edge of node.edgesIn) {
                     if (!edge.visited()) {
                         edge.visit();
-                        console.log("      R", edge.fromNode().div.id, "<=", node.iColumn - 1);
+                        //console.log("      R", edge.fromNode().div.id, "<=", node.iColumn-1);
                         remaining.push({ node: edge.fromNode(), iCol: node.iColumn - 1, fromNode: node, dir: -1, indent: indent + 1 });
                     }
                 }
@@ -320,7 +329,7 @@ export class Graph {
                 for (let edge of node.edgesOut) {
                     if (!edge.visited()) {
                         edge.visit();
-                        console.log("      R", edge.toNode().div.id, "=>", node.iColumn + 1);
+                        //console.log("      R", edge.toNode().div.id, "=>", node.iColumn+1);
                         remaining.push({ node: edge.toNode(), iCol: node.iColumn + 1, fromNode: node, dir: 1, indent: indent + 1 });
                     }
                 }
