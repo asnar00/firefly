@@ -242,11 +242,9 @@ function updateSearch(searchField) {
 function searchFor(query) {
     return __awaiter(this, void 0, void 0, function* () {
         const results = yield search(s_searchQuery);
+        clearSearchResults();
         if (results) {
             showSearchResults(results);
-        }
-        else {
-            clearSearchResults();
         }
     });
 }
@@ -329,7 +327,6 @@ function onCommandKey() {
     });
 }
 function showSearchResults(results) {
-    clearSearchResults();
     let searchResultsDiv = document.getElementById("search-results");
     const array = results.results;
     for (const item of array) {

@@ -226,10 +226,9 @@ async function updateSearch(searchField: HTMLElement) {
 
 async function searchFor(query: string) {
     const results = await search(s_searchQuery);
+    clearSearchResults();
     if (results) {
         showSearchResults(results);
-    } else {
-        clearSearchResults();
     }
 }
 
@@ -308,7 +307,6 @@ async function onCommandKey() {
 }
 
 function showSearchResults(results: any) {
-    clearSearchResults();
     let searchResultsDiv = document.getElementById("search-results")!;
     const array = results.results;
     for(const item of array) {

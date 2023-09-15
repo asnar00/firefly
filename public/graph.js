@@ -175,7 +175,7 @@ export class Graph {
         svg.style.width = '100%';
         svg.style.height = '100%';
         svg.style.pointerEvents = 'none';
-        svg.style.zIndex = '1000';
+        svg.style.zIndex = '-1000';
         this.container.appendChild(svg);
         return svg;
     }
@@ -334,11 +334,11 @@ export class Graph {
     }
     updateCanvas() {
         let bounds = new Rect(0, 0, window.innerWidth, window.innerHeight);
-        let padding = 10;
+        let padding = 32;
         // Calculate canvas rect based on node positions/sizes
         // note: bounds may be negative, that's fine
         for (const node of this.nodes.values()) {
-            bounds.extendToFit(node.targetRect(), this.padding);
+            bounds.extendToFit(node.targetRect(), padding);
         }
         bounds.round();
         if (bounds.isEqualTo(this.canvasRect))
@@ -498,14 +498,36 @@ export class Edge {
         const cornerRadius = Math.min(Math.abs(endY - startY) / 2, 10);
         const midX = xVertical;
         const vs = (endY < startY) ? -1 : +1;
-        const d = [
-            `M ${startX} ${startY}`,
-            `H ${midX - cornerRadius}`,
-            `Q ${midX} ${startY} ${midX} ${startY + vs * cornerRadius}`,
-            `V ${endY - vs * cornerRadius}`,
-            `Q ${midX} ${endY} ${midX + cornerRadius} ${endY}`,
-            `H ${endX}`,
-        ].join(' ');
+        let d = "";
+        if (startX < endX) {
+            d = [
+                `M ${startX} ${startY}`,
+                `H ${midX - cornerRadius}`,
+                `Q ${midX} ${startY} ${midX} ${startY + vs * cornerRadius}`,
+                `V ${endY - vs * cornerRadius}`,
+                `Q ${midX} ${endY} ${midX + cornerRadius} ${endY}`,
+                `H ${endX}`,
+            ].join(' ');
+            this.path.setAttribute('stroke-dasharray', 'none');
+        }
+        else {
+            let botY = parentRect.bottom + s_graph.padding / 4;
+            let cr = Math.min(cornerRadius, Math.abs(botY - startY));
+            let rightX = startX + s_graph.padding;
+            d = [
+                `M ${startX} ${startY}`,
+                `H ${rightX - cr}`,
+                `Q ${rightX} ${startY} ${rightX} ${startY + cr}`,
+                `V ${botY - cr}`,
+                `Q ${rightX} ${botY} ${rightX - cr} ${botY}`,
+                `H ${midX + cornerRadius}`,
+                `Q ${midX} ${botY} ${midX} ${botY + vs * cornerRadius}`,
+                `V ${endY - vs * cornerRadius}`,
+                `Q ${midX} ${endY} ${midX + cornerRadius} ${endY}`,
+                `H ${endX}`,
+            ].join(' ');
+            this.path.setAttribute('stroke-dasharray', '4,2');
+        }
         this.path.setAttribute('d', d);
     }
     toNode() {
