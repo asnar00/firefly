@@ -706,7 +706,11 @@ function onMouseOverTitle(titleDiv, buttonDiv, entering) {
     }
 }
 function onCloseButtonClick(div) {
+    let buttonDivs = s_graph.findSourceDivs(div);
     closeCard(div.id);
+    for (let button of buttonDivs) {
+        highlightLink(button, false);
+    }
 }
 function shortName(card) {
     let result = "";

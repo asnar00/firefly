@@ -689,7 +689,11 @@ function onMouseOverTitle(titleDiv: HTMLElement, buttonDiv: HTMLElement, enterin
 }
 
 function onCloseButtonClick(div: HTMLElement) {
+    let buttonDivs = s_graph.findSourceDivs(div);
     closeCard(div.id);
+    for(let button of buttonDivs) {
+        highlightLink(button, false);
+    }
 }
 
 function shortName(card: Card) : string {
