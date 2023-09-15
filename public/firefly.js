@@ -180,13 +180,6 @@ function openSession() {
         s_searchQuery = json.ui.search;
     });
 }
-function openMain() {
-    console.log("openMain");
-    /*
-    openCardFrom(s_mainID, null);
-    const mainCard = findCard(s_mainID)!;
-    */
-}
 function searchBox() {
     const searchFieldHTML = `<div class="search-field" id="search-field" contenteditable="true" spellcheck="false"></div>`;
     const iconHTML = `<i class="${s_mainIcon}" style="padding-top: 6px;" id="search-button"></i>`;
