@@ -238,3 +238,5 @@ In other words, JSON is just another tree structure.
 
 OK, cool, that's interesting, hadn't thought of that.
 
+
+So next step: fix all open/close logic bugs, make transitions beautiful.

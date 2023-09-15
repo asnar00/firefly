@@ -230,12 +230,25 @@ export class Graph {
         }
         this.rootNode.sortIndex = "000";
         this.newVisit();
-        console.log("------------------------------");
         for (let node of this.nodes.values()) {
             node.iColumn = 0;
         }
-        let nodes = [{ node: this.rootNode, iCol: 0, fromNode: null, dir: 0, indent: 0 }];
-        this.assignNodeRec(nodes);
+        let doNodes = [{ node: this.rootNode, iCol: 0, fromNode: null, dir: 0, indent: 0 }];
+        let safeCount = 0;
+        while ((safeCount++) < 100 && doNodes.length > 0) {
+            console.log("--------------- round", safeCount);
+            let remaining = this.assignNodeRec(doNodes);
+            if (remaining.length > 0) {
+                console.log("remaining", remaining.length);
+                for (let d of remaining) {
+                    console.log(" ", d.node.div.id, ((d.dir > 0) ? "=>" : ((d.dir < 0) ? "<=" : "")), d.iCol);
+                }
+            }
+            else {
+                console.log("none remaining.");
+            }
+            doNodes = remaining;
+        }
         this.columns = new NodeColumns();
         for (let node of this.nodes.values()) {
             this.columns.addNode(node, node.iColumn);
@@ -244,6 +257,7 @@ export class Graph {
     }
     // breadth-first graph-walk: assign (node) to column (iCol), assign all callers and callees
     assignNodeRec(doNodes) {
+        let remaining = [];
         while (doNodes.length > 0) {
             let d = doNodes[0];
             doNodes.shift();
@@ -258,12 +272,20 @@ export class Graph {
             else {
                 node.parentNode = fromNode;
                 if (d.dir >= 0) {
-                    node.iColumn = Math.max(node.iColumn, iCol);
+                    if (node.visited())
+                        node.iColumn = Math.max(node.iColumn, iCol);
+                    else
+                        node.iColumn = iCol;
+                    node.visit();
                     const index = getChildNodeIndex(fromNode.div);
                     node.sortIndex = fromNode.sortIndex + '.' + index.toString().padStart(3, '0'); // call order
                 }
                 else {
-                    node.iColumn = Math.min(node.iColumn, iCol);
+                    if (node.visited())
+                        node.iColumn = Math.min(node.iColumn, iCol);
+                    else
+                        node.iColumn = iCol;
+                    node.visit();
                     node.sortIndex = fromNode.sortIndex + '.' + node.div.id; // TODO: find a better metric
                 }
             }
@@ -285,7 +307,26 @@ export class Graph {
                     }
                 }
             }
+            if (dir > 0) {
+                for (let edge of node.edgesIn) {
+                    if (!edge.visited()) {
+                        edge.visit();
+                        console.log("      R", edge.fromNode().div.id, "<=", node.iColumn - 1);
+                        remaining.push({ node: edge.fromNode(), iCol: node.iColumn - 1, fromNode: node, dir: -1, indent: indent + 1 });
+                    }
+                }
+            }
+            else if (dir < 0) {
+                for (let edge of node.edgesOut) {
+                    if (!edge.visited()) {
+                        edge.visit();
+                        console.log("      R", edge.toNode().div.id, "=>", node.iColumn + 1);
+                        remaining.push({ node: edge.toNode(), iCol: node.iColumn + 1, fromNode: node, dir: 1, indent: indent + 1 });
+                    }
+                }
+            }
         }
+        return remaining;
     }
     // we're about to start a new recursive visitation round
     newVisit() {

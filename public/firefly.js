@@ -107,23 +107,23 @@ function run() {
 }
 function init() {
     return __awaiter(this, void 0, void 0, function* () {
-        logo();
-        busyIcon();
-        graph();
-        keyboard();
-        mouse();
+        initLogo();
+        initBusyIcon();
+        initGraph();
+        initKeyboard();
+        initMouse();
     });
 }
-function mouse() {
+function initMouse() {
     // nothing atm
 }
-function logo() {
+function initLogo() {
     const logo = document.getElementById('logo_etc');
     logo.style.left = `${(window.innerWidth - logo.offsetWidth) / 2}px`;
     logo.style.top = `${(window.innerHeight / 2) - 40}px`;
     logo.style.transition = `top 0.25s`;
 }
-function busyIcon() {
+function initBusyIcon() {
     const logo = document.getElementById('logo_etc');
     const busy = element(`<i class="icon-arrows-cw rotating" id="busy-icon"></i>`);
     logo.append(busy);
@@ -133,7 +133,7 @@ function removeBusyIcon() {
     if (busyIcon)
         busyIcon.remove();
 }
-function graph() {
+function initGraph() {
     const container = document.getElementById('container');
     s_graph = new Graph(container);
 }
@@ -274,7 +274,7 @@ function changeSearchOption(optionName, iconName) {
     searchDiv.remove();
     searchBox();
 }
-function keyboard() {
+function initKeyboard() {
     return __awaiter(this, void 0, void 0, function* () {
         listen(document.body, 'keydown', (event) => __awaiter(this, void 0, void 0, function* () {
             if (event.metaKey) {

@@ -92,25 +92,25 @@ async function run() {
 }
 
 async function init() {
-    logo();
-    busyIcon();
-    graph();
-    keyboard();
-    mouse();
+    initLogo();
+    initBusyIcon();
+    initGraph();
+    initKeyboard();
+    initMouse();
 }
 
-function mouse() {
+function initMouse() {
     // nothing atm
 }
 
-function logo() {
+function initLogo() {
     const logo = document.getElementById('logo_etc') as HTMLElement;
     logo.style.left = `${(window.innerWidth - logo.offsetWidth)/2}px`;
     logo.style.top = `${(window.innerHeight/2)-40}px`;
     logo.style.transition = `top 0.25s`;
 }
 
-function busyIcon() {
+function initBusyIcon() {
     const logo = document.getElementById('logo_etc') as HTMLElement;
     const busy = element(`<i class="icon-arrows-cw rotating" id="busy-icon"></i>`);
     logo.append(busy);
@@ -121,7 +121,7 @@ function removeBusyIcon() {
     if (busyIcon) busyIcon.remove();
 }
 
-function graph() {
+function initGraph() {
     const container = document.getElementById('container') as HTMLElement;
     s_graph = new Graph(container);
 }
@@ -259,7 +259,7 @@ function changeSearchOption(optionName: string, iconName: string) {
     searchBox();
 }
 
-async function keyboard() {
+async function initKeyboard() {
     listen(document.body, 'keydown', async (event: KeyboardEvent) => {
         if (event.metaKey) {
             if(event.key == 'f') {
