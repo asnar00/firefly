@@ -140,20 +140,8 @@ function initGraph() {
 function eventLoop() {
     s_eventLog.update();
     s_graph.update();
-    moveLogo();
     updateDetailTags();
     requestAnimationFrame(eventLoop);
-}
-function moveLogo() {
-    let xScroll = window.scrollX;
-    let logo = document.getElementById("logo_etc");
-    let [yMin, yMax] = s_graph.yRange(xScroll + rect(logo).width() + 50);
-    if (yMin && yMax) {
-        logo.style.top = `${window.innerHeight - 66}px`;
-    }
-    else {
-        logo.style.top = `${(window.innerHeight / 2) - 40}px`;
-    }
 }
 function loadCards() {
     return __awaiter(this, void 0, void 0, function* () {
@@ -584,6 +572,7 @@ function animateLogoToLeft() {
             });
             // Start the animation
             logo.style.left = "0";
+            logo.style.top = `${window.innerHeight - 66}px`;
         });
     });
 }
