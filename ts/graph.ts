@@ -255,7 +255,7 @@ export class Graph {
         for(let node of this.nodes.values()) {
             node.iColumn = 0;
         }
-        let doNodes = [ {node: this.rootNode, iCol: 0, fromNode: null, dir: 0, indent:0 } ];
+        let doNodes = [ {node: this.rootNode, iCol: 0, fromNode: null, edge: null, dir: 0, indent:0 } ];
         let safeCount = 0;
         while((safeCount++) < 100 && doNodes.length > 0) {
             let remaining = this.assignNodeRec(doNodes);
@@ -274,7 +274,7 @@ export class Graph {
         while(doNodes.length > 0) {
             let d = doNodes[0];
             doNodes.shift();
-            let node = d.node; let iCol = d.iCol; let fromNode = d.fromNode; let dir = d.dir; let indent = d.indent;
+            let node = d.node; let iCol = d.iCol; let fromNode = d.fromNode; let edge= d.edge; let dir = d.dir; let indent = d.indent;
 
             // set column and sort-index based on who called us and which direction we're going; TODO: make better
             if (!fromNode) {
@@ -284,8 +284,10 @@ export class Graph {
                     if (node.visited()) node.iColumn = Math.max(node.iColumn, iCol);
                     else node.iColumn = iCol;
                     node.visit();
-                    const index = getChildNodeIndex(fromNode.div);
-                    node.sortIndex = fromNode.sortIndex + '.' + index.toString().padStart(3, '0'); // call order
+                    if (edge) {
+                        const index = getChildNodeIndex(edge.fromDiv);
+                        node.sortIndex = fromNode.sortIndex + '.' + index.toString().padStart(3, '0'); // call order
+                    }
                 } else {
                     if (node.visited()) node.iColumn = Math.min(node.iColumn, iCol);
                     else node.iColumn = iCol;
@@ -299,7 +301,7 @@ export class Graph {
                 for(let edge of node.edgesOut) { // callees
                     if (!edge.visited()) {
                         edge.visit();
-                        doNodes.push({node: edge.toNode(), iCol: node.iColumn+1, fromNode: node, dir: 1, indent: indent+1});
+                        doNodes.push({node: edge.toNode(), iCol: node.iColumn+1, fromNode: node, edge: edge, dir: 1, indent: indent+1});
                     }
                 }
             }
@@ -307,7 +309,7 @@ export class Graph {
                 for(let edge of node.edgesIn) { // callers
                     if (!edge.visited()) {
                         edge.visit();
-                        doNodes.push({node: edge.fromNode(), iCol: node.iColumn-1, fromNode: node, dir: -1, indent: indent+1});
+                        doNodes.push({node: edge.fromNode(), iCol: node.iColumn-1, fromNode: node, edge: edge, dir: -1, indent: indent+1});
                     }
                 }
             }

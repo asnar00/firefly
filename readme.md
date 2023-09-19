@@ -248,5 +248,7 @@ things to do:
 - fix backward looping edges : thread them around nodes
 - toggle up/down arrow buttons (close-all-callers/callees)
 - animation in and out
+- auto-scroll behaviour (scrollToView)
 
+GO NOW.
 - close should close dependents automatically DONE

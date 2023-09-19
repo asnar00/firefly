@@ -75,6 +75,8 @@ export class EventLog {
                 else {
                     this.nRetries++;
                     if (this.nRetries > 100) {
+                        console.log("REPLAY FAILED:");
+                        console.log(failure);
                         this.stop();
                     }
                 }
