@@ -245,9 +245,10 @@ ___
 things to do:
 
 - fix backward looping edges : thread them around nodes
-- toggle up/down arrow buttons (close-all-callers/callees)
 - animation in and out
-- auto-scroll behaviour (scrollToView)
 
+DONE:
+- auto-scroll behaviour (scrollToView) DONE
+- toggle up/down arrow buttons (close-all-callers/callees) DONE
 - close should close dependents automatically DONE
 - fix sort-index by tracing from the first column DONE

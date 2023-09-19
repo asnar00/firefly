@@ -47,6 +47,7 @@ export class Graph {
             this.setRootNode(node);
         }
         this.container.append(div);
+        node.animateOpen();
         this.requestArrange();
     }
     // create a new edge from one div to another; or return existing
@@ -432,6 +433,28 @@ export class Node {
         this.parentNode = null; // node we want to move with
         this.div = div;
         this.userInfo = userInfo;
+    }
+    animateOpen() {
+        this.div.style.width = '0px';
+        this.div.style.height = '0px';
+        this.div.style.overflow = 'hidden';
+        // Force a reflow to ensure the div is initially rendered with 0 width and height
+        void this.div.offsetHeight;
+        // Get the natural dimensions of the div
+        const naturalWidth = this.div.scrollWidth + "px";
+        const naturalHeight = this.div.scrollHeight + "px";
+        // Set the transition property dynamically
+        this.div.style.transition = 'width 0.25s ease-out, height 0.25s ease-out';
+        // Animate to its natural size
+        this.div.style.width = naturalWidth;
+        this.div.style.height = naturalHeight;
+        // Listen for the transitionend event
+        this.div.addEventListener('transitionend', () => {
+            // Using an arrow function ensures that 'this' remains the instance of YourContainerClass
+            this.div.style.width = 'auto';
+            this.div.style.height = 'auto';
+            this.div.style.transition = ''; // Optionally reset the transition property
+        }, { once: true }); // The event listener will be removed automatically after it's called once
     }
     update() {
         this.div = refind(this.div);

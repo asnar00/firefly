@@ -10,6 +10,7 @@ import {remote} from "./util.js";
 import {rect} from "./util.js";
 import {Graph} from "./graph.js";
 import {EventLog} from "./events.js";
+import {Vec2} from "./util.js";
 
 window.onload = () => { main(); };
 
@@ -536,7 +537,7 @@ async function animateLogoToLeft(): Promise<void> {
         logo.addEventListener('animationend', function onAnimationEnd() {
             // Remove the event listener to prevent memory leaks
             logo.removeEventListener('animationend', onAnimationEnd);
-            resolve();
+                        resolve();
         });
 
         // Start the animation
