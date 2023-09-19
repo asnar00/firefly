@@ -654,6 +654,8 @@ function codeContainer(uid: string, codeDiv: HTMLElement, title: string) : HTMLE
 }
 
 function toggleCallees(card: Card) {
+    let fromDiv = s_graph.findDiv(card.uid);
+    if (!fromDiv) return;
     let cs = callees(card);
     let openDivs : HTMLElement[] = [];
     for(let c of cs) {
@@ -662,6 +664,11 @@ function toggleCallees(card: Card) {
     }
     if (openDivs.length > 0) {
         for(let div of openDivs) {
+            console.log(" ", div.id);
+            let linkButtons = findLinkButtonsTo(div, fromDiv);
+            for(let b of linkButtons) {
+                highlightLink(b, false);
+            }
             s_graph.remove(div);
         }
     } else {
@@ -891,12 +898,13 @@ function openCardTo(uid: string, toDiv: HTMLElement, minimised: boolean=false) {
 
 // returns array of all buttons in "div" that link to "toDiv"
 function findLinkButtonsTo(toDiv: HTMLElement, fromDiv: HTMLElement) : HTMLElement[] {
-    let buttons = fromDiv.querySelectorAll('span.tag');
+    let buttons = Array.from(fromDiv.querySelectorAll('span.tag'));
+    buttons.push(... Array.from(fromDiv.querySelectorAll('span.tag-highlight')));
     let results : HTMLElement[] = [];
-    buttons.forEach((button) => {
+    for(let button of buttons) {
         if (button.id.indexOf(toDiv.id) >= 0) {
             results.push(button as HTMLElement);
         }
-    });
+    }
     return results;
 }

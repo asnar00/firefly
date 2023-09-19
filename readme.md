@@ -244,10 +244,12 @@ So next step: fix all open/close logic bugs, make transitions beautiful.
 ___
 things to do:
 
+- close-multiple should fix link highlights (not sure how)
 - fix backward looping edges : thread them around nodes
-- animation in and out
+
 
 DONE:
+- animation in and out DONE
 - auto-scroll behaviour (scrollToView) DONE
 - toggle up/down arrow buttons (close-all-callers/callees) DONE
 - close should close dependents automatically DONE

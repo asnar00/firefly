@@ -670,6 +670,9 @@ function codeContainer(uid, codeDiv, title) {
     return containerDiv;
 }
 function toggleCallees(card) {
+    let fromDiv = s_graph.findDiv(card.uid);
+    if (!fromDiv)
+        return;
     let cs = callees(card);
     let openDivs = [];
     for (let c of cs) {
@@ -679,6 +682,11 @@ function toggleCallees(card) {
     }
     if (openDivs.length > 0) {
         for (let div of openDivs) {
+            console.log(" ", div.id);
+            let linkButtons = findLinkButtonsTo(div, fromDiv);
+            for (let b of linkButtons) {
+                highlightLink(b, false);
+            }
             s_graph.remove(div);
         }
     }
@@ -913,12 +921,13 @@ function openCardTo(uid, toDiv, minimised = false) {
 }
 // returns array of all buttons in "div" that link to "toDiv"
 function findLinkButtonsTo(toDiv, fromDiv) {
-    let buttons = fromDiv.querySelectorAll('span.tag');
+    let buttons = Array.from(fromDiv.querySelectorAll('span.tag'));
+    buttons.push(...Array.from(fromDiv.querySelectorAll('span.tag-highlight')));
     let results = [];
-    buttons.forEach((button) => {
+    for (let button of buttons) {
         if (button.id.indexOf(toDiv.id) >= 0) {
             results.push(button);
         }
-    });
+    }
     return results;
 }
