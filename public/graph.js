@@ -4,6 +4,7 @@
 // manages a graph of nodes and edges
 import { getChildNodeIndex } from "./util.js";
 import { rect } from "./util.js";
+import { scrollToViewRect } from "./util.js";
 import { Rect } from "./util.js";
 import { Vec2 } from "./util.js";
 import { resizeDiv } from "./util.js";
@@ -68,6 +69,16 @@ export class Graph {
         if (this.rootNode != node)
             this.requestArrange();
         this.rootNode = node;
+    }
+    // scroll to view one or more divs (if you can)
+    scrollToView(divs) {
+        setTimeout(() => {
+            let rects = [];
+            for (let div of divs)
+                rects.push(rect(div));
+            let bound = Rect.bounding(rects);
+            scrollToViewRect(bound);
+        }, 300);
     }
     // find node given div
     findNode(div) {
@@ -412,7 +423,7 @@ export class Node {
         this.userInfo = null; // user info attached to node
         this.edgesIn = []; // edges coming in
         this.edgesOut = []; // edges going out
-        this.pos = new Vec2(); // position now
+        this.pos = new Vec2(-1, -1); // position now
         this.targetPos = new Vec2(); // position we want to get to
         this.size = new Vec2(); // size on last frame
         this.visitCount = 0; // visit-count
@@ -424,8 +435,12 @@ export class Node {
     }
     update() {
         this.div = refind(this.div);
-        const pos = this.pos.lerpTowards(this.targetPos, 0.1);
-        this.setPos(pos);
+        if (this.pos.x == -1 && this.pos.y == -1) {
+            this.setPos(this.targetPos);
+        }
+        else {
+            this.setPos(this.pos.lerpTowards(this.targetPos, 0.1));
+        }
         this.size.set(this.div.clientWidth, this.div.clientHeight);
     }
     setTargetPos(pos) {

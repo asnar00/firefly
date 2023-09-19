@@ -65,6 +65,16 @@ export class Rect {
             this.right == r.right &&
             this.bottom == r.bottom);
     }
+    // bounding rect of multiple rectangles
+    static bounding(rects) {
+        if (rects.length == 0)
+            return new Rect(0, 0, 0, 0);
+        let rect = rects[0];
+        for (let i = 1; i < rects.length; i++) {
+            rect.extendToFit(rects[i]);
+        }
+        return rect;
+    }
 }
 // given some HTML, make a DIV from it
 export function element(html) {
@@ -91,8 +101,7 @@ export function getBodyWidth() {
     let bodyWidth = getComputedStyle(document.body).width;
     return parseInt(bodyWidth, 10);
 }
-export function scrollToView(div, padding = 48) {
-    const rect = div.getBoundingClientRect();
+export function scrollToViewRect(rect, padding = 48) {
     const windowHeight = window.innerHeight;
     const windowWidth = window.innerWidth;
     let x = window.scrollX;
@@ -117,11 +126,11 @@ export function scrollToView(div, padding = 48) {
     }
     // Perform the scroll if needed
     if (x != window.scrollX || y != window.scrollY) {
-        window.scrollTo(x, y);
+        smoothScrollTo(x, y);
     }
     return [x, y];
 }
-export function scrollTo(x, y) {
+export function smoothScrollTo(x, y) {
     let scrollOptions = {
         behavior: 'smooth'
     };

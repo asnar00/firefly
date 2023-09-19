@@ -244,11 +244,10 @@ So next step: fix all open/close logic bugs, make transitions beautiful.
 ___
 things to do:
 
-- fix sort-index by tracing from the first column
 - fix backward looping edges : thread them around nodes
 - toggle up/down arrow buttons (close-all-callers/callees)
 - animation in and out
 - auto-scroll behaviour (scrollToView)
 
-GO NOW.
 - close should close dependents automatically DONE
+- fix sort-index by tracing from the first column DONE

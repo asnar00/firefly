@@ -650,12 +650,12 @@ function codeContainer(uid, codeDiv, title) {
     titleDiv.append(buttons);
     if (callers(card).length > 0) {
         let leftButton = element(`<i class="icon-angle-circled-left" "style=filter:invert(1);" id="${containerDiv.id}_left_button"></i>`);
-        listen(leftButton, 'click', () => { openCallers(card); });
+        listen(leftButton, 'click', () => { openCallers(card); scrollToView(callers(card)); });
         buttons.append(leftButton);
     }
     if (callees(card).length > 0) {
         let rightButton = element(`<i class="icon-angle-circled-right" id="${containerDiv.id}_right_button"></i>`);
-        listen(rightButton, 'click', () => { openCallees(card); });
+        listen(rightButton, 'click', () => { openCallees(card); scrollToView(callees(card)); });
         buttons.append(rightButton);
     }
     let closeButton = element(`<i class="icon-cancel" id="${containerDiv.id}_close_button"></i>`);
@@ -669,10 +669,17 @@ function codeContainer(uid, codeDiv, title) {
     containerDiv.appendChild(wrapperDiv);
     return containerDiv;
 }
+function scrollToView(cards) {
+    let divs = [];
+    for (let c of cards)
+        divs.push(s_graph.findDiv(c.uid));
+    s_graph.scrollToView(divs);
+}
 function onTitleBarClick(containerDiv, codeDiv) {
     const view = s_graph.userInfo(containerDiv);
     view.minimised = !(view.minimised);
     setViewStyle(containerDiv, view);
+    s_graph.scrollToView([containerDiv]);
 }
 function setViewStyle(div, view) {
     let codeDiv = div.children[0].children[1]; // TODO:  better way
@@ -689,6 +696,7 @@ function setViewStyle(div, view) {
             codeDiv.classList.add("code-expanded");
         }
     }
+    s_graph.requestArrange();
 }
 function onMouseOverTitle(titleDiv, buttonDiv, entering) {
     if (entering) {
@@ -756,6 +764,7 @@ function expandOrContract(elem) {
         elem.scrollTop = view.yScroll;
     }
     setViewStyle(div, view);
+    s_graph.scrollToView([div]);
 }
 function getScrollPos(elem) {
     let view = s_graph.userInfo(elem);
@@ -801,6 +810,11 @@ function openCardsFromButton(button, minimised = false) {
         openCardFrom(c.uid, button, minimised);
     }
     highlightLink(button, true);
+    let divs = [];
+    for (let c of cards) {
+        divs.push(s_graph.findDiv(c.uid));
+    }
+    s_graph.scrollToView(divs);
 }
 // close all cards pointed to by (button)
 function closeCardsFromButton(button) {

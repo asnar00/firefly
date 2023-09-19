@@ -3,7 +3,8 @@
 // author: asnaroo (with a little help from GPT4)
 
 import {element} from "./util.js";
-import {scrollToView} from "./util.js";
+import {scrollToViewRect} from "./util.js";
+import {Rect} from "./util.js";
 import {debounce} from "./util.js";
 import {remote} from "./util.js";
 import {rect} from "./util.js";
@@ -626,13 +627,13 @@ function codeContainer(uid: string, codeDiv: HTMLElement, title: string) : HTMLE
 
     if (callers(card).length > 0) {
         let leftButton = element(`<i class="icon-angle-circled-left" "style=filter:invert(1);" id="${containerDiv.id}_left_button"></i>`)!;
-        listen(leftButton, 'click', () => { openCallers(card); });
+        listen(leftButton, 'click', () => { openCallers(card); scrollToView(callers(card)); });
         buttons.append(leftButton);
     }
 
     if (callees(card).length > 0) {
         let rightButton = element(`<i class="icon-angle-circled-right" id="${containerDiv.id}_right_button"></i>`)!;
-        listen(rightButton, 'click', () => { openCallees(card); });
+        listen(rightButton, 'click', () => { openCallees(card); scrollToView(callees(card));});
         buttons.append(rightButton);
     }
 
@@ -651,10 +652,17 @@ function codeContainer(uid: string, codeDiv: HTMLElement, title: string) : HTMLE
     return containerDiv;
 }
 
+function scrollToView(cards: Card[]) {
+    let divs: HTMLElement[] = [];
+    for(let c of cards) divs.push(s_graph.findDiv(c.uid)!); 
+    s_graph.scrollToView(divs);
+}
+
 function onTitleBarClick(containerDiv: HTMLElement, codeDiv: HTMLElement) {
     const view = s_graph.userInfo(containerDiv)! as CardView;
     view.minimised = !(view.minimised);
     setViewStyle(containerDiv, view);
+    s_graph.scrollToView([containerDiv]);
 }
 
 function setViewStyle(div: HTMLElement, view: CardView) {
@@ -670,6 +678,7 @@ function setViewStyle(div: HTMLElement, view: CardView) {
             codeDiv.classList.add("code-expanded");
         }
     }
+    s_graph.requestArrange();
 }
 
 function onMouseOverTitle(titleDiv: HTMLElement, buttonDiv: HTMLElement, entering: boolean) {
@@ -735,6 +744,7 @@ function expandOrContract(elem : HTMLElement) {
          elem.scrollTop = view.yScroll;
     }
     setViewStyle(div, view);
+    s_graph.scrollToView([div]);
 }
 
 function getScrollPos(elem: HTMLElement) {
@@ -780,6 +790,9 @@ function openCardsFromButton(button: HTMLElement, minimised: boolean= false) {
         openCardFrom(c.uid, button, minimised);
     }
     highlightLink(button, true);
+    let divs : HTMLElement[] = [];
+    for(let c of cards) { divs.push(s_graph.findDiv(c.uid)!); }
+    s_graph.scrollToView(divs);
 }
 
 // close all cards pointed to by (button)
