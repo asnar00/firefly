@@ -38,7 +38,7 @@ export class Graph {
     // clear all nodes
     clear() {
         for (let node of this.nodes.values()) {
-            this.remove(node.div);
+            this.removeSingleNode(node);
         }
         this.requestArrange();
         this.rootNode = null;
@@ -69,6 +69,22 @@ export class Graph {
         this.findNode(toDiv)!.edgesIn.push(edge);
         this.requestArrange();
         return edge;
+    }
+
+    // remove node and dependents
+    remove(div: HTMLElement) {
+        let node = this.findNode(div);
+        if (!node) return;
+        this.newVisit();
+        let nodes = this.nodesToCloseRec(node);
+        for(let n of nodes) {
+            n.animateClose();
+        }
+        setTimeout(() => {
+            for(let n of nodes) {
+                this.removeSingleNode(n);
+            }
+        }, 250);
     }
 
     // focus on a specific node; it keeps same position, others move around it
@@ -146,38 +162,41 @@ export class Graph {
         if (edge) return edge; else return null;
     }
 
-    // remove a node and all its edges
-    remove(div: HTMLElement) {
-        let node = this.findNode(div);
-        if (!node) return;
-        this.newVisit();
-        this.removeNodeRec(node);
+    // remove a single node and all its edges, immediately
+    removeSingleNode(node: Node) {
+        this.removeEdges(node);
+        this.nodes.delete(node.div.id);
+        node.div.remove();
+        node.delete();
         this.requestArrange();
     }
 
-    removeNodeRec(node: Node) {
-        if (node.visited()) return;
+    // returns list of nodes to close if we close (node)
+    nodesToCloseRec(node: Node) : Node[] {
+        if (node.visited()) return [];
         node.visit();
-        let closeNodes: Node[] = [];
+        let closeNodes: Node[] = [node];
         for(let e of node.edgesIn) { 
             let fromNode = e.fromNode();
             if (fromNode.parentNode == node && closeNodes.indexOf(fromNode)==-1) { 
-                closeNodes.push(fromNode); 
+                closeNodes.push(... this.nodesToCloseRec(fromNode));
             }
-            this.removeEdgeIn(e); 
         }
         for(let e of node.edgesOut) { 
             let toNode = e.toNode();
             if (toNode.parentNode == node && closeNodes.indexOf(toNode)==-1) { 
-                closeNodes.push(toNode);
+                closeNodes.push(... this.nodesToCloseRec(toNode));
             }
-            this.removeEdgeOut(e); 
         }
-        this.nodes.delete(node.div.id);
-        node.div.remove();
-        node.delete();
-        for(let node of closeNodes) {
-            this.removeNodeRec(node);
+        return closeNodes;
+    }
+
+    removeEdges(node: Node) {
+        for(let e of node.edgesIn) {
+            this.removeEdgeIn(e); 
+        }
+        for(let e of node.edgesOut) {
+            this.removeEdgeOut(e);
         }
     }
 
@@ -459,8 +478,20 @@ export class Node {
             this.div.style.height = 'auto';
             this.div.style.transition = '';  // Optionally reset the transition property
         }, { once: true });  // The event listener will be removed automatically after it's called once
+    }
 
-
+    animateClose() {
+        for(let e of this.edgesIn) { e.removeFromSVG(); }
+        for(let e of this.edgesOut) { e.removeFromSVG(); }
+        let r = rect(this.div);
+        this.div.style.width = `${r.width()}px`;
+        this.div.style.height = `${r.height()}px`;
+        this.div.style.overflow = 'hidden';
+        this.div.style.transition = 'width 0.25s, height 0.25s';
+        requestAnimationFrame( () => {
+            this.div.style.width = '0px';
+            this.div.style.height = '0px';
+        });
     }
 
     update() {

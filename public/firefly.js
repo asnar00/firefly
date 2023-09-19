@@ -23,7 +23,6 @@ import { remote } from "./util.js";
 import { rect } from "./util.js";
 import { Graph } from "./graph.js";
 import { EventLog } from "./events.js";
-import { Vec2 } from "./util.js";
 window.onload = () => { main(); };
 const s_useLocalFiles = false; // change this to true to enable local file access
 let dirHandle = null;
@@ -138,7 +137,6 @@ function initGraph() {
     const container = document.getElementById('container');
     s_graph = new Graph(container);
 }
-let logoPos = new Vec2(0, 0);
 function eventLoop() {
     s_eventLog.update();
     s_graph.update();
@@ -561,7 +559,6 @@ function animateLogoToLeft() {
             logo.addEventListener('animationend', function onAnimationEnd() {
                 // Remove the event listener to prevent memory leaks
                 logo.removeEventListener('animationend', onAnimationEnd);
-                logo.style.position = 'fixed';
                 resolve();
             });
             // Start the animation

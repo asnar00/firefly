@@ -205,6 +205,7 @@ h3 {
 }
 
 .code-minimised {
+    overflow: hidden;
     max-width: 0px;
     max-height: 0px;
     min-width: 0px;
