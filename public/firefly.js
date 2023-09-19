@@ -650,12 +650,12 @@ function codeContainer(uid, codeDiv, title) {
     titleDiv.append(buttons);
     if (callers(card).length > 0) {
         let leftButton = element(`<i class="icon-angle-circled-left" "style=filter:invert(1);" id="${containerDiv.id}_left_button"></i>`);
-        listen(leftButton, 'click', () => { openCallers(card); scrollToView(callers(card)); });
+        listen(leftButton, 'click', () => { toggleCallers(card); });
         buttons.append(leftButton);
     }
     if (callees(card).length > 0) {
         let rightButton = element(`<i class="icon-angle-circled-right" id="${containerDiv.id}_right_button"></i>`);
-        listen(rightButton, 'click', () => { openCallees(card); scrollToView(callees(card)); });
+        listen(rightButton, 'click', () => { toggleCallees(card); });
         buttons.append(rightButton);
     }
     let closeButton = element(`<i class="icon-cancel" id="${containerDiv.id}_close_button"></i>`);
@@ -668,6 +668,42 @@ function codeContainer(uid, codeDiv, title) {
     wrapperDiv.appendChild(codeDiv);
     containerDiv.appendChild(wrapperDiv);
     return containerDiv;
+}
+function toggleCallees(card) {
+    let cs = callees(card);
+    let openDivs = [];
+    for (let c of cs) {
+        let div = s_graph.findDiv(c.uid);
+        if (div)
+            openDivs.push(div);
+    }
+    if (openDivs.length > 0) {
+        for (let div of openDivs) {
+            s_graph.remove(div);
+        }
+    }
+    else {
+        openCallees(card);
+        scrollToView(cs);
+    }
+}
+function toggleCallers(card) {
+    let cs = callers(card);
+    let openDivs = [];
+    for (let c of cs) {
+        let div = s_graph.findDiv(c.uid);
+        if (div)
+            openDivs.push(div);
+    }
+    if (openDivs.length > 0) {
+        for (let div of openDivs) {
+            s_graph.remove(div);
+        }
+    }
+    else {
+        openCallers(card);
+        scrollToView(callers(card));
+    }
 }
 function scrollToView(cards) {
     let divs = [];
