@@ -189,7 +189,9 @@ function searchBox() {
     const iconHTML = `<i class="${s_mainIcon}" style="padding-top: 6px;" id="search-button"></i>`;
     const icon2HTML = `<i class="icon-right-big" style="padding-top: 6px; padding-right:3px"></i>`;
     const searchResultsHTML = `<div class="search-results" id="search-results"></div>`;
-    const searchDivHTML = `<div class="search-box" id="search-box">${iconHTML}${searchFieldHTML}${icon2HTML}${searchResultsHTML}</div>`;
+    const issueIcon = (s_playMode=="replay") ? "icon-ok-circled" : "icon-attention-circled";
+    const issueButtonHTML = `<i class="${issueIcon}" style="padding-top: 3px; padding-right:8px; font-size:16px;"></i>`;
+    const searchDivHTML = `<div class="search-box" id="search-box">${iconHTML}${searchFieldHTML}${icon2HTML}${searchResultsHTML}${issueButtonHTML}</div>`;
     let searchDiv = element(searchDivHTML);
     document.body.append(searchDiv);
     let searchField = document.getElementById("search-field")!;
@@ -268,16 +270,7 @@ async function initKeyboard() {
                 selectSearchField();
             } else if (event.key== '.') {
                 event.preventDefault();
-                let synthetic = (event as any).synthetic;
-                if (s_playMode == "record" && synthetic===undefined) {
-                    stopRecording();
-                } else if (s_playMode == "replay") {
-                    if (synthetic===undefined) {
-                        setRecordMode();
-                    } else {
-                        stopPlayback();
-                    }
-                }
+                toggleEventRecord(event);
             }
         }
     });
@@ -289,6 +282,20 @@ async function stopRecording() {
     s_playMode = "replay";
     s_eventLog.stop();
     saveAll();
+}
+
+// toggle event recording
+function toggleEventRecord(event: Event) {
+    let synthetic = (event as any).synthetic;
+    if (s_playMode == "record" && synthetic===undefined) {
+        stopRecording();
+    } else if (s_playMode == "replay") {
+        if (synthetic===undefined) {
+            setRecordMode();
+        } else {
+            stopPlayback();
+        }
+    }
 }
 
 
@@ -651,32 +658,12 @@ function codeContainer(uid: string, codeDiv: HTMLElement, title: string) : HTMLE
     titleDiv.id = `${containerDiv.id}_title_bar`;
     titleDiv.textContent = title;
     listen(titleDiv, 'click', () => { toggleMinimise(containerDiv, codeDiv); });
-    // hmmmmm: addDetailTag(titleDiv, `${card.module}.${card.language}`);
-
-    // buttons
-    let buttons = element(`<div class="buttons" style="visibility:hidden;"></div>`);
-    titleDiv.append(buttons);
-
-    if (callers(card).length > 0) {
-        let leftButton = element(`<i class="icon-angle-circled-left" "style=filter:invert(1);" id="${containerDiv.id}_left_button"></i>`)!;
-        listen(leftButton, 'click', () => { toggleCallers(card); });
-        buttons.append(leftButton);
-    }
-
-    if (callees(card).length > 0) {
-        let rightButton = element(`<i class="icon-angle-circled-right" id="${containerDiv.id}_right_button"></i>`)!;
-        listen(rightButton, 'click', () => { toggleCallees(card); });
-        buttons.append(rightButton);
-    }
-
-    let closeButton = element(`<i class="icon-cancel" id="${containerDiv.id}_close_button"></i>`)!;
-    listen(closeButton, 'click', () => { onCloseButtonClick(containerDiv); });
-    buttons.append(closeButton);
-
-    listen(titleDiv, 'mouseenter', () => { toggleTitle(titleDiv, buttons, true); });
-    listen(titleDiv, 'mouseleave', () => { toggleTitle(titleDiv, buttons, false); });
+    listen(titleDiv, 'mouseenter', () => { toggleTitle(card, containerDiv, titleDiv, true); });
+    listen(titleDiv, 'mouseleave', () => { toggleTitle(card, containerDiv, titleDiv, false); });
+    let buttons: HTMLElement = createTitleButtons(card, containerDiv, titleDiv);
+    buttons.style.visibility = 'hidden';
+    setTimeout(() => {updateTitleButtons(card, containerDiv, titleDiv);}, 310);
     
-
     // Append the title and the code div to the container
     wrapperDiv.appendChild(titleDiv);
     wrapperDiv.appendChild(codeDiv);
@@ -702,6 +689,42 @@ function toggleCallees(card: Card) {
         openCallees(card);
         scrollToView(cs);
     }
+}
+
+// create title buttons and add them to (titleDiv)
+function createTitleButtons(card: Card, containerDiv: HTMLElement, titleDiv: HTMLElement) : HTMLElement {
+    let buttons = element(`<div class="buttons"></div>`);
+    titleDiv.append(buttons);
+
+    let cs = callers(card);
+    if (cs.length > 0) {
+        let divs = getOpenDivs(cs);
+        let willClose = (divs.length == cs.length);
+        let icon = willClose ? "icon-angle-circled-left" : "icon-angle-left";
+        let leftButton = element(`<i class="${icon}" "style=filter:invert(1);" id="${containerDiv.id}_left_button"></i>`)!;
+        listen(leftButton, 'click', () => { 
+            toggleCallers(card);
+            setTimeout(() => {updateTitleButtons(card, containerDiv, titleDiv);}, 300);
+        });
+        buttons.append(leftButton);
+    }
+    cs = callees(card);
+    if (cs.length > 0) {
+        let divs = getOpenDivs(cs);
+        let willClose = (divs.length == cs.length);
+        let icon = willClose ? "icon-angle-circled-right" : "icon-angle-right";
+        let rightButton = element(`<i class="${icon}" id="${containerDiv.id}_right_button"></i>`)!;
+        listen(rightButton, 'click', () => { 
+            toggleCallees(card); 
+            setTimeout(() => {updateTitleButtons(card, containerDiv, titleDiv);}, 300);
+        });
+        buttons.append(rightButton);
+    }
+
+    let closeButton = element(`<i class="icon-cancel" id="${containerDiv.id}_close_button"></i>`)!;
+    listen(closeButton, 'click', () => { onCloseButtonClick(containerDiv); });
+    buttons.append(closeButton);
+    return buttons;
 }
 
 // toggle visibility of all callers of (card) [upstream]
@@ -761,12 +784,25 @@ function setViewStyle(div: HTMLElement, view: CardView) {
 }
 
 // toggle visibility of buttons within a title
-function toggleTitle(titleDiv: HTMLElement, buttonDiv: HTMLElement, entering: boolean) {
+function toggleTitle(card: Card, containerDiv: HTMLElement, titleDiv: HTMLElement, entering: boolean) {
+    let buttonDiv : HTMLElement | null = titleDiv.querySelector('.buttons')!;
     if (entering) {
-        buttonDiv.style.visibility = "visible";
+        buttonDiv!.style.visibility = 'visible';
     } else {
-        buttonDiv.style.visibility = "hidden";
+        buttonDiv!.style.visibility = 'hidden';
     }
+}
+
+// update buttons in title bar
+function updateTitleButtons(card: Card, containerDiv: HTMLElement, titleDiv: HTMLElement) {
+    let buttonDiv : HTMLElement | null = titleDiv.querySelector('.buttons')!;
+    let vis = 'visible';
+    if (buttonDiv) {
+        buttonDiv.remove();
+        vis = buttonDiv.style.visibility;
+    }
+    let newButtonDiv: HTMLElement = createTitleButtons(card, containerDiv, titleDiv);
+    newButtonDiv.style.visibility = vis;
 }
 
 // close card and de-highlight buttons that link to it

@@ -253,7 +253,6 @@ DONE:
 ___
 SCRIBBLES
 
-
 OK, so here is the thing we need to demonstrate: feature modularity.
 
 When interacting with the code, you want to implement a new feature. So we have a conversation with the agent about the change we want, and it builds a task tree showing what modifications it's going to make to the code. Then it makes the modifications, runs tests, repeat, and so on.
@@ -266,4 +265,20 @@ We want to generate a "packaged feature" which tells the story of how the featur
 - task tree
 - modifications to code and meta-code
 
-miso
+miso.
+
+Where we are now: looking at caller-callee open/close button behaviour. Hard to get right.
+
+- close shouldn't close parentNode (otherwise everything closes)
+- button state should toggle nicely, layout shouldn't flip around
+- choose better button icons
+
+We really should get some kind of AI stuff working now right. We have the idea.
+
+What: purpose from perspective of caller
+How: what it does to achieve that purpose
+Steps: pseudocode, line-for-line. There's got to be a nice way.
+
+
+
+
