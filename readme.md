@@ -251,34 +251,14 @@ DONE:
 - fix sort-index by tracing from the first column DONE
 
 ___
-SCRIBBLES
+NEXT STEPS:
 
-OK, so here is the thing we need to demonstrate: feature modularity.
+- persistence
+- delta on import: only process changed cards
+- generate what and how strings!
+- generate pseudocode.
 
-When interacting with the code, you want to implement a new feature. So we have a conversation with the agent about the change we want, and it builds a task tree showing what modifications it's going to make to the code. Then it makes the modifications, runs tests, repeat, and so on.
 
-The goal should be to demonstrate this workflow for any language, or at least ts and py.
-
-We want to generate a "packaged feature" which tells the story of how the feature got built:
-- recording of the "fail" case (original code)
-- conversation to establish goals of changes
-- task tree
-- modifications to code and meta-code
-
-miso.
-
-Where we are now: looking at caller-callee open/close button behaviour. Hard to get right.
-
-- close shouldn't close parentNode (otherwise everything closes)
-- choose better button icons
-
-- button state should toggle nicely, layout shouldn't flip around DONE
-
-We really should get some kind of AI stuff working now right. We have the idea.
-
-What: purpose from perspective of caller
-How: what it does to achieve that purpose
-Steps: pseudocode, line-for-line. There's got to be a nice way.
 
 
 

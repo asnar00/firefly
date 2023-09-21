@@ -190,7 +190,7 @@ function searchBox() {
     const icon2HTML = `<i class="icon-right-big" style="padding-top: 6px; padding-right:3px"></i>`;
     const searchResultsHTML = `<div class="search-results" id="search-results"></div>`;
     const issueIcon = (s_playMode=="replay") ? "icon-ok" : "icon-ccw";
-    const issueButtonHTML = `<i class="${issueIcon}" style="padding-top: 3px; padding-right:8px; font-size:16px;"></i>`;
+    const issueButtonHTML = `<i class="${issueIcon}" style="padding-top: 3px; padding-right:8px; font-size:16px; cursor: pointer;"></i>`;
     let issueButton = element(issueButtonHTML);
     listen(issueButton, 'click', (event: MouseEvent) => {
         toggleEventRecord(event);
