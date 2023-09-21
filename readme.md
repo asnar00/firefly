@@ -242,15 +242,28 @@ OK, cool, that's interesting, hadn't thought of that.
 So next step: fix all open/close logic bugs, make transitions beautiful.
 
 ___
-things to do:
-
-- close-multiple should fix link highlights (not sure how)
-- fix backward looping edges : thread them around nodes
-
-
 DONE:
+- close-multiple should fix link highlights (not sure how) DONE
 - animation in and out DONE
 - auto-scroll behaviour (scrollToView) DONE
 - toggle up/down arrow buttons (close-all-callers/callees) DONE
 - close should close dependents automatically DONE
 - fix sort-index by tracing from the first column DONE
+
+___
+SCRIBBLES
+
+
+OK, so here is the thing we need to demonstrate: feature modularity.
+
+When interacting with the code, you want to implement a new feature. So we have a conversation with the agent about the change we want, and it builds a task tree showing what modifications it's going to make to the code. Then it makes the modifications, runs tests, repeat, and so on.
+
+The goal should be to demonstrate this workflow for any language, or at least ts and py.
+
+We want to generate a "packaged feature" which tells the story of how the feature got built:
+- recording of the "fail" case (original code)
+- conversation to establish goals of changes
+- task tree
+- modifications to code and meta-code
+
+miso

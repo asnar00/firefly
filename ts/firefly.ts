@@ -83,28 +83,36 @@ async function main() {
     await run();
 }
 
+// set up the client, load everything, run event loop
 async function run() {
     await init();
-    await loadCards();
-    removeBusyIcon();
-    await animateLogoToLeft();
-    await openSession();
-    searchBox();
+    await loadAll();
     eventLoop();
 }
 
+// initialise all the client things
 async function init() {
     initLogo();
     initBusyIcon();
     initGraph();
     initKeyboard();
     initMouse();
+    searchBox();
+}
+
+// load all the data we need from the server
+async function loadAll() {
+    await loadCards();
+    removeBusyIcon();
+    await animateLogoToLeft();
+    await openSession();
 }
 
 function initMouse() {
     // nothing atm
 }
 
+// move the logo to bottom left to signal we are good to go!
 function initLogo() {
     const logo = document.getElementById('logo_etc') as HTMLElement;
     logo.style.left = `${(window.innerWidth - logo.offsetWidth)/2}px`;
@@ -112,22 +120,26 @@ function initLogo() {
     logo.style.transition = `top 0.25s`;
 }
 
+// display a rotating busy icon 
 function initBusyIcon() {
     const logo = document.getElementById('logo_etc') as HTMLElement;
     const busy = element(`<i class="icon-arrows-cw rotating" id="busy-icon"></i>`);
     logo.append(busy);
 }
 
+// stop displaying the busy icon
 function removeBusyIcon() {
     const busyIcon = document.getElementById('busy-icon') as HTMLElement;
     if (busyIcon) busyIcon.remove();
 }
 
+// initialise the graph manager
 function initGraph() {
     const container = document.getElementById('container') as HTMLElement;
     s_graph = new Graph(container);
 }
 
+// update state
 function eventLoop() {
     s_eventLog.update();
     s_graph.update();
@@ -135,6 +147,7 @@ function eventLoop() {
     requestAnimationFrame(eventLoop);
 }
 
+// load all cards from server, set them up
 async function loadCards() {
     console.log("loadCards");
     if (s_useLocalFiles) {
@@ -148,6 +161,7 @@ async function loadCards() {
     console.log("nCards:", s_allCards.length);
 }
 
+// load session state data, make it so
 async function openSession() {
     console.log("openSession");
     let json = await load("sessions/test.json");
@@ -169,6 +183,7 @@ async function openSession() {
     s_searchQuery = json.ui.search;
 }
 
+// create search box div
 function searchBox() {
     const searchFieldHTML = `<div class="search-field" id="search-field" contenteditable="true" spellcheck="false"></div>`;
     const iconHTML = `<i class="${s_mainIcon}" style="padding-top: 6px;" id="search-button"></i>`;
@@ -193,6 +208,7 @@ function searchBox() {
     }
 }
 
+// do a server-side semantic search on whatever text is in (searchField)
 async function updateSearch(searchField: HTMLElement) {
     searchField.style.width = '128px';
     if (searchField.scrollWidth < 512) {
@@ -206,6 +222,7 @@ async function updateSearch(searchField: HTMLElement) {
     }, 0);
 }
 
+// search for some query string, display the results
 async function searchFor(query: string) {
     const results = await search(s_searchQuery);
     clearSearchResults();
@@ -214,6 +231,7 @@ async function searchFor(query: string) {
     }
 }
 
+// pop-up a menu of possible search types (inoperative)
 function searchOptions() {
     console.log("searchOptions");
     let palette = element(`<div class="icon-palette"></div>`);
@@ -231,6 +249,7 @@ function searchOptions() {
     palette.style.top = `${window.innerHeight -  64}px`;
 }
 
+// change the search type (inoperative)
 function changeSearchOption(optionName: string, iconName: string) {
     console.log("changeSearchOption", optionName, iconName);
     s_mainIcon = iconName;
@@ -240,12 +259,13 @@ function changeSearchOption(optionName: string, iconName: string) {
     searchBox();
 }
 
+// set up keyboard events
 async function initKeyboard() {
     listen(document.body, 'keydown', async (event: KeyboardEvent) => {
         if (event.metaKey) {
             if(event.key == 'f') {
                 event.preventDefault();
-                onCommandKey();
+                selectSearchField();
             } else if (event.key== '.') {
                 event.preventDefault();
                 let synthetic = (event as any).synthetic;
@@ -263,6 +283,7 @@ async function initKeyboard() {
     });
 }
 
+// stop event recording
 async function stopRecording() {
     say("stop eventlog; next run will replay");
     s_playMode = "replay";
@@ -270,24 +291,29 @@ async function stopRecording() {
     saveAll();
 }
 
+
+// stop event playback
 function stopPlayback() {
     say("end of event playback");
     s_eventLog.stop();
 }
 
+// indicate that the next run shouldn't be in replay mode
 async function setRecordMode() {
     say("next run will record");
     s_playMode = "record";    
     saveAll();
 }
 
-async function onCommandKey() {
+// focuses on the search field and clears it
+async function selectSearchField() {
     let searchField = document.getElementById("search-field")!;
     clearSearchResults();
     searchField.innerText = "";
     searchField.focus();
 }
 
+// updates the search results bar with the latest matches
 function showSearchResults(results: any) {
     let searchResultsDiv = document.getElementById("search-results")!;
     const array = results.results;
@@ -393,6 +419,7 @@ function jumpToCard(card: Card) {
     openCallers(card);
 }
 
+// opens all cards called by (card)
 function openCallees(card: Card) {
     const div = s_graph.findDiv(card.uid);
     if (!div) return;
@@ -417,6 +444,7 @@ function openCallees(card: Card) {
     }
 }
 
+// returns a list of all cards called by (card) [callable only]
 function callees(card: Card) : Card[] {
     let calleeCards: Card[] = [];
     for(let iDep=0; iDep < card.dependsOn.length; iDep++) {
@@ -432,6 +460,7 @@ function callees(card: Card) : Card[] {
     return calleeCards;
 }
 
+// opens all cards that call (card)
 function openCallers(card: Card) {
     const div = s_graph.findDiv(card.uid);
     if (!div) return;
@@ -440,6 +469,7 @@ function openCallers(card: Card) {
     }
 }
 
+// returns a list of all cards that call (card) [upstream]
 function callers(card: Card) : Card[] {
     let callers: Card[] = [];
     if (card.kind == "function" || card.kind == "method") {
@@ -455,11 +485,7 @@ function callers(card: Card) : Card[] {
     return callers;
 }
 
-// given (card) and (target), checks card.dependsOn and returns index of dependency that matches
-function findDependency(card: Card, target: Card) : number {
-    return card.dependsOn.findIndex(d => (d.targets.indexOf(target.uid) >= 0));
-}
-
+// empty out the search result bar
 function clearSearchResults() {
     let searchResultsDiv = document.getElementById("search-results")!;
     if (searchResultsDiv) {
@@ -469,11 +495,13 @@ function clearSearchResults() {
     }
 }
 
+// on server, do a semantic search and return list of matches
 async function search(query: string) : Promise<any> {
     if (query.trim() == "") return null;
     return await remote("@firefly.search", { query: query });
 }
 
+// import all files from within nominated path on user's machine
 async function importLocalFolder() {
     let logo: HTMLButtonElement = document.getElementById('logo_etc') as HTMLButtonElement;
     let button = element(`<button id="openDirectory" class="transparent-button" style="display: inline-block;">
@@ -546,6 +574,7 @@ async function animateLogoToLeft(): Promise<void> {
     });
 }
 
+// on server, open github repo, and analyse its contents
 async function openRepository(owner: string, repoName: string) {
     return await remote("@firefly.openRepository", { owner: owner, repoName: repoName });
 }
@@ -597,6 +626,7 @@ function cardToHTML(card: Card, view: CardView) : HTMLElement {
     return container;
 }
 
+// given a source card and one of its dependencies, return a decorated link button ID
 function linkID(sourceId: string, dep: Dependency, iDep: number) : string {
     let linkId = `from__${sourceId}__linkto__${iDep}__` + dep.targets[0];
     for(let i = 1; i < dep.targets.length; i++) {
@@ -605,11 +635,13 @@ function linkID(sourceId: string, dep: Dependency, iDep: number) : string {
     return linkId;
 }
 
+// given a DIV containing card content, wrap it up in a container: title bar, content wrapper, the works
 function codeContainer(uid: string, codeDiv: HTMLElement, title: string) : HTMLElement {
+    let card = findCard(uid)!;
+
     let containerDiv = document.createElement('div');
     containerDiv.id = uid;
     containerDiv.className = 'code-container';
-
     const wrapperDiv = document.createElement('div');
     wrapperDiv.className = 'inner-wrapper';
 
@@ -618,9 +650,8 @@ function codeContainer(uid: string, codeDiv: HTMLElement, title: string) : HTMLE
     titleDiv.className = 'code-title';
     titleDiv.id = `${containerDiv.id}_title_bar`;
     titleDiv.textContent = title;
-    listen(titleDiv, 'click', () => { onTitleBarClick(containerDiv, codeDiv); });
-
-    let card = findCard(containerDiv.id)!;
+    listen(titleDiv, 'click', () => { toggleMinimise(containerDiv, codeDiv); });
+    // hmmmmm: addDetailTag(titleDiv, `${card.module}.${card.language}`);
 
     // buttons
     let buttons = element(`<div class="buttons" style="visibility:hidden;"></div>`);
@@ -642,8 +673,8 @@ function codeContainer(uid: string, codeDiv: HTMLElement, title: string) : HTMLE
     listen(closeButton, 'click', () => { onCloseButtonClick(containerDiv); });
     buttons.append(closeButton);
 
-    listen(titleDiv, 'mouseenter', () => { onMouseOverTitle(titleDiv, buttons, true); });
-    listen(titleDiv, 'mouseleave', () => { onMouseOverTitle(titleDiv, buttons, false); });
+    listen(titleDiv, 'mouseenter', () => { toggleTitle(titleDiv, buttons, true); });
+    listen(titleDiv, 'mouseleave', () => { toggleTitle(titleDiv, buttons, false); });
     
 
     // Append the title and the code div to the container
@@ -653,18 +684,14 @@ function codeContainer(uid: string, codeDiv: HTMLElement, title: string) : HTMLE
     return containerDiv;
 }
 
+// toggle visility of all callees of (card) [downstream]
 function toggleCallees(card: Card) {
     let fromDiv = s_graph.findDiv(card.uid);
     if (!fromDiv) return;
     let cs = callees(card);
-    let openDivs : HTMLElement[] = [];
-    for(let c of cs) {
-        let div = s_graph.findDiv(c.uid);
-        if (div) openDivs.push(div);
-    }
-    if (openDivs.length > 0) {
+    let openDivs : HTMLElement[] = getOpenDivs(cs);
+    if (openDivs.length == cs.length) { // all open
         for(let div of openDivs) {
-            console.log(" ", div.id);
             let linkButtons = findLinkButtonsTo(div, fromDiv);
             for(let b of linkButtons) {
                 highlightLink(b, false);
@@ -677,14 +704,11 @@ function toggleCallees(card: Card) {
     }
 }
 
+// toggle visibility of all callers of (card) [upstream]
 function toggleCallers(card: Card) {
     let cs = callers(card);
-    let openDivs : HTMLElement[] = [];
-    for(let c of cs) {
-        let div = s_graph.findDiv(c.uid);
-        if (div) openDivs.push(div);
-    }
-    if (openDivs.length > 0) {
+    let openDivs : HTMLElement[] = getOpenDivs(cs);
+    if (openDivs.length == cs.length) { // if all are open
         for(let div of openDivs) {
             s_graph.remove(div);
         }
@@ -694,19 +718,32 @@ function toggleCallers(card: Card) {
     }
 }
 
+// returns list of open DIVs for any list of cards
+function getOpenDivs(cards: Card[]) : HTMLElement[] {
+    let openDivs : HTMLElement[] = [];
+    for(let c of cards) {
+        let div = s_graph.findDiv(c.uid);
+        if (div) openDivs.push(div);
+    }
+    return openDivs;
+}
+
+// scroll main window to ensure that all (cards) are in view
 function scrollToView(cards: Card[]) {
     let divs: HTMLElement[] = [];
     for(let c of cards) divs.push(s_graph.findDiv(c.uid)!); 
     s_graph.scrollToView(divs);
 }
 
-function onTitleBarClick(containerDiv: HTMLElement, codeDiv: HTMLElement) {
+// toggle card view minimise
+function toggleMinimise(containerDiv: HTMLElement, codeDiv: HTMLElement) {
     const view = s_graph.userInfo(containerDiv)! as CardView;
     view.minimised = !(view.minimised);
     setViewStyle(containerDiv, view);
     s_graph.scrollToView([containerDiv]);
 }
 
+// ensure that (div)'s styles etc match the settings in (view)
 function setViewStyle(div: HTMLElement, view: CardView) {
     let codeDiv = div.children[0].children[1] as HTMLElement;  // TODO:  better way
     if (view.minimised) {
@@ -723,7 +760,8 @@ function setViewStyle(div: HTMLElement, view: CardView) {
     s_graph.requestArrange();
 }
 
-function onMouseOverTitle(titleDiv: HTMLElement, buttonDiv: HTMLElement, entering: boolean) {
+// toggle visibility of buttons within a title
+function toggleTitle(titleDiv: HTMLElement, buttonDiv: HTMLElement, entering: boolean) {
     if (entering) {
         buttonDiv.style.visibility = "visible";
     } else {
@@ -731,6 +769,7 @@ function onMouseOverTitle(titleDiv: HTMLElement, buttonDiv: HTMLElement, enterin
     }
 }
 
+// close card and de-highlight buttons that link to it
 function onCloseButtonClick(div: HTMLElement) {
     let buttonDivs = s_graph.findSourceDivs(div);
     closeCard(div.id);
@@ -739,6 +778,7 @@ function onCloseButtonClick(div: HTMLElement) {
     }
 }
 
+// user-readable short name, as concise as possible
 function shortName(card: Card) : string {
     let result: string = "";
     if (card.parent != "null") { result += findCard(card.parent)!.name + "."; }
@@ -747,16 +787,19 @@ function shortName(card: Card) : string {
     return result;
 }
 
+// even more concise short-name for a card
 function superShortName(card: Card) : string {
     let result = card.name;
     if (card.kind=="method" || card.kind=="function") result += "()";
     return result;
 }
 
+// sets highlight style on or off for a link button
 function highlightLink(linkDiv: HTMLElement, highlight: boolean) {
     if (highlight) linkDiv.className = "tag-highlight"; else linkDiv.className = "tag";
 }
 
+// listen for an event, but enable record/replay and auto-save-all
 function listen(elem: HTMLElement, type: string, func: Function) {
     elem.addEventListener(type, async (event) => {
         if (elem.id == "") {
@@ -773,6 +816,7 @@ function listen(elem: HTMLElement, type: string, func: Function) {
     });
 }
 
+// toggle expanded/contracted state of a card's view
 function expandOrContract(elem : HTMLElement) {
     let div = s_graph.topLevelDiv(elem)!;
     let view = s_graph.userInfo(div) as CardView;
@@ -789,6 +833,7 @@ function expandOrContract(elem : HTMLElement) {
     s_graph.scrollToView([div]);
 }
 
+// gets the current scroll offsets for a card view
 function getScrollPos(elem: HTMLElement) {
     let view = s_graph.userInfo(elem);
     if (view.state == CardViewState.Compact) {
@@ -799,6 +844,7 @@ function getScrollPos(elem: HTMLElement) {
 
 const debouncedSaveAll = debounce(() => { saveAll() }, 300);
 
+// save all state
 async function saveAll() {
     console.log("saveAll");
     const uiJson = { playMode: s_playMode, search: s_searchQuery };
@@ -807,10 +853,12 @@ async function saveAll() {
     s_eventLog.flush();
 }
 
+// saves (obj) to (path) on server
 async function save(json: any, path: string) {
     await remote("@firefly.save", { path: path, obj: json });
 }
 
+// loads (path) from server to create object
 async function load(path: string) : Promise<any> {
     return await remote("@firefly.load", { path: path});
 }

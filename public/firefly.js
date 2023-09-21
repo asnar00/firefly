@@ -94,17 +94,15 @@ function main() {
         yield run();
     });
 }
+// set up the client, load everything, run event loop
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         yield init();
-        yield loadCards();
-        removeBusyIcon();
-        yield animateLogoToLeft();
-        yield openSession();
-        searchBox();
+        yield loadAll();
         eventLoop();
     });
 }
+// initialise all the client things
 function init() {
     return __awaiter(this, void 0, void 0, function* () {
         initLogo();
@@ -112,37 +110,53 @@ function init() {
         initGraph();
         initKeyboard();
         initMouse();
+        searchBox();
+    });
+}
+// load all the data we need from the server
+function loadAll() {
+    return __awaiter(this, void 0, void 0, function* () {
+        yield loadCards();
+        removeBusyIcon();
+        yield animateLogoToLeft();
+        yield openSession();
     });
 }
 function initMouse() {
     // nothing atm
 }
+// move the logo to bottom left to signal we are good to go!
 function initLogo() {
     const logo = document.getElementById('logo_etc');
     logo.style.left = `${(window.innerWidth - logo.offsetWidth) / 2}px`;
     logo.style.top = `${(window.innerHeight / 2) - 40}px`;
     logo.style.transition = `top 0.25s`;
 }
+// display a rotating busy icon 
 function initBusyIcon() {
     const logo = document.getElementById('logo_etc');
     const busy = element(`<i class="icon-arrows-cw rotating" id="busy-icon"></i>`);
     logo.append(busy);
 }
+// stop displaying the busy icon
 function removeBusyIcon() {
     const busyIcon = document.getElementById('busy-icon');
     if (busyIcon)
         busyIcon.remove();
 }
+// initialise the graph manager
 function initGraph() {
     const container = document.getElementById('container');
     s_graph = new Graph(container);
 }
+// update state
 function eventLoop() {
     s_eventLog.update();
     s_graph.update();
     updateDetailTags();
     requestAnimationFrame(eventLoop);
 }
+// load all cards from server, set them up
 function loadCards() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("loadCards");
@@ -157,6 +171,7 @@ function loadCards() {
         console.log("nCards:", s_allCards.length);
     });
 }
+// load session state data, make it so
 function openSession() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("openSession");
@@ -180,6 +195,7 @@ function openSession() {
         s_searchQuery = json.ui.search;
     });
 }
+// create search box div
 function searchBox() {
     const searchFieldHTML = `<div class="search-field" id="search-field" contenteditable="true" spellcheck="false"></div>`;
     const iconHTML = `<i class="${s_mainIcon}" style="padding-top: 6px;" id="search-button"></i>`;
@@ -205,6 +221,7 @@ function searchBox() {
         searchFor(s_searchQuery);
     }
 }
+// do a server-side semantic search on whatever text is in (searchField)
 function updateSearch(searchField) {
     return __awaiter(this, void 0, void 0, function* () {
         searchField.style.width = '128px';
@@ -220,6 +237,7 @@ function updateSearch(searchField) {
         }), 0);
     });
 }
+// search for some query string, display the results
 function searchFor(query) {
     return __awaiter(this, void 0, void 0, function* () {
         const results = yield search(s_searchQuery);
@@ -229,6 +247,7 @@ function searchFor(query) {
         }
     });
 }
+// pop-up a menu of possible search types (inoperative)
 function searchOptions() {
     console.log("searchOptions");
     let palette = element(`<div class="icon-palette"></div>`);
@@ -245,6 +264,7 @@ function searchOptions() {
     document.body.append(palette);
     palette.style.top = `${window.innerHeight - 64}px`;
 }
+// change the search type (inoperative)
 function changeSearchOption(optionName, iconName) {
     console.log("changeSearchOption", optionName, iconName);
     s_mainIcon = iconName;
@@ -253,13 +273,14 @@ function changeSearchOption(optionName, iconName) {
     searchDiv.remove();
     searchBox();
 }
+// set up keyboard events
 function initKeyboard() {
     return __awaiter(this, void 0, void 0, function* () {
         listen(document.body, 'keydown', (event) => __awaiter(this, void 0, void 0, function* () {
             if (event.metaKey) {
                 if (event.key == 'f') {
                     event.preventDefault();
-                    onCommandKey();
+                    selectSearchField();
                 }
                 else if (event.key == '.') {
                     event.preventDefault();
@@ -280,6 +301,7 @@ function initKeyboard() {
         }));
     });
 }
+// stop event recording
 function stopRecording() {
     return __awaiter(this, void 0, void 0, function* () {
         say("stop eventlog; next run will replay");
@@ -288,10 +310,12 @@ function stopRecording() {
         saveAll();
     });
 }
+// stop event playback
 function stopPlayback() {
     say("end of event playback");
     s_eventLog.stop();
 }
+// indicate that the next run shouldn't be in replay mode
 function setRecordMode() {
     return __awaiter(this, void 0, void 0, function* () {
         say("next run will record");
@@ -299,7 +323,8 @@ function setRecordMode() {
         saveAll();
     });
 }
-function onCommandKey() {
+// focuses on the search field and clears it
+function selectSearchField() {
     return __awaiter(this, void 0, void 0, function* () {
         let searchField = document.getElementById("search-field");
         clearSearchResults();
@@ -307,6 +332,7 @@ function onCommandKey() {
         searchField.focus();
     });
 }
+// updates the search results bar with the latest matches
 function showSearchResults(results) {
     let searchResultsDiv = document.getElementById("search-results");
     const array = results.results;
@@ -405,6 +431,7 @@ function jumpToCard(card) {
     openCallees(card);
     openCallers(card);
 }
+// opens all cards called by (card)
 function openCallees(card) {
     const div = s_graph.findDiv(card.uid);
     if (!div)
@@ -429,6 +456,7 @@ function openCallees(card) {
         }
     }
 }
+// returns a list of all cards called by (card) [callable only]
 function callees(card) {
     let calleeCards = [];
     for (let iDep = 0; iDep < card.dependsOn.length; iDep++) {
@@ -443,6 +471,7 @@ function callees(card) {
     }
     return calleeCards;
 }
+// opens all cards that call (card)
 function openCallers(card) {
     const div = s_graph.findDiv(card.uid);
     if (!div)
@@ -451,6 +480,7 @@ function openCallers(card) {
         openCardTo(caller.uid, div, true);
     }
 }
+// returns a list of all cards that call (card) [upstream]
 function callers(card) {
     let callers = [];
     if (card.kind == "function" || card.kind == "method") {
@@ -465,10 +495,7 @@ function callers(card) {
     }
     return callers;
 }
-// given (card) and (target), checks card.dependsOn and returns index of dependency that matches
-function findDependency(card, target) {
-    return card.dependsOn.findIndex(d => (d.targets.indexOf(target.uid) >= 0));
-}
+// empty out the search result bar
 function clearSearchResults() {
     let searchResultsDiv = document.getElementById("search-results");
     if (searchResultsDiv) {
@@ -477,6 +504,7 @@ function clearSearchResults() {
         }
     }
 }
+// on server, do a semantic search and return list of matches
 function search(query) {
     return __awaiter(this, void 0, void 0, function* () {
         if (query.trim() == "")
@@ -484,6 +512,7 @@ function search(query) {
         return yield remote("@firefly.search", { query: query });
     });
 }
+// import all files from within nominated path on user's machine
 function importLocalFolder() {
     return __awaiter(this, void 0, void 0, function* () {
         let logo = document.getElementById('logo_etc');
@@ -567,6 +596,7 @@ function animateLogoToLeft() {
         });
     });
 }
+// on server, open github repo, and analyse its contents
 function openRepository(owner, repoName) {
     return __awaiter(this, void 0, void 0, function* () {
         return yield remote("@firefly.openRepository", { owner: owner, repoName: repoName });
@@ -625,6 +655,7 @@ function cardToHTML(card, view) {
     setViewStyle(container, view);
     return container;
 }
+// given a source card and one of its dependencies, return a decorated link button ID
 function linkID(sourceId, dep, iDep) {
     let linkId = `from__${sourceId}__linkto__${iDep}__` + dep.targets[0];
     for (let i = 1; i < dep.targets.length; i++) {
@@ -632,7 +663,9 @@ function linkID(sourceId, dep, iDep) {
     }
     return linkId;
 }
+// given a DIV containing card content, wrap it up in a container: title bar, content wrapper, the works
 function codeContainer(uid, codeDiv, title) {
+    let card = findCard(uid);
     let containerDiv = document.createElement('div');
     containerDiv.id = uid;
     containerDiv.className = 'code-container';
@@ -643,8 +676,8 @@ function codeContainer(uid, codeDiv, title) {
     titleDiv.className = 'code-title';
     titleDiv.id = `${containerDiv.id}_title_bar`;
     titleDiv.textContent = title;
-    listen(titleDiv, 'click', () => { onTitleBarClick(containerDiv, codeDiv); });
-    let card = findCard(containerDiv.id);
+    listen(titleDiv, 'click', () => { toggleMinimise(containerDiv, codeDiv); });
+    // hmmmmm: addDetailTag(titleDiv, `${card.module}.${card.language}`);
     // buttons
     let buttons = element(`<div class="buttons" style="visibility:hidden;"></div>`);
     titleDiv.append(buttons);
@@ -661,28 +694,23 @@ function codeContainer(uid, codeDiv, title) {
     let closeButton = element(`<i class="icon-cancel" id="${containerDiv.id}_close_button"></i>`);
     listen(closeButton, 'click', () => { onCloseButtonClick(containerDiv); });
     buttons.append(closeButton);
-    listen(titleDiv, 'mouseenter', () => { onMouseOverTitle(titleDiv, buttons, true); });
-    listen(titleDiv, 'mouseleave', () => { onMouseOverTitle(titleDiv, buttons, false); });
+    listen(titleDiv, 'mouseenter', () => { toggleTitle(titleDiv, buttons, true); });
+    listen(titleDiv, 'mouseleave', () => { toggleTitle(titleDiv, buttons, false); });
     // Append the title and the code div to the container
     wrapperDiv.appendChild(titleDiv);
     wrapperDiv.appendChild(codeDiv);
     containerDiv.appendChild(wrapperDiv);
     return containerDiv;
 }
+// toggle visility of all callees of (card) [downstream]
 function toggleCallees(card) {
     let fromDiv = s_graph.findDiv(card.uid);
     if (!fromDiv)
         return;
     let cs = callees(card);
-    let openDivs = [];
-    for (let c of cs) {
-        let div = s_graph.findDiv(c.uid);
-        if (div)
-            openDivs.push(div);
-    }
-    if (openDivs.length > 0) {
+    let openDivs = getOpenDivs(cs);
+    if (openDivs.length == cs.length) { // all open
         for (let div of openDivs) {
-            console.log(" ", div.id);
             let linkButtons = findLinkButtonsTo(div, fromDiv);
             for (let b of linkButtons) {
                 highlightLink(b, false);
@@ -695,15 +723,11 @@ function toggleCallees(card) {
         scrollToView(cs);
     }
 }
+// toggle visibility of all callers of (card) [upstream]
 function toggleCallers(card) {
     let cs = callers(card);
-    let openDivs = [];
-    for (let c of cs) {
-        let div = s_graph.findDiv(c.uid);
-        if (div)
-            openDivs.push(div);
-    }
-    if (openDivs.length > 0) {
+    let openDivs = getOpenDivs(cs);
+    if (openDivs.length == cs.length) { // if all are open
         for (let div of openDivs) {
             s_graph.remove(div);
         }
@@ -713,18 +737,31 @@ function toggleCallers(card) {
         scrollToView(callers(card));
     }
 }
+// returns list of open DIVs for any list of cards
+function getOpenDivs(cards) {
+    let openDivs = [];
+    for (let c of cards) {
+        let div = s_graph.findDiv(c.uid);
+        if (div)
+            openDivs.push(div);
+    }
+    return openDivs;
+}
+// scroll main window to ensure that all (cards) are in view
 function scrollToView(cards) {
     let divs = [];
     for (let c of cards)
         divs.push(s_graph.findDiv(c.uid));
     s_graph.scrollToView(divs);
 }
-function onTitleBarClick(containerDiv, codeDiv) {
+// toggle card view minimise
+function toggleMinimise(containerDiv, codeDiv) {
     const view = s_graph.userInfo(containerDiv);
     view.minimised = !(view.minimised);
     setViewStyle(containerDiv, view);
     s_graph.scrollToView([containerDiv]);
 }
+// ensure that (div)'s styles etc match the settings in (view)
 function setViewStyle(div, view) {
     let codeDiv = div.children[0].children[1]; // TODO:  better way
     if (view.minimised) {
@@ -742,7 +779,8 @@ function setViewStyle(div, view) {
     }
     s_graph.requestArrange();
 }
-function onMouseOverTitle(titleDiv, buttonDiv, entering) {
+// toggle visibility of buttons within a title
+function toggleTitle(titleDiv, buttonDiv, entering) {
     if (entering) {
         buttonDiv.style.visibility = "visible";
     }
@@ -750,6 +788,7 @@ function onMouseOverTitle(titleDiv, buttonDiv, entering) {
         buttonDiv.style.visibility = "hidden";
     }
 }
+// close card and de-highlight buttons that link to it
 function onCloseButtonClick(div) {
     let buttonDivs = s_graph.findSourceDivs(div);
     closeCard(div.id);
@@ -757,6 +796,7 @@ function onCloseButtonClick(div) {
         highlightLink(button, false);
     }
 }
+// user-readable short name, as concise as possible
 function shortName(card) {
     let result = "";
     if (card.parent != "null") {
@@ -767,18 +807,21 @@ function shortName(card) {
         result += "()";
     return result;
 }
+// even more concise short-name for a card
 function superShortName(card) {
     let result = card.name;
     if (card.kind == "method" || card.kind == "function")
         result += "()";
     return result;
 }
+// sets highlight style on or off for a link button
 function highlightLink(linkDiv, highlight) {
     if (highlight)
         linkDiv.className = "tag-highlight";
     else
         linkDiv.className = "tag";
 }
+// listen for an event, but enable record/replay and auto-save-all
 function listen(elem, type, func) {
     elem.addEventListener(type, (event) => __awaiter(this, void 0, void 0, function* () {
         if (elem.id == "") {
@@ -794,6 +837,7 @@ function listen(elem, type, func) {
         }
     }));
 }
+// toggle expanded/contracted state of a card's view
 function expandOrContract(elem) {
     let div = s_graph.topLevelDiv(elem);
     let view = s_graph.userInfo(div);
@@ -810,6 +854,7 @@ function expandOrContract(elem) {
     setViewStyle(div, view);
     s_graph.scrollToView([div]);
 }
+// gets the current scroll offsets for a card view
 function getScrollPos(elem) {
     let view = s_graph.userInfo(elem);
     if (view.state == CardViewState.Compact) {
@@ -818,6 +863,7 @@ function getScrollPos(elem) {
     }
 }
 const debouncedSaveAll = debounce(() => { saveAll(); }, 300);
+// save all state
 function saveAll() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("saveAll");
@@ -827,11 +873,13 @@ function saveAll() {
         s_eventLog.flush();
     });
 }
+// saves (obj) to (path) on server
 function save(json, path) {
     return __awaiter(this, void 0, void 0, function* () {
         yield remote("@firefly.save", { path: path, obj: json });
     });
 }
+// loads (path) from server to create object
 function load(path) {
     return __awaiter(this, void 0, void 0, function* () {
         return yield remote("@firefly.load", { path: path });
