@@ -97,7 +97,6 @@ async function init() {
     initGraph();
     initKeyboard();
     initMouse();
-    searchBox();
 }
 
 // load all the data we need from the server
@@ -106,6 +105,7 @@ async function loadAll() {
     removeBusyIcon();
     await animateLogoToLeft();
     await openSession();
+    searchBox();
 }
 
 function initMouse() {
@@ -189,10 +189,15 @@ function searchBox() {
     const iconHTML = `<i class="${s_mainIcon}" style="padding-top: 6px;" id="search-button"></i>`;
     const icon2HTML = `<i class="icon-right-big" style="padding-top: 6px; padding-right:3px"></i>`;
     const searchResultsHTML = `<div class="search-results" id="search-results"></div>`;
-    const issueIcon = (s_playMode=="replay") ? "icon-ok-circled" : "icon-attention-circled";
+    const issueIcon = (s_playMode=="replay") ? "icon-ok" : "icon-ccw";
     const issueButtonHTML = `<i class="${issueIcon}" style="padding-top: 3px; padding-right:8px; font-size:16px;"></i>`;
-    const searchDivHTML = `<div class="search-box" id="search-box">${iconHTML}${searchFieldHTML}${icon2HTML}${searchResultsHTML}${issueButtonHTML}</div>`;
+    let issueButton = element(issueButtonHTML);
+    listen(issueButton, 'click', (event: MouseEvent) => {
+        toggleEventRecord(event);
+    });
+    const searchDivHTML = `<div class="search-box" id="search-box">${iconHTML}${searchFieldHTML}${icon2HTML}${searchResultsHTML}</div>`;
     let searchDiv = element(searchDivHTML);
+    searchDiv.append(issueButton);
     document.body.append(searchDiv);
     let searchField = document.getElementById("search-field")!;
     listen(searchField, 'keydown', async (event : KeyboardEvent) => {
@@ -375,7 +380,7 @@ class DetailTag {
         if (this.detailsDiv.style.visibility == 'visible') {
             let r = rect(this.div);
             this.detailsDiv.style.left = `${r.left}px`;
-            this.detailsDiv.style.top = `${r.top - 32}px`;
+            this.detailsDiv.style.top = `${r.top - 16}px`;
         }
     }
     remove() {
@@ -720,6 +725,8 @@ function createTitleButtons(card: Card, containerDiv: HTMLElement, titleDiv: HTM
         });
         buttons.append(rightButton);
     }
+
+    addDetailTag(titleDiv, `${card.module}.${card.language}`);
 
     let closeButton = element(`<i class="icon-cancel" id="${containerDiv.id}_close_button"></i>`)!;
     listen(closeButton, 'click', () => { onCloseButtonClick(containerDiv); });

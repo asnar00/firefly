@@ -270,8 +270,9 @@ miso.
 Where we are now: looking at caller-callee open/close button behaviour. Hard to get right.
 
 - close shouldn't close parentNode (otherwise everything closes)
-- button state should toggle nicely, layout shouldn't flip around
 - choose better button icons
+
+- button state should toggle nicely, layout shouldn't flip around DONE
 
 We really should get some kind of AI stuff working now right. We have the idea.
 
