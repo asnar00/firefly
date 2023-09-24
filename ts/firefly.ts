@@ -14,23 +14,6 @@ import {Vec2} from "./util.js";
 
 window.onload = () => { main(); };
 
-class App {
-    useLocalFiles = false;
-    dirHandle: any | null = null;
-    allCards: Card[] = [];
-    cardsByUid: Map<string, Card> = new Map();
-    graph : Graph = new Graph(document.getElementById("container")!);
-    mainIcon = "icon-search";
-    mainOption = "search";
-    searchQuery = "";
-    mainID = "ts_firefly_firefly_function_main";
-    playMode: string = "record";
-    eventLog: EventLog = new EventLog();
-    detailTags : DetailTag[] = [];
-}
-
-let s_app : App = new App();
-
 class CodeBlock {
     text: string = "";                  // actual code text
     language: string;                   // ".ts", ".py", ".cpp", ".hpp", etc.
@@ -82,6 +65,23 @@ class CardView {
         this.minimised = minimised;
     }
 }
+
+class App {
+    useLocalFiles = false;
+    dirHandle: any | null = null;
+    allCards: Card[] = [];
+    cardsByUid: Map<string, Card> = new Map();
+    graph : Graph = new Graph(document.getElementById("container")!);
+    mainIcon = "icon-search";
+    mainOption = "search";
+    searchQuery = "";
+    mainID = "ts_firefly_firefly_function_main";
+    playMode: string = "record";
+    eventLog: EventLog = new EventLog();
+    detailTags : DetailTag[] = [];
+}
+
+let s_app : App = new App();
 
 async function main() {
     console.log("firefly ᕦ(ツ)ᕤ");

@@ -24,23 +24,6 @@ import { rect } from "./util.js";
 import { Graph } from "./graph.js";
 import { EventLog } from "./events.js";
 window.onload = () => { main(); };
-class App {
-    constructor() {
-        this.useLocalFiles = false;
-        this.dirHandle = null;
-        this.allCards = [];
-        this.cardsByUid = new Map();
-        this.graph = new Graph(document.getElementById("container"));
-        this.mainIcon = "icon-search";
-        this.mainOption = "search";
-        this.searchQuery = "";
-        this.mainID = "ts_firefly_firefly_function_main";
-        this.playMode = "record";
-        this.eventLog = new EventLog();
-        this.detailTags = [];
-    }
-}
-let s_app = new App();
 class CodeBlock {
     constructor(code, language, iLine) {
         this.text = ""; // actual code text
@@ -94,6 +77,23 @@ class CardView {
         this.minimised = minimised;
     }
 }
+class App {
+    constructor() {
+        this.useLocalFiles = false;
+        this.dirHandle = null;
+        this.allCards = [];
+        this.cardsByUid = new Map();
+        this.graph = new Graph(document.getElementById("container"));
+        this.mainIcon = "icon-search";
+        this.mainOption = "search";
+        this.searchQuery = "";
+        this.mainID = "ts_firefly_firefly_function_main";
+        this.playMode = "record";
+        this.eventLog = new EventLog();
+        this.detailTags = [];
+    }
+}
+let s_app = new App();
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("firefly ᕦ(ツ)ᕤ");
