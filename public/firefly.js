@@ -24,17 +24,23 @@ import { rect } from "./util.js";
 import { Graph } from "./graph.js";
 import { EventLog } from "./events.js";
 window.onload = () => { main(); };
-const s_useLocalFiles = false; // change this to true to enable local file access
-let dirHandle = null;
-var s_allCards;
-let s_cardsByUid = new Map();
-var s_graph;
-let s_mainIcon = "icon-search";
-let s_mainOption = "search";
-let s_searchQuery = "";
-const s_mainID = "ts_firefly_firefly_function_main";
-let s_playMode = "record";
-let s_eventLog = new EventLog();
+class App {
+    constructor() {
+        this.useLocalFiles = false;
+        this.dirHandle = null;
+        this.allCards = [];
+        this.cardsByUid = new Map();
+        this.graph = new Graph(document.getElementById("container"));
+        this.mainIcon = "icon-search";
+        this.mainOption = "search";
+        this.searchQuery = "";
+        this.mainID = "ts_firefly_firefly_function_main";
+        this.playMode = "record";
+        this.eventLog = new EventLog();
+        this.detailTags = [];
+    }
+}
+let s_app = new App();
 class CodeBlock {
     constructor(code, language, iLine) {
         this.text = ""; // actual code text
@@ -107,7 +113,6 @@ function init() {
     return __awaiter(this, void 0, void 0, function* () {
         initLogo();
         initBusyIcon();
-        initGraph();
         initKeyboard();
         initMouse();
     });
@@ -144,15 +149,10 @@ function removeBusyIcon() {
     if (busyIcon)
         busyIcon.remove();
 }
-// initialise the graph manager
-function initGraph() {
-    const container = document.getElementById('container');
-    s_graph = new Graph(container);
-}
 // update state
 function eventLoop() {
-    s_eventLog.update();
-    s_graph.update();
+    s_app.eventLog.update();
+    s_app.graph.update();
     updateDetailTags();
     requestAnimationFrame(eventLoop);
 }
@@ -160,15 +160,15 @@ function eventLoop() {
 function loadCards() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("loadCards");
-        if (s_useLocalFiles) {
+        if (s_app.useLocalFiles) {
             yield importLocalFolder();
         }
         const jsonObj = yield openRepository("asnar00", "firefly");
-        s_allCards = jsonObj.cards;
-        for (const card of s_allCards) {
-            s_cardsByUid.set(card.uid, card);
+        s_app.allCards = jsonObj.cards;
+        for (const card of s_app.allCards) {
+            s_app.cardsByUid.set(card.uid, card);
         }
-        console.log("nCards:", s_allCards.length);
+        console.log("nCards:", s_app.allCards.length);
     });
 }
 // load session state data, make it so
@@ -181,27 +181,27 @@ function openSession() {
             return;
         }
         if (json.ui.playMode) {
-            s_playMode = json.ui.playMode;
-            console.log(s_playMode);
-            if (s_playMode == "replay") {
+            s_app.playMode = json.ui.playMode;
+            console.log(s_app.playMode);
+            if (s_app.playMode == "replay") {
                 say("replaying eventlog");
-                yield s_eventLog.replay("eventlog/eventlog.json");
+                yield s_app.eventLog.replay("eventlog/eventlog.json");
             }
-            else if (s_playMode == "record") {
+            else if (s_app.playMode == "record") {
                 say("recording eventlog");
-                yield s_eventLog.record();
+                yield s_app.eventLog.record();
             }
         }
-        s_searchQuery = json.ui.search;
+        s_app.searchQuery = json.ui.search;
     });
 }
 // create search box div
 function searchBox() {
     const searchFieldHTML = `<div class="search-field" id="search-field" contenteditable="true" spellcheck="false"></div>`;
-    const iconHTML = `<i class="${s_mainIcon}" style="padding-top: 6px;" id="search-button"></i>`;
+    const iconHTML = `<i class="${s_app.mainIcon}" style="padding-top: 6px;" id="search-button"></i>`;
     const icon2HTML = `<i class="icon-right-big" style="padding-top: 6px; padding-right:3px"></i>`;
     const searchResultsHTML = `<div class="search-results" id="search-results"></div>`;
-    const issueIcon = (s_playMode == "replay") ? "icon-ok" : "icon-ccw";
+    const issueIcon = (s_app.playMode == "replay") ? "icon-ok" : "icon-ccw";
     const issueButtonHTML = `<i class="${issueIcon}" style="padding-top: 3px; padding-right:8px; font-size:16px; cursor: pointer;"></i>`;
     let issueButton = element(issueButtonHTML);
     listen(issueButton, 'click', (event) => {
@@ -223,9 +223,9 @@ function searchBox() {
     let searchButton = document.getElementById("search-button");
     searchButton.style.cursor = 'pointer';
     listen(searchButton, 'click', searchOptions);
-    if (s_searchQuery != "") {
-        searchField.innerText = s_searchQuery;
-        searchFor(s_searchQuery);
+    if (s_app.searchQuery != "") {
+        searchField.innerText = s_app.searchQuery;
+        searchFor(s_app.searchQuery);
     }
 }
 // do a server-side semantic search on whatever text is in (searchField)
@@ -239,15 +239,15 @@ function updateSearch(searchField) {
             searchField.style.width = '512px';
         }
         setTimeout(() => __awaiter(this, void 0, void 0, function* () {
-            s_searchQuery = searchField.innerText;
-            searchFor(s_searchQuery);
+            s_app.searchQuery = searchField.innerText;
+            searchFor(s_app.searchQuery);
         }), 0);
     });
 }
 // search for some query string, display the results
 function searchFor(query) {
     return __awaiter(this, void 0, void 0, function* () {
-        const results = yield search(s_searchQuery);
+        const results = yield search(s_app.searchQuery);
         clearSearchResults();
         if (results) {
             showSearchResults(results);
@@ -274,8 +274,8 @@ function searchOptions() {
 // change the search type (inoperative)
 function changeSearchOption(optionName, iconName) {
     console.log("changeSearchOption", optionName, iconName);
-    s_mainIcon = iconName;
-    s_mainOption = optionName;
+    s_app.mainIcon = iconName;
+    s_app.mainOption = optionName;
     let searchDiv = document.getElementById("search-box");
     searchDiv.remove();
     searchBox();
@@ -301,18 +301,18 @@ function initKeyboard() {
 function stopRecording() {
     return __awaiter(this, void 0, void 0, function* () {
         say("stop eventlog; next run will replay");
-        s_playMode = "replay";
-        s_eventLog.stop();
+        s_app.playMode = "replay";
+        s_app.eventLog.stop();
         saveAll();
     });
 }
 // toggle event recording
 function toggleEventRecord(event) {
     let synthetic = event.synthetic;
-    if (s_playMode == "record" && synthetic === undefined) {
+    if (s_app.playMode == "record" && synthetic === undefined) {
         stopRecording();
     }
-    else if (s_playMode == "replay") {
+    else if (s_app.playMode == "replay") {
         if (synthetic === undefined) {
             setRecordMode();
         }
@@ -324,13 +324,13 @@ function toggleEventRecord(event) {
 // stop event playback
 function stopPlayback() {
     say("end of event playback");
-    s_eventLog.stop();
+    s_app.eventLog.stop();
 }
 // indicate that the next run shouldn't be in replay mode
 function setRecordMode() {
     return __awaiter(this, void 0, void 0, function* () {
         say("next run will record");
-        s_playMode = "record";
+        s_app.playMode = "record";
         saveAll();
     });
 }
@@ -387,7 +387,7 @@ class DetailTag {
         listen(div, 'mouseenter', () => { this.detailsDiv.style.visibility = 'visible'; });
         listen(div, 'mouseleave', () => { this.detailsDiv.style.visibility = 'hidden'; });
         onClose(div, () => { this.remove(); });
-        s_detailTags.push(this);
+        s_app.detailTags.push(this);
         this.update();
     }
     update() {
@@ -399,23 +399,22 @@ class DetailTag {
     }
     remove() {
         this.detailsDiv.remove();
-        let i = s_detailTags.indexOf(this);
+        let i = s_app.detailTags.indexOf(this);
         if (i >= 0) {
-            s_detailTags.splice(i, 1);
+            s_app.detailTags.splice(i, 1);
         }
     }
 }
-var s_detailTags = [];
 function addDetailTag(div, message) {
     let tag = new DetailTag(div, message);
 }
 function updateDetailTags() {
-    for (let tag of s_detailTags) {
+    for (let tag of s_app.detailTags) {
         tag.update();
     }
 }
 function onClose(div, func) {
-    const parentElement = s_graph.topLevelDiv(div);
+    const parentElement = s_app.graph.topLevelDiv(div);
     if (!parentElement)
         return;
     const observer = new MutationObserver(function (mutations) {
@@ -436,15 +435,15 @@ function jumpToCard(card) {
     console.log("jumpToCard");
     let info = new CardView(CardViewState.Compact);
     let div = cardToHTML(card, info);
-    s_graph.clear(); // for now
-    s_graph.node(div, info);
+    s_app.graph.clear(); // for now
+    s_app.graph.node(div, info);
     document.title = superShortName(card);
     openCallees(card);
     openCallers(card);
 }
 // opens all cards called by (card)
 function openCallees(card) {
-    const div = s_graph.findDiv(card.uid);
+    const div = s_app.graph.findDiv(card.uid);
     if (!div)
         return;
     const codeDiv = div.children[0].children[1]; // TODO: do better :-)
@@ -484,7 +483,7 @@ function callees(card) {
 }
 // opens all cards that call (card)
 function openCallers(card) {
-    const div = s_graph.findDiv(card.uid);
+    const div = s_app.graph.findDiv(card.uid);
     if (!div)
         return;
     for (let caller of callers(card)) {
@@ -615,7 +614,7 @@ function openRepository(owner, repoName) {
 }
 // finds the card with the given UID, or null if doesn't exist
 function findCard(uid) {
-    const card = s_cardsByUid.get(uid);
+    const card = s_app.cardsByUid.get(uid);
     if (card === undefined) {
         return null;
     }
@@ -701,7 +700,7 @@ function codeContainer(uid, codeDiv, title) {
 }
 // toggle visility of all callees of (card) [downstream]
 function toggleCallees(card) {
-    let fromDiv = s_graph.findDiv(card.uid);
+    let fromDiv = s_app.graph.findDiv(card.uid);
     if (!fromDiv)
         return;
     let cs = callees(card);
@@ -712,7 +711,7 @@ function toggleCallees(card) {
             for (let b of linkButtons) {
                 highlightLink(b, false);
             }
-            s_graph.remove(div);
+            s_app.graph.remove(div);
         }
     }
     else {
@@ -760,7 +759,7 @@ function toggleCallers(card) {
     let openDivs = getOpenDivs(cs);
     if (openDivs.length == cs.length) { // if all are open
         for (let div of openDivs) {
-            s_graph.remove(div);
+            s_app.graph.remove(div);
         }
     }
     else {
@@ -772,7 +771,7 @@ function toggleCallers(card) {
 function getOpenDivs(cards) {
     let openDivs = [];
     for (let c of cards) {
-        let div = s_graph.findDiv(c.uid);
+        let div = s_app.graph.findDiv(c.uid);
         if (div)
             openDivs.push(div);
     }
@@ -782,15 +781,15 @@ function getOpenDivs(cards) {
 function scrollToView(cards) {
     let divs = [];
     for (let c of cards)
-        divs.push(s_graph.findDiv(c.uid));
-    s_graph.scrollToView(divs);
+        divs.push(s_app.graph.findDiv(c.uid));
+    s_app.graph.scrollToView(divs);
 }
 // toggle card view minimise
 function toggleMinimise(containerDiv, codeDiv) {
-    const view = s_graph.userInfo(containerDiv);
+    const view = s_app.graph.userInfo(containerDiv);
     view.minimised = !(view.minimised);
     setViewStyle(containerDiv, view);
-    s_graph.scrollToView([containerDiv]);
+    s_app.graph.scrollToView([containerDiv]);
 }
 // ensure that (div)'s styles etc match the settings in (view)
 function setViewStyle(div, view) {
@@ -808,7 +807,7 @@ function setViewStyle(div, view) {
             codeDiv.classList.add("code-expanded");
         }
     }
-    s_graph.requestArrange();
+    s_app.graph.requestArrange();
 }
 // toggle visibility of buttons within a title
 function toggleTitle(card, containerDiv, titleDiv, entering) {
@@ -833,7 +832,7 @@ function updateTitleButtons(card, containerDiv, titleDiv) {
 }
 // close card and de-highlight buttons that link to it
 function onCloseButtonClick(div) {
-    let buttonDivs = s_graph.findSourceDivs(div);
+    let buttonDivs = s_app.graph.findSourceDivs(div);
     closeCard(div.id);
     for (let button of buttonDivs) {
         highlightLink(button, false);
@@ -870,20 +869,20 @@ function listen(elem, type, func) {
         if (elem.id == "") {
             console.log("WARNING: event from element with no ID");
         }
-        if (s_playMode == "record") {
-            s_eventLog.logEvent(event, elem);
+        if (s_app.playMode == "record") {
+            s_app.eventLog.logEvent(event, elem);
         }
         yield func(event);
         event.stopPropagation();
-        if (s_playMode == "record") {
+        if (s_app.playMode == "record") {
             debouncedSaveAll();
         }
     }));
 }
 // toggle expanded/contracted state of a card's view
 function expandOrContract(elem) {
-    let div = s_graph.topLevelDiv(elem);
-    let view = s_graph.userInfo(div);
+    let div = s_app.graph.topLevelDiv(elem);
+    let view = s_app.graph.userInfo(div);
     if (!view)
         return;
     if (view.state == CardViewState.Compact) {
@@ -895,11 +894,11 @@ function expandOrContract(elem) {
         elem.scrollTop = view.yScroll;
     }
     setViewStyle(div, view);
-    s_graph.scrollToView([div]);
+    s_app.graph.scrollToView([div]);
 }
 // gets the current scroll offsets for a card view
 function getScrollPos(elem) {
-    let view = s_graph.userInfo(elem);
+    let view = s_app.graph.userInfo(elem);
     if (view.state == CardViewState.Compact) {
         view.xScroll = elem.scrollLeft;
         view.yScroll = elem.scrollTop;
@@ -910,10 +909,10 @@ const debouncedSaveAll = debounce(() => { saveAll(); }, 300);
 function saveAll() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("saveAll");
-        const uiJson = { playMode: s_playMode, search: s_searchQuery };
+        const uiJson = { playMode: s_app.playMode, search: s_app.searchQuery };
         const sessionJson = { ui: uiJson };
         save(sessionJson, "sessions/test.json");
-        s_eventLog.flush();
+        s_app.eventLog.flush();
     });
 }
 // saves (obj) to (path) on server
@@ -947,9 +946,9 @@ function openCardsFromButton(button, minimised = false) {
     highlightLink(button, true);
     let divs = [];
     for (let c of cards) {
-        divs.push(s_graph.findDiv(c.uid));
+        divs.push(s_app.graph.findDiv(c.uid));
     }
-    s_graph.scrollToView(divs);
+    s_app.graph.scrollToView(divs);
 }
 // close all cards pointed to by (button)
 function closeCardsFromButton(button) {
@@ -973,9 +972,9 @@ function getTargetCards(button) {
 }
 // closes card if it's open
 function closeCard(uid) {
-    let div = s_graph.findDiv(uid);
+    let div = s_app.graph.findDiv(uid);
     if (div) {
-        s_graph.remove(div);
+        s_app.graph.remove(div);
     }
 }
 // opens a card, optionally connected to a button element
@@ -984,29 +983,29 @@ function openCardFrom(uid, button, minimised = false) {
     if (!card)
         return;
     let view = new CardView(CardViewState.Compact, minimised);
-    let div = s_graph.findDiv(uid);
+    let div = s_app.graph.findDiv(uid);
     if (!div) {
         div = cardToHTML(card, view);
-        s_graph.node(div, view);
+        s_app.graph.node(div, view);
     }
     if (button) {
-        s_graph.edge(button, div);
+        s_app.graph.edge(button, div);
     }
 }
 // opens a card that calls to an existing element
 function openCardTo(uid, toDiv, minimised = false) {
-    let div = s_graph.findDiv(uid);
+    let div = s_app.graph.findDiv(uid);
     let card = findCard(uid);
     if (!card)
         return;
     let view = new CardView(CardViewState.Compact, minimised);
     if (!div) {
         div = cardToHTML(card, view);
-        s_graph.node(div, view);
+        s_app.graph.node(div, view);
     }
     let linkButtons = findLinkButtonsTo(toDiv, div);
     for (let button of linkButtons) {
-        s_graph.edge(button, toDiv);
+        s_app.graph.edge(button, toDiv);
         highlightLink(button, true);
     }
 }
