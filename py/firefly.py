@@ -49,7 +49,7 @@ def openRepository(owner, repoName):
     vectorsFolder = folder + f'/vectors'
     vectors.loadEmbeddings(vectorsFolder)
     if changed:
-        oldCardsFile = folder + f'/cards/{owner}_{repoName}_old.json' # TEST ONLY; remove the "_old" for production
+        oldCardsFile = folder + f'/cards/{owner}_{repoName}.json' # TEST ONLY; remove the "_old" for production
         oldCards = loadOldCards(readJsonFromFile(oldCardsFile))
         sourceFolder = f'{folder}/source'
         newCards = importAllCards(repoName, [sourceFolder])
