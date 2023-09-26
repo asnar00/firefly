@@ -258,8 +258,26 @@ NEXT STEPS:
 - generate what and how strings!
 - generate pseudocode.
 
+____
+Persistence.
 
+So let's think about what persistence means in the context of record/replay.
+A session takes state 0 to state 1 and onwards:
 
+s0 ==> s1 ==> s2 ==> s3
 
+Persistence means that if we quit anywhere, or refresh, we're in the same state as when we left.
+so we have to save app state, and restore from json.
 
+currently state = search, and we need to add "open thingies".
+
+In fact, it's just a series of open-commands.
+So we should look to wherever the graph calls happen.
+
+___ 
+incremantel import of code to cards
+
+just get it done willya?
+basic one is: you already have a bunch of cards;
+we do need to be able to save and load things nicely to JSON in both js and py.
 

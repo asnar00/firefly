@@ -48,10 +48,14 @@ def openRepository(owner, repoName):
     cardsFile = folder + f'/cards/{owner}_{repoName}.json'
     vectorsFolder = folder + f'/vectors'
     if changed:
+        oldCardsFile = folder + f'/cards/{owner}_{repoName}_old.json' # TEST ONLY; remove the "_old" for production
+        oldCards = loadOldCards(readJsonFromFile(oldCardsFile))
         sourceFolder = f'{folder}/source'
+        newCards = importAllCards(repoName, [sourceFolder])
+        computeDependencies(newCards)
         vectors.setEmbeddingFolder(vectorsFolder)
-        vectors.clear()
-        cards = importAllCards(repoName, [sourceFolder])
+        processChangedCards(newCards, oldCards)
+        cards = cardsToJsonDict(newCards)
         writeJsonToFile(cards, cardsFile)
     else:
         cards = readJsonFromFile(cardsFile)
@@ -110,8 +114,7 @@ def readJsonFromFile(filename):
         data = json.load(file)
     return data
 
-
-def importAllCards(project, folders) -> dict:
+def importAllCards(project, folders):   # returns list of new cards, doesn't compute deps or anything, just reads the code
     cards = []
     for folder in folders:
         print(f"importAllCards: {folder}")
@@ -119,13 +122,10 @@ def importAllCards(project, folders) -> dict:
         for file in files:
             cards.extend(importCardsFromFile(project, file))
     removeIndents(cards)
-    computeDependencies(cards)
-    #computeLevels(cards)
-    saveEmbeddings(cards)
-    return cardsToJsonDict(cards)
+    return cards
 
 def saveEmbeddings(cards):
-    print("saving embeddings")
+    print("saving embeddings for", len(cards), "cards")
     cardsFromKeys = {}
     for card in cards:
         key = separateWords(card.shortName())
@@ -136,6 +136,12 @@ def saveEmbeddings(cards):
     for key, cards in cardsFromKeys.items():
         uids = [c.uid() for c in cards]
         vectors.add(key, uids)
+
+def removeEmbeddings(cards):
+    print("removing embeddings for", len(cards), "cards")
+    for card in cards:
+        key = separateWords(card.shortName())
+        vectors.remove(key, card.uid())
 
 def separateWords(name): # convert "camelCaseHTTP" and "camel_case_HTTP" to "camel case HTTP", 
     symbols = "!@#$%^&*()+-={}[]:\";\',.<>/?\`~_"
@@ -184,14 +190,15 @@ class Language:
         return ("", "")
     
 class CodeBlock:
-    def __init__(self, text: str, language: Language, iLine: int):
+    def __init__(self, text: str, language: Language, iLine: int, jLine:int =-1):
         self.text = text
         self.language = language
         self.iLine = iLine
-        self.jLine = iLine # inclusive: eurgh
+        if jLine==-1: self.jLine = iLine # inclusive: eurgh
+        else: self.jLine = iLine
         
 class Card:
-    def __init__(self, project: str, module: str, code: str, language: Language, iLine: int) :
+    def __init__(self, project: str="", module: str="", code: str="", language: Language=Language(), iLine: int=0) :
         self.project = project  # global
         self.module = module    # root-relative path of the file, for disambiguation
         self.language = language.shortName()    
@@ -245,7 +252,7 @@ def card_serialiser(obj):
     raise TypeError(f"Type {type(obj)} unfortunately is not serializable")
 
 class Dependency:
-    def __init__(self, iChar: int, jChar: int, targets: Card):
+    def __init__(self, iChar: int, jChar: int, targets: List[Card]):
         self.iChar = iChar
         self.jChar = jChar
         self.targets = targets
@@ -403,11 +410,18 @@ def readFile(filename: str) -> str:
     return text
 
 def findLanguage(ext: str) -> Language:
-    if ext == ".py": return Python()
-    elif ext == ".ts" or ext == ".js": return Typescript()
+    if ext.startswith('.'): ext = ext[1:]
+    if ext == "py": return Python()
+    elif ext == "ts" or ext == "js": return Typescript()
     else:
         raise Exception("Unrecognised file extension")
     
+def uidDict(cards: List[Card]) -> dict:
+    uids = {}       # uid => Card
+    for card in cards:
+        uids[card.uid()] = card
+    return uids
+
 def importCardsFromFile(project, filename) -> List[Card]:
     #print("importing cards from", filename)
     root, ext = os.path.splitext(filename)
@@ -437,6 +451,33 @@ def cardsToJsonDict(cards: List[Card]) -> dict:
     jsonObj = { "cards" : [card_serialiser(c) for c in cards] }
     return jsonObj
 
+def loadOldCards(json: dict) -> dict:  # returns (uid => Card) dictionary
+    uids = {}       # uid => Card
+    cards = []
+    for j in json['cards']:
+        card = Card()
+        cards.append(card)
+        uids[j['uid']] = card
+        card.language = j['language']
+        card.module = j['module']
+        card.kind = j['kind']
+        card.name = j['name']
+        card.purpose = j['purpose']
+        card.examples = j['examples']
+        card.inputs = j['inputs']
+        card.outputs = j['outputs']
+    i=0
+    for j in json['cards']:
+        card = cards[i]
+        i +=1
+        # Parse the code, dependsOn, dependents, children, and parent
+        card.code = [CodeBlock(c['text'], findLanguage(c['language']), c['iLine'], c['jLine']) for c in j['code']]
+        card.dependsOn = [Dependency(d['iChar'], d['jChar'], [uids[t] for t in d['targets']]) for d in j['dependsOn']]
+        card.dependents = [Dependency(d['iChar'], d['jChar'], [uids[t] for t in d['targets']]) for d in j['dependents']]
+        card.children = [uids[c] for c in j['children']]
+        card.parent = uids[j['parent']] if j['parent'] != 'null' else None
+    return uids
+
 class Lex:
     def __init__(self, code: str ="", iChar:int =0, jChar:int =0, type:str =""):
         sub = code[iChar:jChar]
@@ -456,6 +497,29 @@ class Lex:
         elif isinstance(other, str):
             return self.text == other
         return False
+
+def processChangedCards(cards: List[Card], oldCards: dict):
+    cardsToProcess = []
+    removedCards = []
+    for card in cards:
+        if card.uid() in oldCards:
+            oldCard = oldCards[card.uid()]
+            if oldCard.code[0].text != card.code[0].text:
+                cardsToProcess.push(card)
+        else:
+            cardsToProcess.push(card)
+    uids = uidDict(cards)
+    for card in oldCards.values():
+        if not card.uid() in uids:
+            removedCards.push(card)
+    print("cards to process ------------------------")
+    for card in cardsToProcess:
+        print(card.uid())
+    print("removed cards ---------------------------")
+    for card in removedCards:
+        print(Card.uid())
+    saveEmbeddings(cardsToProcess)
+    removeEmbeddings(removedCards)
 
 def computeDependencies(cards: List[Card]):         # this is a bit of a behemoth, refactor!
     # put all cards into a hash table mapping name -> List[Card]
@@ -865,18 +929,11 @@ def updateRepository(repo) -> bool:     # returns True if the code changed
 
 def test():
     print("testing...")
-    cards = importCardsFromFile("firefly", "../ts/firefly.ts")
-    computeDependencies(cards)
-    for card in cards:
-        print("----------------------------------")
-        print(card.uid())
-        code = card.code[0].text
-        print(code)
-        words = []
-        for d in card.dependsOn:
-            for t in d.targets:
-                words.append(t.shortName())
-        print(words)
+    fname = "../data/repositories/asnar00/firefly/cards/asnar00_firefly.json"
+    json = readJsonFromFile(fname)
+    cards = loadOldCards(json)
+    print(cards.keys())
 
 if __name__ == "__main__":
     startServer()
+    #test()

@@ -943,7 +943,6 @@ function openCardsFromButton(button, minimised = false) {
     for (let c of cards) {
         openCardFrom(c.uid, button, minimised);
     }
-    highlightLink(button, true);
     let divs = [];
     for (let c of cards) {
         divs.push(s_app.graph.findDiv(c.uid));
@@ -989,6 +988,7 @@ function openCardFrom(uid, button, minimised = false) {
         s_app.graph.node(div, view);
     }
     if (button) {
+        highlightLink(button, true);
         s_app.graph.edge(button, div);
     }
 }

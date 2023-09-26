@@ -166,10 +166,6 @@ export function debounce<T extends (...args: any[]) => void>(func: T, wait: numb
     };
 }
 
-export function isOnscren(element: HTMLElement) : boolean {
-    return document.body.contains(element);
-}
-
 export function getChildNodeIndex(element: Element): number {
     return Array.from(element.parentElement!.children).indexOf(element);
 }

@@ -918,7 +918,6 @@ function openCardsFromButton(button: HTMLElement, minimised: boolean= false) {
     for(let c of cards) {
         openCardFrom(c.uid, button, minimised);
     }
-    highlightLink(button, true);
     let divs : HTMLElement[] = [];
     for(let c of cards) { divs.push(s_app.graph.findDiv(c.uid)!); }
     s_app.graph.scrollToView(divs);
@@ -962,6 +961,7 @@ function openCardFrom(uid: string, button: HTMLElement | null, minimised: boolea
         s_app.graph.node(div, view);
     }
     if (button) {
+        highlightLink(button, true);
         s_app.graph.edge(button, div);
     }
 }
