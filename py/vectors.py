@@ -29,7 +29,7 @@ def clear():
         shutil.rmtree(vectorsFolder)
         os.makedirs(os.path.dirname(vectorsFolder), exist_ok=True)
 
-def add(key: str, value):
+def set(key: str, value):
     global embeddings
     if key in embeddings:   # exists already
         #print("already exists")
@@ -44,6 +44,22 @@ def add(key: str, value):
         embeddings[key] = data
         save(key, data)
     return { 'result' : 'success' }
+
+def get(key: str):
+    global embeddings
+    if key in embeddings:
+        return (embeddings[key])['value']
+    else:
+        return {}
+
+
+def remove(key: str):
+    global embeddings
+    global vectorsFolder
+    if key in embeddings:
+        embeddings.pop(key, None)
+        filename = vectorsFolder + "/" + stringToHash(key) + ".json"
+        os.remove(filename)
 
 def search(query: str, nResults: int):
     searchVec = sbertEmbedding(query)

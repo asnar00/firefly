@@ -85,7 +85,7 @@ let s_app : App = new App();
 
 async function main() {
     console.log("firefly ᕦ(ツ)ᕤ");
-    await run();
+    run();
 }
 
 // set up the client, load everything, run event loop
@@ -126,6 +126,7 @@ function initLogo() {
 
 // display a rotating busy icon 
 function initBusyIcon() {
+    console.log("initBusyIcon");
     const logo = document.getElementById('logo_etc') as HTMLElement;
     const busy = element(`<i class="icon-arrows-cw rotating" id="busy-icon"></i>`);
     logo.append(busy);

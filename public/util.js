@@ -161,9 +161,6 @@ export function debounce(func, wait) {
         }, wait);
     };
 }
-export function isOnscren(element) {
-    return document.body.contains(element);
-}
 export function getChildNodeIndex(element) {
     return Array.from(element.parentElement.children).indexOf(element);
 }

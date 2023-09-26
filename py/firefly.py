@@ -134,13 +134,20 @@ def saveEmbeddings(cards):
             cardsFromKeys[key].append(card)
     for key, cards in cardsFromKeys.items():
         uids = [c.uid() for c in cards]
-        vectors.add(key, uids)
+        vectors.set(key, uids)
 
 def removeEmbeddings(cards):
     print("removing embeddings for", len(cards), "cards")
     for card in cards:
         key = separateWords(card.shortName())
-        vectors.remove(key, card.uid())
+        uidToRemove = card.uid()
+        uids = vectors.get(key)
+        if len(uids) > 0:
+            uids = [item for item in uids if item != uidToRemove]
+            if len(uids)==0:
+                vectors.remove(key)
+            else:
+                vectors.set(key, uids)
 
 def separateWords(name): # convert "camelCaseHTTP" and "camel_case_HTTP" to "camel case HTTP", 
     symbols = "!@#$%^&*()+-={}[]:\";\',.<>/?\`~_"
@@ -504,19 +511,19 @@ def processChangedCards(cards: List[Card], oldCards: dict):
         if card.uid() in oldCards:
             oldCard = oldCards[card.uid()]
             if oldCard.code[0].text != card.code[0].text:
-                cardsToProcess.push(card)
+                cardsToProcess.append(card)
         else:
-            cardsToProcess.push(card)
+            cardsToProcess.append(card)
     uids = uidDict(cards)
     for card in oldCards.values():
         if not card.uid() in uids:
-            removedCards.push(card)
+            removedCards.append(card)
     print("cards to process ------------------------")
     for card in cardsToProcess:
         print(card.uid())
     print("removed cards ---------------------------")
     for card in removedCards:
-        print(Card.uid())
+        print(card.uid())
     saveEmbeddings(cardsToProcess)
     removeEmbeddings(removedCards)
 
