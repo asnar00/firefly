@@ -124,7 +124,7 @@ def importAllCards(project, folders):   # returns list of new cards, doesn't com
     return cards
 
 def saveEmbeddings(cards):
-    print("saving embeddings for", len(cards), "cards")
+    print("saving embeddings for", len(cards), "cards:")
     cardsFromKeys = {}
     for card in cards:
         key = separateWords(card.shortName())
@@ -137,7 +137,7 @@ def saveEmbeddings(cards):
         vectors.set(key, uids)
 
 def removeEmbeddings(cards):
-    print("removing embeddings for", len(cards), "cards")
+    print("removing embeddings for", len(cards), "cards:")
     for card in cards:
         key = separateWords(card.shortName())
         uidToRemove = card.uid()
