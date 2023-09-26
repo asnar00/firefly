@@ -47,19 +47,18 @@ def openRepository(owner, repoName):
     changed = updateRepository(repo)
     cardsFile = folder + f'/cards/{owner}_{repoName}.json'
     vectorsFolder = folder + f'/vectors'
+    vectors.loadEmbeddings(vectorsFolder)
     if changed:
         oldCardsFile = folder + f'/cards/{owner}_{repoName}_old.json' # TEST ONLY; remove the "_old" for production
         oldCards = loadOldCards(readJsonFromFile(oldCardsFile))
         sourceFolder = f'{folder}/source'
         newCards = importAllCards(repoName, [sourceFolder])
         computeDependencies(newCards)
-        vectors.setEmbeddingFolder(vectorsFolder)
         processChangedCards(newCards, oldCards)
         cards = cardsToJsonDict(newCards)
         writeJsonToFile(cards, cardsFile)
     else:
         cards = readJsonFromFile(cardsFile)
-        vectors.loadEmbeddings(vectorsFolder)
     writeJsonToFile(repos, path)
     t = time.perf_counter() - p0
     print(f"done! took {t} sec.")

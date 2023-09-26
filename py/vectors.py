@@ -86,10 +86,6 @@ def loadSbertModel():
     else:
         print("already loaded sbert model")
 
-def setEmbeddingFolder(path):
-    global vectorsFolder
-    vectorsFolder = path
-
 def loadEmbeddings(path):
     global vectorsFolder
     vectorsFolder = path
