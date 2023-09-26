@@ -50,7 +50,7 @@ def openRepository(owner, repoName):
     vectors.loadEmbeddings(vectorsFolder)
     if changed:
         oldCardsFile = folder + f'/cards/{owner}_{repoName}.json' # TEST ONLY; remove the "_old" for production
-        oldCards = loadOldCards(readJsonFromFile(oldCardsFile))
+        oldCards = loadOldCards(repoName, readJsonFromFile(oldCardsFile))
         sourceFolder = f'{folder}/source'
         newCards = importAllCards(repoName, [sourceFolder])
         computeDependencies(newCards)
@@ -457,13 +457,14 @@ def cardsToJsonDict(cards: List[Card]) -> dict:
     jsonObj = { "cards" : [card_serialiser(c) for c in cards] }
     return jsonObj
 
-def loadOldCards(json: dict) -> dict:  # returns (uid => Card) dictionary
+def loadOldCards(project: str, json: dict) -> dict:  # returns (uid => Card) dictionary
     uids = {}       # uid => Card
     cards = []
     for j in json['cards']:
         card = Card()
         cards.append(card)
         uids[j['uid']] = card
+        card.project = project
         card.language = j['language']
         card.module = j['module']
         card.kind = j['kind']
@@ -937,7 +938,7 @@ def test():
     print("testing...")
     fname = "../data/repositories/asnar00/firefly/cards/asnar00_firefly.json"
     json = readJsonFromFile(fname)
-    cards = loadOldCards(json)
+    cards = loadOldCards("firefly", json)
     print(cards.keys())
 
 if __name__ == "__main__":
