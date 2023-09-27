@@ -23,6 +23,7 @@ import requests
 import shutil
 import zipfile
 import time
+import gptprompts
 
 print("---------------------------------------------------------------------------")
 print("firefly.ps ᕦ(ツ)ᕤ")
@@ -240,6 +241,7 @@ class Card:
         self.title = ''         # title
         self.purpose = ''       # purpose
         self.pseudocode = ''    # pseudocode
+        self.notes = ''         # questions and comments
         self.code = [ CodeBlock(code, language, iLine) ]        # actual text from code file
         self.dependsOn = []     # cards we depend on
         self.dependents = []    # cards that depend on us
@@ -277,6 +279,7 @@ def card_serialiser(obj):
             "title" : obj.title,
             "purpose" : obj.purpose,
             "pseudocode" : obj.pseudocode,
+            "notes" : obj.notes,
             "code" : [{ "text" : c.text, "language" : c.language.shortName(), "iLine" : c.iLine, "jLine" : c.jLine } for c in obj.code],
             "dependsOn" : [ { "targets" : [t.uid() for t in d.targets], "iChar": d.iChar, "jChar": d.jChar } for d in obj.dependsOn],
             "dependents" : [ { "targets" : [t.uid() for t in d.targets], "iChar": d.iChar, "jChar": d.jChar } for d in obj.dependents],
@@ -514,6 +517,7 @@ def loadOldCards(project: str, json: dict) -> dict:  # returns (uid => Card) dic
         card.title = j['title']
         card.purpose = j['purpose']
         card.pseudocode = j['pseudocode']
+        card.notes = j['notes']
     i=0
     for j in json['cards']:
         card = cards[i]
@@ -994,6 +998,51 @@ def updateRepository(repo) -> bool:
         downloadRepository(owner, repoName, token)
         repo['SHA'] = latestSHA
         return True
+    
+# generates component description list for a card (name/comment/signature for each callee)
+def componentDescriptions(card: Card) -> str:
+    text = card.code[0].text
+    lang = card.code[0].language
+    lines = text.split("\n")
+    useLines = []
+    addedDescLabel = False
+    for i in range(0, len(lines)):
+        isComment = (lines[i].strip().startswith(lang.comment()))
+        if isComment:
+            if not addedDescLabel:
+                useLines.append('description: ' + lines[i].strip().removeprefix(lang.comment()).strip())
+                addedDescLabel = True
+            else:
+                useLines.append(lines[i].strip().removeprefix(lang.comment()).strip())
+        else:
+            useLines.append('signature: ' + lines[i].strip())
+        if not isComment:
+            break
+    return '\n'.join(useLines)
+
+# find purpose / pseudocode / clarification-requests for (uid => card) dictionary
+def writePseudocode(cardsDict, uid):
+    print("--------------------------------------")
+    print("writePseudocode", uid)
+    card = cardsDict[uid]
+    called = []
+    for dep in card.dependsOn:
+        for t in dep.targets:
+            if not (t in called): called.append(t)
+    prompt = ''
+    prompt += "Function:\n\n" + card.code[0].text + "\n\n"
+    prompt += "Components:\n\n"
+    for c in called:
+        prompt += "name: " + c.shortName() + "\n"
+        prompt += componentDescriptions(c) + "\n\n"
+    prompt += "\nClarifications: None\n"
+    print("sent request to gpt...")
+    p0 = time.perf_counter()
+    pseudocode = gptprompts.writePseudocode(prompt)
+    print("result!")
+    print(pseudocode)
+    t = time.perf_counter() - p0
+    print(f"took {t} sec.")
 
 # whatever tests you need to do 
 def test():
@@ -1001,7 +1050,7 @@ def test():
     fname = "../data/repositories/asnar00/firefly/cards/asnar00_firefly.json"
     json = readJsonFromFile(fname)
     cards = loadOldCards("firefly", json)
-    print(cards.keys())
+    writePseudocode(cards, "ts_firefly_firefly_function_toggleCallees")
 
 # python main
 if __name__ == "__main__":

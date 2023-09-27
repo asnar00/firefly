@@ -133,7 +133,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         # Serve files from the specified folder
         return path
 
-# implements auto self-restart (only works if the py files all load correctly)
+# implements auto self-restart (only works if the py files all parse correctly)
 def start(name, port, rootFolder):
     global listen_port, app_name, public, root
     app_name = name
