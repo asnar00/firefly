@@ -24,6 +24,7 @@ import { rect } from "./util.js";
 import { Graph } from "./graph.js";
 import { EventLog } from "./events.js";
 window.onload = () => { main(); };
+// represents a block of code contained within a card
 class CodeBlock {
     constructor(code, language, iLine) {
         this.text = ""; // actual code text
@@ -33,6 +34,7 @@ class CodeBlock {
         this.iLine = iLine;
     }
 }
+// indicates that a character range (iChar--jChar) links to another card
 class Dependency {
     constructor() {
         this.iChar = 0; // character index in code of start of symbol
@@ -41,6 +43,7 @@ class Dependency {
     }
 }
 ;
+// represents a piece of code (class, method, function, variable)
 class Card {
     constructor() {
         this.uid = ""; // uid; something like lang_module_kind_name, but maybe other decorators too
@@ -48,10 +51,9 @@ class Card {
         this.module = ""; // module: eg. firefly or graphview
         this.kind = ""; // "class" or "function" or "other"
         this.name = ""; // name of function or class being defined
-        this.purpose = ""; // purpose
-        this.examples = ""; // examples
-        this.inputs = ""; // inputs
-        this.outputs = ""; // outputs
+        this.title = ""; // human-readable title
+        this.purpose = ""; // paragraph-length purpose
+        this.pseudocode = ""; // one line per original code
         this.code = []; // actual text from code file
         this.dependsOn = []; // cards we depend on
         this.dependents = []; // cards that depend on us
@@ -61,12 +63,14 @@ class Card {
         this.rankFromTop = 0; // 1 means nothing calls this; x means called by things with rank < x
     }
 }
+// possible options for the state of a card-view
 var CardViewState;
 (function (CardViewState) {
     CardViewState[CardViewState["Compact"] = 0] = "Compact";
     CardViewState[CardViewState["Fullsize"] = 1] = "Fullsize";
     CardViewState[CardViewState["Editing"] = 2] = "Editing";
 })(CardViewState || (CardViewState = {}));
+// holds all state about an individual card viewer
 class CardView {
     constructor(state, minimised = false) {
         this.minimised = false; // if true, title bar only
@@ -77,6 +81,7 @@ class CardView {
         this.minimised = minimised;
     }
 }
+// holds all state for the application
 class App {
     constructor() {
         this.useLocalFiles = false;
@@ -94,6 +99,7 @@ class App {
     }
 }
 let s_app = new App();
+// does everything client-side
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         console.log("firefly ᕦ(ツ)ᕤ");
@@ -114,7 +120,6 @@ function init() {
         initLogo();
         initBusyIcon();
         initKeyboard();
-        initMouse();
     });
 }
 // load all the data we need from the server
@@ -126,9 +131,6 @@ function loadAll() {
         yield openSession();
         searchBox();
     });
-}
-function initMouse() {
-    // nothing atm
 }
 // move the logo to bottom left to signal we are good to go!
 function initLogo() {
@@ -364,6 +366,7 @@ function showSearchResults(results) {
         }
     }
 }
+// deliver an "alertbox" style message to the user, via our little logo dude character
 function say(message, timeSec = 2) {
     console.log(message);
     let div = element(`<div class="speech-bubble">${message}</div>`);
@@ -378,6 +381,7 @@ function say(message, timeSec = 2) {
         div.remove();
     }, timeSec * 1000);
 }
+// represents a pop-up detail tag (appears on mouse-over)
 class DetailTag {
     constructor(div, msg) {
         this.div = div;
@@ -394,7 +398,7 @@ class DetailTag {
     update() {
         if (this.detailsDiv.style.visibility == 'visible') {
             let r = rect(this.div);
-            this.detailsDiv.style.left = `${r.left}px`;
+            this.detailsDiv.style.left = `${r.left + 16}px`;
             this.detailsDiv.style.top = `${r.top - 16}px`;
         }
     }
@@ -406,14 +410,17 @@ class DetailTag {
         }
     }
 }
+// adds a detail tag to any HTML element
 function addDetailTag(div, message) {
     let tag = new DetailTag(div, message);
 }
+// call this once per frame
 function updateDetailTags() {
     for (let tag of s_app.detailTags) {
         tag.update();
     }
 }
+// causes (func) to be called when (div) is closed
 function onClose(div, func) {
     const parentElement = s_app.graph.topLevelDiv(div);
     if (!parentElement)
@@ -432,6 +439,7 @@ function onClose(div, func) {
     });
     observer.observe(parentElement, { childList: true });
 }
+// opens (card) as the main card, shows all callers and callees
 function jumpToCard(card) {
     console.log("jumpToCard");
     let info = new CardView(CardViewState.Compact);

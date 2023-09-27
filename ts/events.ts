@@ -6,6 +6,7 @@
 import {remote} from "./util.js";
 import {setCursorToEnd} from "./util.js";
 
+// represents a mouse, keyboard or other kind of event
 interface SerialisedEvent {
     iFrame: number;  // this.iFrame when event was generated
     type: string; // "mouse", "keyboard", etc.
@@ -14,6 +15,7 @@ interface SerialisedEvent {
     data: any; // Data specific to the event type
 }
 
+// records or replays a stream of browser events
 export class EventLog {
     nRetries = 0;
     events: SerialisedEvent[] = [];
@@ -22,6 +24,7 @@ export class EventLog {
     iEventReplay = 0;
     scrollEvent: SerialisedEvent | null = null;
     
+    // set record-mode; from now on, all events get saved
     async record() {
         this.playMode = "record";
         this.events = [];
@@ -31,6 +34,7 @@ export class EventLog {
         });
     }
 
+    // serialise an event and add it to the log
     logEvent(event: Event, elem: HTMLElement) {
         let obj = this.serialiseEvent(event, elem);
         if (!obj) {
@@ -40,6 +44,7 @@ export class EventLog {
         this.addEventToLog(obj);
     }
 
+    // add a serialised-event object to the log
     addEventToLog(obj: SerialisedEvent) {
         if (obj.type == "scroll") {
             if (!this.scrollEvent ||
@@ -52,6 +57,7 @@ export class EventLog {
         this.events.push(obj);
     }
 
+    // select replay mode, set "play cursor" to the beginning
     async replay(eventLogPath: string) {
         this.playMode = "replay";
         this.events = await remote("@firefly.load", { path: eventLogPath});
@@ -59,6 +65,7 @@ export class EventLog {
         this.iEventReplay = 0;
     }
 
+    // call this once per frame to record or replay events
     update() {
         if (this.playMode == "replay") {
             if (this.iEventReplay >= this.events.length) {
@@ -89,6 +96,7 @@ export class EventLog {
         this.iFrame ++;
     }
 
+    // send all events to the server to be recorded, clear event log
     async flush() {
         if (this.playMode == "record") {
             await remote("@firefly.saveEventLog", { events: this.events });
@@ -96,6 +104,7 @@ export class EventLog {
         }
     }
 
+    // stop recording or playback
     async stop(){
         if (this.playMode == "replay") {
             this.iEventReplay = this.events.length;
@@ -106,6 +115,7 @@ export class EventLog {
         this.playMode = "none";
     }
 
+    // saves the most recent scroll event in a stream of consecutive events
     saveScrollEvent(eventType: string, x: number, y: number) {
         if (this.playMode == "record") {
             let sev : SerialisedEvent = {
@@ -122,6 +132,7 @@ export class EventLog {
         }
     }
 
+    // converts an event to a JSON object that can be stored
     serialiseEvent(event: Event, target: HTMLElement): SerialisedEvent | null {
         if (event instanceof MouseEvent) {
             return {
@@ -173,6 +184,7 @@ export class EventLog {
         return null;
     }
 
+    // converts a serialised event to a "real" event (with 'synthetic' tag so we can tell the difference)
     issueEvent(sev: SerialisedEvent) : string {
         if (sev.eventType != 'mousemove') {
             //console.log(`frame ${s_iFrame}: ${sev.type}.${sev.eventType}`);

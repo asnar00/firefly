@@ -35,11 +35,13 @@ root = ""
 global functions
 functions = {}
 
+# decorator that adds (func) to a list of callables
 def register(func):
     functions[func.__name__] = { 'call' : func, 'args' :  list(signature(func).parameters) }
     print(f"registered {func.__name__}")
     return func
 
+# calls one of the callables
 def call(func, args):
     print(f"calling {func}")
     #print(f"calling {func} with {args}")
@@ -47,6 +49,7 @@ def call(func, args):
     #print(f"result: {result}")
     return result  
 
+# server gobbledygook
 class RestartHandler(FileSystemEventHandler):
     def __init__(self, observer, script_to_run):
         self.observer = observer
@@ -61,7 +64,7 @@ class RestartHandler(FileSystemEventHandler):
         self.observer.stop()
         os.execv(sys.executable, ['python'] + [self.script_to_run])
 
-
+# more server gobbledygook
 class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200, "ok")
@@ -70,6 +73,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
 
+    # process a GET request - just serve the file from the right place
     def do_GET(self):
         path = self.translate_path(self.path)
         if path is None:
@@ -78,6 +82,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
             return
         super().do_GET()
 
+    # process a POST request - call the right function, return its results
     def do_POST(self):
         content_length = int(self.headers.get("Content-Length", "0"))
         raw_data = self.rfile.read(content_length).decode("utf-8")
@@ -94,6 +99,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         else:
             self.send_error(404, "Endpoint not found")
 
+    # send a response back to the client
     def respond(self, output):
         encoded_output = json.dumps(output).encode("utf-8")
         self.send_response(200)
@@ -103,6 +109,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(encoded_output)
 
+    # convert an external requested path to an internal path
     def translate_path(self, path):
         global listen_port, app_name, public, root
         #print("requested:", path)
@@ -125,7 +132,8 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         
         # Serve files from the specified folder
         return path
-    
+
+# implements auto self-restart (only works if the py files all load correctly)
 def start(name, port, rootFolder):
     global listen_port, app_name, public, root
     app_name = name
@@ -143,9 +151,11 @@ def start(name, port, rootFolder):
         observer.stop()
     observer.join()
 
+# server gobbledygook
 class ReusableTCPServer(socketserver.TCPServer):
     allow_reuse_address = True
 
+# start the server
 def runServer():
     global listen_port, app_name, public, root
     print(f"starting service '{app_name}' listening on port {listen_port}...")

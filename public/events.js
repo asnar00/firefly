@@ -13,6 +13,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 import { remote } from "./util.js";
 import { setCursorToEnd } from "./util.js";
+// records or replays a stream of browser events
 export class EventLog {
     constructor() {
         this.nRetries = 0;
@@ -22,6 +23,7 @@ export class EventLog {
         this.iEventReplay = 0;
         this.scrollEvent = null;
     }
+    // set record-mode; from now on, all events get saved
     record() {
         return __awaiter(this, void 0, void 0, function* () {
             this.playMode = "record";
@@ -32,6 +34,7 @@ export class EventLog {
             });
         });
     }
+    // serialise an event and add it to the log
     logEvent(event, elem) {
         let obj = this.serialiseEvent(event, elem);
         if (!obj) {
@@ -40,6 +43,7 @@ export class EventLog {
         }
         this.addEventToLog(obj);
     }
+    // add a serialised-event object to the log
     addEventToLog(obj) {
         if (obj.type == "scroll") {
             if (!this.scrollEvent ||
@@ -51,6 +55,7 @@ export class EventLog {
         }
         this.events.push(obj);
     }
+    // select replay mode, set "play cursor" to the beginning
     replay(eventLogPath) {
         return __awaiter(this, void 0, void 0, function* () {
             this.playMode = "replay";
@@ -59,6 +64,7 @@ export class EventLog {
             this.iEventReplay = 0;
         });
     }
+    // call this once per frame to record or replay events
     update() {
         if (this.playMode == "replay") {
             if (this.iEventReplay >= this.events.length) {
@@ -90,6 +96,7 @@ export class EventLog {
         }
         this.iFrame++;
     }
+    // send all events to the server to be recorded, clear event log
     flush() {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.playMode == "record") {
@@ -98,6 +105,7 @@ export class EventLog {
             }
         });
     }
+    // stop recording or playback
     stop() {
         return __awaiter(this, void 0, void 0, function* () {
             if (this.playMode == "replay") {
@@ -110,6 +118,7 @@ export class EventLog {
             this.playMode = "none";
         });
     }
+    // saves the most recent scroll event in a stream of consecutive events
     saveScrollEvent(eventType, x, y) {
         if (this.playMode == "record") {
             let sev = {
@@ -125,6 +134,7 @@ export class EventLog {
             this.addEventToLog(sev);
         }
     }
+    // converts an event to a JSON object that can be stored
     serialiseEvent(event, target) {
         if (event instanceof MouseEvent) {
             return {
@@ -178,6 +188,7 @@ export class EventLog {
         console.log("unserialised event type", typeof (event));
         return null;
     }
+    // converts a serialised event to a "real" event (with 'synthetic' tag so we can tell the difference)
     issueEvent(sev) {
         if (sev.eventType != 'mousemove') {
             //console.log(`frame ${s_iFrame}: ${sev.type}.${sev.eventType}`);

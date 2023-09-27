@@ -14,6 +14,7 @@ import {Vec2} from "./util.js";
 
 window.onload = () => { main(); };
 
+// represents a block of code contained within a card
 class CodeBlock {
     text: string = "";                  // actual code text
     language: string;                   // ".ts", ".py", ".cpp", ".hpp", etc.
@@ -23,22 +24,23 @@ class CodeBlock {
     }
 }
 
+// indicates that a character range (iChar--jChar) links to another card
 class Dependency {
     iChar: number = 0;                  // character index in code of start of symbol
     jChar: number = 0;                  // character index in code after symbol
     targets: string[] = [];             // card uids we link to
 };
 
+// represents a piece of code (class, method, function, variable)
 class Card {
     uid: string = "";                   // uid; something like lang_module_kind_name, but maybe other decorators too
     language: string = "";              // language shortname of original code
     module: string = "";                // module: eg. firefly or graphview
     kind: string = "";                  // "class" or "function" or "other"
     name: string = "";                  // name of function or class being defined
-    purpose: string = "";               // purpose
-    examples: string = "";              // examples
-    inputs: string = "";                // inputs
-    outputs: string = "";               // outputs
+    title: string = "";                 // human-readable title
+    purpose: string = "";               // paragraph-length purpose
+    pseudocode: string = "";            // one line per original code
     code: CodeBlock[] = [];             // actual text from code file
     dependsOn: Dependency[] = [];       // cards we depend on
     dependents: Dependency[] =[];       // cards that depend on us
@@ -49,12 +51,14 @@ class Card {
 
 }
 
+// possible options for the state of a card-view
 enum CardViewState {
     Compact,
     Fullsize,
     Editing
 }
 
+// holds all state about an individual card viewer
 class CardView {
     minimised: boolean = false;                         // if true, title bar only
     state: CardViewState = CardViewState.Compact;       // state of code viewer
@@ -66,6 +70,7 @@ class CardView {
     }
 }
 
+// holds all state for the application
 class App {
     useLocalFiles = false;
     dirHandle: any | null = null;
@@ -83,6 +88,7 @@ class App {
 
 let s_app : App = new App();
 
+// does everything client-side
 async function main() {
     console.log("firefly ᕦ(ツ)ᕤ");
     run();
@@ -100,7 +106,6 @@ async function init() {
     initLogo();
     initBusyIcon();
     initKeyboard();
-    initMouse();
 }
 
 // load all the data we need from the server
@@ -110,10 +115,6 @@ async function loadAll() {
     await animateLogoToLeft();
     await openSession();
     searchBox();
-}
-
-function initMouse() {
-    // nothing atm
 }
 
 // move the logo to bottom left to signal we are good to go!
@@ -345,6 +346,7 @@ function showSearchResults(results: any) {
     }
 }
 
+// deliver an "alertbox" style message to the user, via our little logo dude character
 function say(message: string, timeSec: number = 2) {
     console.log(message);
     let div = element(`<div class="speech-bubble">${message}</div>`);
@@ -360,6 +362,7 @@ function say(message: string, timeSec: number = 2) {
     }, timeSec*1000);
 }
 
+// represents a pop-up detail tag (appears on mouse-over)
 class DetailTag {
     div: HTMLElement;       // track this
     msg: string;            // display
@@ -378,7 +381,7 @@ class DetailTag {
     update() {
         if (this.detailsDiv.style.visibility == 'visible') {
             let r = rect(this.div);
-            this.detailsDiv.style.left = `${r.left}px`;
+            this.detailsDiv.style.left = `${r.left + 16}px`;
             this.detailsDiv.style.top = `${r.top - 16}px`;
         }
     }
@@ -389,16 +392,19 @@ class DetailTag {
     }
 }
 
+// adds a detail tag to any HTML element
 function addDetailTag(div: HTMLElement, message: string) {
     let tag = new DetailTag(div, message);
 }
 
+// call this once per frame
 function updateDetailTags() {
     for (let tag of s_app.detailTags) { 
         tag.update(); 
     }
 }
 
+// causes (func) to be called when (div) is closed
 function onClose(div: HTMLElement, func: Function) {
     const parentElement = s_app.graph.topLevelDiv(div);
     if (!parentElement) return;
@@ -417,6 +423,7 @@ function onClose(div: HTMLElement, func: Function) {
     observer.observe(parentElement, { childList: true });
 }
 
+// opens (card) as the main card, shows all callers and callees
 function jumpToCard(card: Card) {
     console.log("jumpToCard");
     let info = new CardView(CardViewState.Compact);

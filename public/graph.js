@@ -263,6 +263,7 @@ export class Graph {
         this.columns.spaceNodesHorizontally();
         this.forceArrange = false;
     }
+    // returns true if any node changed size since last frame
     anyNodeSizeChanged() {
         for (let node of this.nodes.values()) {
             if (node.sizeChanged())
@@ -373,6 +374,7 @@ export class Graph {
     newVisit() {
         this.visitCount++;
     }
+    // check that the canvas is big enough for all nodes, resize if not
     updateCanvas() {
         let bounds = new Rect(0, 0, window.innerWidth, window.innerHeight);
         let padding = 32;
@@ -404,11 +406,13 @@ export class Graph {
             window.scrollTo(window.scrollX - delta.y, window.scrollY - delta.y);
         }
     }
+    // update all nodes
     updateNodes() {
         for (let node of this.nodes.values()) {
             node.update();
         }
     }
+    // update all edges
     updateEdges() {
         for (let edge of this.edges.values()) {
             edge.update();
@@ -451,6 +455,7 @@ export class Node {
         this.div = div;
         this.userInfo = userInfo;
     }
+    // animates the node's DIV's size from zero up to its natural size, over 0.25 sec
     animateOpen() {
         this.div.style.width = '0px';
         this.div.style.height = '0px';
@@ -473,6 +478,7 @@ export class Node {
             this.div.style.transition = ''; // Optionally reset the transition property
         }, { once: true }); // The event listener will be removed automatically after it's called once
     }
+    // the reverse - makes the DIV disappear over 0.25 sec
     animateClose() {
         for (let e of this.edgesIn) {
             e.removeFromSVG();
@@ -490,6 +496,7 @@ export class Node {
             this.div.style.height = '0px';
         });
     }
+    // update: move towards target position, check for loss of div
     update() {
         this.div = refind(this.div);
         if (this.pos.x == -1 && this.pos.y == -1) {
@@ -500,14 +507,17 @@ export class Node {
         }
         this.size.set(this.div.clientWidth, this.div.clientHeight);
     }
+    // set where we want the div to move to
     setTargetPos(pos) {
         this.targetPos = pos;
     }
+    // set the actual position this frame, taking -ve canvas boundaries into account
     setPos(pos) {
         this.pos = pos;
         this.div.style.left = `${pos.x - s_graph.canvasRect.left}px`;
         this.div.style.top = `${pos.y - s_graph.canvasRect.top}px`;
     }
+    // center the node within the window bounds
     center() {
         let size = new Vec2(this.div.offsetWidth, this.div.offsetHeight);
         let wsize = new Vec2(window.innerWidth, window.innerHeight);
@@ -515,23 +525,29 @@ export class Node {
         this.setTargetPos(pos);
         this.setPos(pos);
     }
+    // return the rectangle we're aiming towards
     targetRect() {
         const r = rect(this.div);
         return new Rect(this.targetPos.x, this.targetPos.y, this.targetPos.x + r.width(), this.targetPos.y + r.height());
     }
+    // vertical coordinate of the center-line of the node's div
     centerLine() {
         const r = this.targetRect();
         return (r.top + r.bottom) / 2;
     }
+    // true if the size of the node changed since the last frame
     sizeChanged() {
         return (this.size.x != this.div.clientWidth ||
             this.size.y != this.div.clientHeight);
     }
+    // true if the node hasn't reached its target position yet
     moving() {
         return !(this.pos.equalsTo(this.targetPos));
     }
     delete() { }
+    // indicate that the node got visited by a recursive procedure
     visit() { this.visitCount = s_graph.visitCount; }
+    // check to see if the node got visited by a recursive procedure
     visited() { return (this.visitCount == s_graph.visitCount); }
 }
 // manages a single edge, and all arrange/draw logic
@@ -549,6 +565,7 @@ export class Edge {
         this.path.setAttribute('fill', 'transparent');
         this.addToSVG();
     }
+    // update state (coordinates, path, etc)
     update() {
         let fromDiv = refind(this.fromDiv);
         let toDiv = refind(this.toDiv);
@@ -614,24 +631,32 @@ export class Edge {
         }
         this.path.setAttribute('d', d);
     }
+    // returns the edge's destination node
     toNode() {
         return s_graph.findNode(this.toDiv);
     }
+    // returns the edge's source node
     fromNode() {
         return s_graph.findNode(this.fromDiv);
     }
+    // adds the edge's path to the main SVG
     addToSVG() {
         s_graph.svg.appendChild(this.path);
     }
+    // removes the edge's path from the main SVG
     removeFromSVG() {
         this.path.remove();
     }
+    // cleanup on destruction
     delete() {
         this.removeFromSVG();
     }
+    // visit during recursive procedure
     visit() { this.visitCount = s_graph.visitCount; }
+    // check if visited during this recursive procedure
     visited() { return (this.visitCount == s_graph.visitCount); }
 }
+// if a div has been closed, find the first div with the same ID
 function refind(div) {
     if (s_graph.container.contains(div))
         return div;
@@ -640,12 +665,14 @@ function refind(div) {
         return null;
     return elements[0];
 }
+// manages an array of columns of nodes with potentially -ve column indices
 class NodeColumns {
     constructor() {
         this.columns = []; // for each column, an array of nodes
         this.groups = []; // for each column, an array of node-groups (grouped by parent)
         this.zeroIndex = 0; // logical index [0] => physical index [zeroIndex], so we can do -ve logical indices
     }
+    // print contents for debug
     showLog() {
         console.log("COLUMNS:");
         for (let i = 0; i < this.columns.length; i++) {
@@ -655,6 +682,7 @@ class NodeColumns {
             }
         }
     }
+    // adds a node to column (iColumn), iColumn can be -ve
     addNode(node, iColumn) {
         let physIndex = this.zeroIndex + iColumn;
         if (physIndex >= this.columns.length) {

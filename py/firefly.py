@@ -31,6 +31,7 @@ root = "/Users/asnaroo/desktop/experiments/firefly"
 global eventLog
 eventLog = []
 
+# opens a github repository, imports and processes all cards
 @service.register
 def openRepository(owner, repoName):
     print("open repository", owner, repoName)
@@ -64,12 +65,14 @@ def openRepository(owner, repoName):
     print(f"done! took {t} sec.")
     return cards
 
+# saves an individual json object to a file
 @service.register
 def save(path, obj):
     path = root + "/data/" + path
     writeJsonToFile(obj, path)
     return { "saved" : True }
 
+# loads an individual json object from a file
 @service.register
 def load(path):
     path = root + "/data/" + path
@@ -80,40 +83,47 @@ def load(path):
     else:
         return { "error" : f"{path.replace(root, '')} not found" }
 
+# clears the event log
 @service.register
 def startEventRecording():
     global eventLog
     eventLog = []
     return { "success" : True }
 
+# flushes the event log 
 @service.register
 def saveEventLog(events):
     global eventLog
     eventLog.extend(events)
     return { "success" : True }
 
+# stops recording, saves all events
 @service.register
 def stopRecording(events):
     global eventLog
     writeJsonToFile(eventLog, f"{root}/data/eventlog/eventlog.json")
     return { "success" : True }
-    
+
+# semantic search - returns top 8 matches
 @service.register
 def search(query):
     dict = vectors.search(query, 8)
     return dict
 
+# writes an object as a json string to a file
 def writeJsonToFile(obj, path: str):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, 'w') as file:
         json.dump(obj, file, indent=4)
 
+# reads a json object from a file
 def readJsonFromFile(filename):
     with open(filename, 'r') as file:
         data = json.load(file)
     return data
 
-def importAllCards(project, folders):   # returns list of new cards, doesn't compute deps or anything, just reads the code
+# reads code for all cards from a list of folders within a project
+def importAllCards(project, folders):
     cards = []
     for folder in folders:
         print(f"importAllCards: {folder}")
@@ -123,6 +133,7 @@ def importAllCards(project, folders):   # returns list of new cards, doesn't com
     removeIndents(cards)
     return cards
 
+# generates embedding vectors for (cards)'s function names (shortName) expressed as words
 def saveEmbeddings(cards):
     print("saving embeddings for", len(cards), "cards:")
     cardsFromKeys = {}
@@ -136,6 +147,7 @@ def saveEmbeddings(cards):
         uids = [c.uid() for c in cards]
         vectors.set(key, uids)
 
+# removes embeddings for (cards) from the vector database
 def removeEmbeddings(cards):
     print("removing embeddings for", len(cards), "cards:")
     for card in cards:
@@ -149,7 +161,8 @@ def removeEmbeddings(cards):
             else:
                 vectors.set(key, uids)
 
-def separateWords(name): # convert "camelCaseHTTP" and "camel_case_HTTP" to "camel case HTTP", 
+# converts an identifier to a normal string of words, eg "camelCaseHTTP" and "camel_case_HTTP" to "camel case HTTP"
+def separateWords(name): 
     symbols = "!@#$%^&*()+-={}[]:\";\',.<>/?\`~_"
     result = ""
     for i in range(0, len(name)):
@@ -169,29 +182,42 @@ def separateWords(name): # convert "camelCaseHTTP" and "camel_case_HTTP" to "cam
             result += c
     return result.replace("\n", " ").strip()
 
+# base class representing a programming language we want to support
 class Language:
+    # the name of the language, eg "python"
     def name(self) -> str:
         return ""
+    # short nane of the language, eg "py"
     def shortName(self) -> str:
         return ""
+    # character string indicating an end-of-line comment ('#' for python, '//' for c++, etc)
     def comment(self) -> str:
         return ""
+    # character string for multi-line comment start
     def multiLineComment(self) -> str:
         return ""
+    # character string for multi-line comment end
     def endMultiLineComment(self) -> str:
         return ""
-    def checkOpenQuote(self, str, ic):   # if (str[ic:]) starts with an openquote, return the closed-quote string to look for
+    # if (str[ic:]) starts with an openquote, return the closed-quote string to look for
+    def checkOpenQuote(self, str, ic): 
         return ""
+    # true if names can contain hyphens, false otherwise
     def namesCanContainHyphens(self) -> bool:
         return False
+    # constructor name - 'constructor' for typescript, '__init__' for python, etc
     def constructorName(self) -> str:
         return ""
+    # keywords indicating function/etc definition, eg. 'function' for typescript, 'def' for python
     def definitionKeywords(self) -> List[str]:
         return []
+    # given some code (text), import all cards and return a list
     def importCards(self, project, module,  text):
-        return []
-    def thisName(self) -> str:  # return "this" or "self" or whatever
+        return []  
+    # return "this" or "self" or whatever
+    def thisName(self) -> str:
         return ""
+    # given a raw text block of code, figure out what type, kind, name, etc it is
     def findTypeAndName(self, card, minIndent) -> (str, str):
         return ("", "")
     
@@ -202,7 +228,8 @@ class CodeBlock:
         self.iLine = iLine
         if jLine==-1: self.jLine = iLine # inclusive: eurgh
         else: self.jLine = iLine
-        
+
+# represents a unit of code - function, variable, method or class
 class Card:
     def __init__(self, project: str="", module: str="", code: str="", language: Language=Language(), iLine: int=0) :
         self.project = project  # global
@@ -210,10 +237,9 @@ class Card:
         self.language = language.shortName()    
         self.kind = ''          # "class" or "function" or "other"
         self.name = ''          # name of function or class being defined
+        self.title = ''         # title
         self.purpose = ''       # purpose
-        self.examples = ''      # examples
-        self.inputs = ''        # inputs
-        self.outputs = ''       # outputs
+        self.pseudocode = ''    # pseudocode
         self.code = [ CodeBlock(code, language, iLine) ]        # actual text from code file
         self.dependsOn = []     # cards we depend on
         self.dependents = []    # cards that depend on us
@@ -223,6 +249,7 @@ class Card:
         self.rankFromBottom = 0 # 1 means depends on nothing; x means depends on things with rank < x
         self.rankFromTop = 0    # 1 means nothing calls this; x means called by things with rank < x 
 
+    # concise human-readable name; var, function(), Class, Class.property, or Class.method()
     def shortName(self):
         s = ""
         if self.parent: s= self.parent.name + "."
@@ -231,12 +258,14 @@ class Card:
             s += "()"
         return s
     
+    # unique identifier based on all sub-identifiers
     def uid(self):
         u = self.language + "_" + self.project + "_" + self.module + "_" + self.kind + "_"
         if self.parent: u += self.parent.name + "_"
         u += self.name
         return u
 
+# converts a card to a JSON object
 def card_serialiser(obj):
     if isinstance(obj, Card):
         return {
@@ -245,10 +274,9 @@ def card_serialiser(obj):
             "module" : obj.module,
             "kind" : obj.kind,
             "name" : obj.name,
+            "title" : obj.title,
             "purpose" : obj.purpose,
-            "examples" : obj.examples,
-            "inputs" : obj.inputs,
-            "outputs" : obj.outputs,
+            "pseudocode" : obj.pseudocode,
             "code" : [{ "text" : c.text, "language" : c.language.shortName(), "iLine" : c.iLine, "jLine" : c.jLine } for c in obj.code],
             "dependsOn" : [ { "targets" : [t.uid() for t in d.targets], "iChar": d.iChar, "jChar": d.jChar } for d in obj.dependsOn],
             "dependents" : [ { "targets" : [t.uid() for t in d.targets], "iChar": d.iChar, "jChar": d.jChar } for d in obj.dependents],
@@ -257,11 +285,14 @@ def card_serialiser(obj):
         }
     raise TypeError(f"Type {type(obj)} unfortunately is not serializable")
 
+# represents a dependency from one card to another
 class Dependency:
     def __init__(self, iChar: int, jChar: int, targets: List[Card]):
         self.iChar = iChar
         self.jChar = jChar
         self.targets = targets
+
+    # combines two dependencies into a single one
     def combine(self, dep):
         len0 = self.jChar - self.iChar
         len1 = dep.jChar - dep.iChar
@@ -276,6 +307,7 @@ class Dependency:
             self.jChar = max(self.jChar, dep.jChar)
             self.targets += dep.targets
 
+# represents the Python language for processing
 class Python(Language):
     def name(self): return "python"
     def shortName(self): return "py"
@@ -335,7 +367,7 @@ class Python(Language):
                         return ("global", parts[0].strip())
         return ("unknown", "unknown")
 
-# typescript
+# represents the Typescript for processing
 class Typescript(Language):
     def name(self): return "typescript"
     def shortName(self): return "ts"
@@ -401,33 +433,40 @@ class Typescript(Language):
                     return ("global", w[1].split(":")[0])
         return ("unknown", "unknown")
 
+# returns the difference between the number of open-braces and closed-braces in a string
 def countBraces(s: str) -> int:
     return s.count("{") - s.count("}")
 
+# returns the number of tabs (four spaces) at the start of a line
 def nTabsAtStart(s: str) -> int:
     return (len(s) - len(s.lstrip(' ')))/4
 
+# returns true if the line is blank / whitespace 
 def isBlank(s: str) -> bool:    
     return not s.strip()
 
+# reads a file and returns the contents as a string
 def readFile(filename: str) -> str:
     with open (filename, "r") as f:
         text = f.read()
     return text
 
+# given a filename extension or language shortname, returns the corresponding Language object
 def findLanguage(ext: str) -> Language:
     if ext.startswith('.'): ext = ext[1:]
     if ext == "py": return Python()
     elif ext == "ts" or ext == "js": return Typescript()
     else:
         raise Exception("Unrecognised file extension")
-    
+
+# returns a dictionary mapping (uid => card) for all (cards)
 def uidDict(cards: List[Card]) -> dict:
     uids = {}       # uid => Card
     for card in cards:
         uids[card.uid()] = card
     return uids
 
+# load (filename) and import all cards 
 def importCardsFromFile(project, filename) -> List[Card]:
     #print("importing cards from", filename)
     root, ext = os.path.splitext(filename)
@@ -435,6 +474,7 @@ def importCardsFromFile(project, filename) -> List[Card]:
     text = readFile(filename)
     return importCards(project, module, text, ext)
 
+# given text for a single file, import all cards (including one level down inside classes)
 def importCards(project: str, module: str, text: str, ext: str) -> List[Card]:
     language = findLanguage(ext)
     cards = importCardsFromText(project, module, language, text, None, 0)
@@ -452,11 +492,13 @@ def importCards(project: str, module: str, text: str, ext: str) -> List[Card]:
     cards = [card for card in cards if card.name != "unknown"] # remove unknown name cards
     return cards
 
+# given a list of cards, return a json object that we can save
 def cardsToJsonDict(cards: List[Card]) -> dict:
     print("cardsToJsonDict:", len(cards), "cards")
     jsonObj = { "cards" : [card_serialiser(c) for c in cards] }
     return jsonObj
 
+# given a json dict, return a dictionary mapping (uid => Card)
 def loadOldCards(project: str, json: dict) -> dict:  # returns (uid => Card) dictionary
     uids = {}       # uid => Card
     cards = []
@@ -469,10 +511,9 @@ def loadOldCards(project: str, json: dict) -> dict:  # returns (uid => Card) dic
         card.module = j['module']
         card.kind = j['kind']
         card.name = j['name']
+        card.title = j['title']
         card.purpose = j['purpose']
-        card.examples = j['examples']
-        card.inputs = j['inputs']
-        card.outputs = j['outputs']
+        card.pseudocode = j['pseudocode']
     i=0
     for j in json['cards']:
         card = cards[i]
@@ -485,6 +526,7 @@ def loadOldCards(project: str, json: dict) -> dict:  # returns (uid => Card) dic
         card.parent = uids[j['parent']] if j['parent'] != 'null' else None
     return uids
 
+# represents a single Lexeme, and possible meanings 
 class Lex:
     def __init__(self, code: str ="", iChar:int =0, jChar:int =0, type:str =""):
         sub = code[iChar:jChar]
@@ -505,6 +547,7 @@ class Lex:
             return self.text == other
         return False
 
+# given a list of cards that have changed, run all time-consuming import operations
 def processChangedCards(cards: List[Card], oldCards: dict):
     cardsToProcess = []
     removedCards = []
@@ -528,7 +571,9 @@ def processChangedCards(cards: List[Card], oldCards: dict):
     saveEmbeddings(cardsToProcess)
     removeEmbeddings(removedCards)
 
-def computeDependencies(cards: List[Card]):         # this is a bit of a behemoth, refactor!
+# given a list of cards, map all dependencies between them
+def computeDependencies(cards: List[Card]):
+    # TODO: this is a bit of a behemoth, refactor!
     # put all cards into a hash table mapping name -> List[Card]
     cardsFromName = {}
     #print("--------------- computeDeps -------------")
@@ -650,7 +695,8 @@ def computeDependencies(cards: List[Card]):         # this is a bit of a behemot
                 for t in l.targets:
                     if t != card:
                         t.dependents.append(Dependency(l.ic, l.jc, [card]))
-            
+
+# for debug - given a string of lexemes, print them out            
 def printLs(msg, ls): 
     print(msg)
     for l in ls:
@@ -660,6 +706,7 @@ def printLs(msg, ls):
         out += ']'
         print(' ', l.text, out)
 
+# convert text to a string of lexemes
 def processLexemes(code: str, lang: Language) -> List[Lex]:
     mlc = lang.multiLineComment()
     elmc = lang.endMultiLineComment()
@@ -692,11 +739,13 @@ def processLexemes(code: str, lang: Language) -> List[Lex]:
             ic = jc
     return result
 
-def skipPast(searchFor, inText, ic) -> int:     # just straight search for (search), return index after or len() if not found
+# search for (searchFor), return index after or len() if not found
+def skipPast(searchFor, inText, ic) -> int: 
     jc = inText.find(searchFor, ic)
     return (jc + len(searchFor)) if jc >= 0 else len(inText)
 
-def skipPastCloseQuote(searchFor, inText, ic) -> int:   # same, but will overlook '\' characters
+# search for (searchFor), ignoring occurrences inside quotes
+def skipPastCloseQuote(searchFor, inText, ic) -> int:
     while(ic < len(inText)):
         ic = inText.find(searchFor, ic)
         if ic < 0: return len(inText)
@@ -704,34 +753,41 @@ def skipPastCloseQuote(searchFor, inText, ic) -> int:   # same, but will overloo
         ic = ic + len(searchFor)
     return len(inText)
 
-def skipPastNextWord(inText, ic, lang: Language) -> int:    # skip past end of next word
+# skip past end of next word
+def skipPastNextWord(inText, ic, lang: Language) -> int:
     while(ic < len(inText)):
         char = inText[ic]
         if not isWordChar(char, lang): return ic
         ic += 1
     return len(inText)
 
+# true if character returns whitespace
 def isWhitespace(char) -> bool:
     return char in ' \n\t'
 
-def skipToNextNonWhitespace(inText, ic) -> int: # skip to next nonwhitespace character
+ # skip to next nonwhitespace character
+def skipToNextNonWhitespace(inText, ic) -> int:
     while(ic < len(inText)):
         if not isWhitespace(inText[ic]):
             return ic
         ic += 1
     return ic
 
+# true if character is a--z or "_"
 def isAlpha(char) -> bool:
     l = char.lower()
     return (l >= 'a' and l <= 'z') or l == '_'
 
+# true if character is one of a list of operator characters
 def isOperator(char) -> bool:
     return char in '!@#$%^&*_+-=:;<>.,/?'
 
+# skip past the next operator
 def skipPastOperator(inText, ic) -> int:
     if ic < len(inText)-1 and isOperator(inText[ic+1]): return ic+2
     return ic+1
 
+# true if a character can occur within a word
 def isWordChar(char, lang: Language) -> bool:
     l = char.lower()
     if (l >= 'a' and l <= 'z'): return True
@@ -740,9 +796,8 @@ def isWordChar(char, lang: Language) -> bool:
     if (lang.namesCanContainHyphens() and l == '-'): return True
     return False
 
-
+# sort callable cards into levels from top down and bottom up (set rank properties)
 def computeLevels(cards: List[Card]):
-    #print('computeLevels...')
     # now compute the levels of all callable things (not classes or properties)
     callables = [c for c in cards if c.kind == 'method' or c.kind == 'function']
     #print('\ncomputing rank from top...')
@@ -799,6 +854,7 @@ def computeLevels(cards: List[Card]):
         queue = nextQueue
         level += 1
 
+# write a text string to a file
 def writeTextToFile(text: str, path: str):
     folder = os.path.dirname(path)
     if folder != '':
@@ -806,13 +862,15 @@ def writeTextToFile(text: str, path: str):
     with open(path, 'w') as file:
         file.write(text)
 
+# given some raw text, import all cards
 def importCardsFromText(project: str, module: str, language: Language, text: str, parent: Card, minIndent: int)-> List[Card]:
     cards = language.importCards(project, module, text, minIndent)
     for c in cards:
         c.parent = parent
         (c.kind, c.name) = language.findTypeAndName(c)
     return cards
-    
+
+# remove indents from the code block of all cards
 def removeIndents(cards: List[Card]):
     for card in cards:
         lines = card.code[0].text.split('\n')
@@ -826,17 +884,15 @@ def removeIndents(cards: List[Card]):
             lines = [l[minLeadingSpaces:] for l in lines]
         card.code[0].text = '\n'.join(lines)
 
-
+# return true if (target) exists in a list of strings
 def findString(strings: list, target: str) -> int:
     try:
         return strings.index(target)
     except ValueError:
         return -1
-    
+
+# return a list of files in the given directory (and its subdirectories) that end with the given extension.
 def findAllFiles(directory, extension):
-    """
-    Returns a list of files in the given directory (and its subdirectories) that end with the given extension.
-    """
     matched_files = []
 
     # Ensure the extension starts with a dot
@@ -852,10 +908,12 @@ def findAllFiles(directory, extension):
 
     return matched_files
 
+# start server listening for commands from the client
 def startServer():
     vectors.loadSbertModel()
     service.start("firefly", 8003, root)
 
+# download the latest version of the code for a github repository to the specified folder
 def getGithubCode(repo_url: str, save_path: str, extract_path: str, pat_token: str =''):
     # clean out the destination folder
     if os.path.exists(extract_path):
@@ -897,7 +955,8 @@ def getGithubCode(repo_url: str, save_path: str, extract_path: str, pat_token: s
         
     else:
         print(f"Failed to get file: {response.content}")
-    
+
+# download github repository to the right folder
 def downloadRepository(owner: str, repo: str, token: str=''):
     folder = f"{root}/data/repositories/{owner}/{repo}"
     zip = folder + '/code.zip'
@@ -905,6 +964,7 @@ def downloadRepository(owner: str, repo: str, token: str=''):
     url = f"https://github.com/{owner}/{repo}"
     getGithubCode(url, zip, source, token)
 
+# find the SHA of the tip of "main" branch of a github repo
 def getRepositorySHA(owner: str, repoName: str, token: str=''):
     #print(f"getting SHA for {owner}/{repoName}")
     repoURL = "https://github.com/{owner}/{repoName}"
@@ -920,7 +980,8 @@ def getRepositorySHA(owner: str, repoName: str, token: str=''):
         print("Failed to fetch the latest commit SHA:", response.content)
         return ''
 
-def updateRepository(repo) -> bool:     # returns True if the code changed
+# download repository, return true if the code changed since last time
+def updateRepository(repo) -> bool:
     owner = repo['owner']
     repoName = repo['repoName']
     token = repo['token']
@@ -934,6 +995,7 @@ def updateRepository(repo) -> bool:     # returns True if the code changed
         repo['SHA'] = latestSHA
         return True
 
+# whatever tests you need to do 
 def test():
     print("testing...")
     fname = "../data/repositories/asnar00/firefly/cards/asnar00_firefly.json"
@@ -941,6 +1003,7 @@ def test():
     cards = loadOldCards("firefly", json)
     print(cards.keys())
 
+# python main
 if __name__ == "__main__":
     startServer()
     #test()
