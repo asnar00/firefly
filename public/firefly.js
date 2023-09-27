@@ -187,11 +187,11 @@ function openSession() {
             s_app.playMode = json.ui.playMode;
             console.log(s_app.playMode);
             if (s_app.playMode == "replay") {
-                say("replaying eventlog");
+                say("replaying");
                 yield s_app.eventLog.replay("eventlog/eventlog.json");
             }
             else if (s_app.playMode == "record") {
-                say("recording eventlog");
+                say("recording");
                 yield s_app.eventLog.record();
             }
         }

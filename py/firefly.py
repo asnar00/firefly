@@ -1020,11 +1020,23 @@ def componentDescriptions(card: Card) -> str:
             break
     return '\n'.join(useLines)
 
+# separate text into tags
+def separateTaggedText(text: str, tags: List[str]) -> List[str]:
+    iTags = []
+    for tag in tags:
+        iTag = text.find(tag)
+        iTags.append(iTag)
+    sections = []
+    for i in range(0, len(iTags)):
+        iChar = iTags[i] + len(tags[i])
+        jChar = iTags[i+1] if i < len(iTags)-1 else len(text)
+        section = text[iChar:jChar]
+        sections.append(section.strip())
+    return sections
+
 # find purpose / pseudocode / clarification-requests for (uid => card) dictionary
-def writePseudocode(cardsDict, uid):
-    print("--------------------------------------")
-    print("writePseudocode", uid)
-    card = cardsDict[uid]
+def writePseudocode(card):
+    print("writePseudocode", card.uid(), "----------------------")
     called = []
     for dep in card.dependsOn:
         for t in dep.targets:
@@ -1036,11 +1048,18 @@ def writePseudocode(cardsDict, uid):
         prompt += "name: " + c.shortName() + "\n"
         prompt += componentDescriptions(c) + "\n\n"
     prompt += "\nClarifications: None\n"
-    print("sent request to gpt...")
     p0 = time.perf_counter()
     pseudocode = gptprompts.writePseudocode(prompt)
-    print("result!")
-    print(pseudocode)
+    print("raw output", pseudocode)
+    sections = separateTaggedText(pseudocode, ['TITLE:', 'PURPOSE:', 'PSEUDOCODE:', 'CLARIFICATION:'])
+    print("  title:", sections[0])
+    print("  purpose:", sections[1])
+    print("  pseudocode:", sections[2])
+    print("  clarifications:", sections[3])
+    card.title = sections[0]
+    card.purpose = sections[1]
+    card.pseudocode = sections[2]
+    card.notes = sections[3]
     t = time.perf_counter() - p0
     print(f"took {t} sec.")
 
@@ -1048,9 +1067,16 @@ def writePseudocode(cardsDict, uid):
 def test():
     print("testing...")
     fname = "../data/repositories/asnar00/firefly/cards/asnar00_firefly.json"
+    fnameOut = "../data/repositories/asnar00/firefly/cards/asnar00_firefly_pseudocode.json"
     json = readJsonFromFile(fname)
     cards = loadOldCards("firefly", json)
-    writePseudocode(cards, "ts_firefly_firefly_function_toggleCallees")
+    done = []
+    for card in cards.values():
+        if card.kind == 'method' or card.kind == 'function':
+            writePseudocode(card)
+            done.append(card)
+            out = cardsToJsonDict(done)
+            writeJsonToFile(out, fnameOut)
 
 # python main
 if __name__ == "__main__":

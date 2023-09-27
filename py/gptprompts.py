@@ -35,7 +35,7 @@ Your response should consist of :
 TITLE:  a short summary of the purpose of the function, up to 15 words.
 PURPOSE: The purpose of the function, expressed in a short paragraph. Avoid phrases such as "the purpose of the function"; just cut to the chase.
 PSEUDOCODE: the pseudocode itself. 
-CLARIFICATION: any questions for which you are unsure of your assumption.
+CLARIFICATION: any questions for which you are unsure of your assumption. If there are no questions, write "CLARIFICATION: None".
 
 Thank you!
 '''

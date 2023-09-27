@@ -263,3 +263,17 @@ OK so now we're going to do METACODE.
 title
 purpose
 steps
+
+____
+OK so that's done. Next we're going to build it into the interface.
+
+states:
+
+Minimised => Title => Purpose => Pseudocode => Code
+
+deal is - always shows you the smallest size it can, showing you the max information.
+all that stuff gets controlled with the style; there's just a different cardToHTML depending on what the mode is.
+
+That's easy enough, right?
+
+OK well let's just fucking try it, I guess.
