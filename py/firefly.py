@@ -524,10 +524,13 @@ def loadOldCards(project: str, json: dict) -> dict:  # returns (uid => Card) dic
         i +=1
         # Parse the code, dependsOn, dependents, children, and parent
         card.code = [CodeBlock(c['text'], findLanguage(c['language']), c['iLine'], c['jLine']) for c in j['code']]
-        card.dependsOn = [Dependency(d['iChar'], d['jChar'], [uids[t] for t in d['targets']]) for d in j['dependsOn']]
-        card.dependents = [Dependency(d['iChar'], d['jChar'], [uids[t] for t in d['targets']]) for d in j['dependents']]
-        card.children = [uids[c] for c in j['children']]
-        card.parent = uids[j['parent']] if j['parent'] != 'null' else None
+        try:
+            card.dependsOn = [Dependency(d['iChar'], d['jChar'], [uids[t] for t in d['targets']]) for d in j['dependsOn']]
+            card.dependents = [Dependency(d['iChar'], d['jChar'], [uids[t] for t in d['targets']]) for d in j['dependents']]
+            card.children = [uids[c] for c in j['children']]
+            card.parent = uids[j['parent']] if j['parent'] != 'null' else None
+        except:
+            continue
     return uids
 
 # represents a single Lexeme, and possible meanings 
@@ -1064,7 +1067,7 @@ def writePseudocode(card):
     print(f"took {t} sec.")
 
 # whatever tests you need to do 
-def test():
+def testWritePseudocode():
     print("testing...")
     fname = "../data/repositories/asnar00/firefly/cards/asnar00_firefly.json"
     fnameOut = "../data/repositories/asnar00/firefly/cards/asnar00_firefly_pseudocode.json"
@@ -1077,6 +1080,26 @@ def test():
             done.append(card)
             out = cardsToJsonDict(done)
             writeJsonToFile(out, fnameOut)
+
+def test():
+    fname = "../data/repositories/asnar00/firefly/cards/asnar00_firefly.json"
+    fnamePS = "../data/repositories/asnar00/firefly/cards/asnar00_firefly_pseudocode.json"
+    fnameOut = "../data/repositories/asnar00/firefly/cards/asnar00_firefly_combined.json"
+    json = readJsonFromFile(fname)
+    cards = loadOldCards("firefly", json)
+    jsonPS = readJsonFromFile(fnamePS)
+    cardsPS = loadOldCards("firefly", jsonPS)
+    for cardPS in cardsPS.values():
+        try:
+            card = cards[cardPS.uid()]
+            card.title = cardPS.title
+            card.purpose = cardPS.purpose
+            card.pseudocode = cardPS.pseudocode
+            card.notes = cardPS.notes
+        except:
+            continue
+    outObj = cardsToJsonDict(cards.values())
+    writeJsonToFile(outObj, fnameOut)
 
 # python main
 if __name__ == "__main__":

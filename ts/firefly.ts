@@ -51,8 +51,17 @@ class Card {
 
 }
 
-// possible options for the state of a card-view
-enum CardViewState {
+// possible options for the content of the card view
+enum CardViewContent {
+    Minimised,                          // just the title bar
+    Title,                              // one-sentence title
+    Purpose,                            // one-paragraph summary
+    Pseudocode,                         // line-by-line pseudocode
+    Code                                // actual code
+}
+
+// possible options for the size of a card-view
+enum CardViewSize {
     Compact,
     Fullsize,
     Editing
@@ -60,13 +69,18 @@ enum CardViewState {
 
 // holds all state about an individual card viewer
 class CardView {
-    minimised: boolean = false;                         // if true, title bar only
-    state: CardViewState = CardViewState.Compact;       // state of code viewer
+    content: CardViewContent = CardViewContent.Purpose;           // content option
+    size: CardViewSize = CardViewSize.Compact;                  // size of code viewer
     xScroll: number =0;
     yScroll: number =0;
-    constructor(state: CardViewState, minimised: boolean=false) {
-        this.state = state;
-        this.minimised = minimised;
+    constructor(size: CardViewSize, content: CardViewContent=CardViewContent.Purpose) {
+        this.size = size;
+        this.content = content;
+    }
+    selectBestContent(card: Card) {
+        if (this.content == CardViewContent.Title && card.title == "") this.content = (this.content + 1) % 5;
+        if (this.content == CardViewContent.Purpose && card.purpose == "") this.content = (this.content + 1) % 5;
+        if (this.content == CardViewContent.Pseudocode && card.pseudocode == "") this.content = (this.content + 1) % 5;
     }
 }
 
@@ -283,7 +297,7 @@ async function initKeyboard() {
 
 // stop event recording
 async function stopRecording() {
-    say("stop eventlog; next run will replay");
+    say("next run will replay");
     s_app.playMode = "replay";
     s_app.eventLog.stop();
     saveAll();
@@ -426,7 +440,7 @@ function onClose(div: HTMLElement, func: Function) {
 // opens (card) as the main card, shows all callers and callees
 function jumpToCard(card: Card) {
     console.log("jumpToCard");
-    let info = new CardView(CardViewState.Compact);
+    let info = new CardView(CardViewSize.Compact);
     let div = cardToHTML(card, info);
     s_app.graph.clear();        // for now
     s_app.graph.node(div, info);
@@ -454,7 +468,7 @@ function openCallees(card: Card) {
             let linkId = linkID(card.uid, dep, iDep);
             let buttons = codeDiv.querySelectorAll(`[id="${linkId}"]`);
             if (buttons.length > 0) {
-                openCardsFromButton(buttons[0] as HTMLElement, true);
+                openCardsFromButton(buttons[0] as HTMLElement, CardViewContent.Minimised);
             }
         }
     }
@@ -481,7 +495,7 @@ function openCallers(card: Card) {
     const div = s_app.graph.findDiv(card.uid);
     if (!div) return;
     for (let caller of callers(card)) {
-        openCardTo(caller.uid, div, true);
+        openCardTo(caller.uid, div, CardViewContent.Minimised);
     }
 }
 
@@ -604,7 +618,61 @@ function findCard(uid: string) : Card | null {
 
 // generates HTML for card, but doesn't connect it yet
 function cardToHTML(card: Card, view: CardView) : HTMLElement {
-    let style = "code"; if (view.state == CardViewState.Fullsize) { style += " code-expanded"; }
+    let elem = generateHTML(card, view);
+    let container = codeContainer(card.uid, elem, shortName(card));
+    setViewStyle(container, view);
+    return container;
+}
+
+// generates HTML for the card contents
+function generateHTML(card: Card, view: CardView) : HTMLElement {
+    view.selectBestContent(card);   // super important; default to code when we don't have documentation
+    const content = view.content;
+    let elem: HTMLElement | null = null;
+    
+    if (content == CardViewContent.Title) {
+        elem= titleToHTML(card, view);
+    } else if (content == CardViewContent.Purpose) {
+        elem= purposeToHTML(card, view);
+    } else if (content == CardViewContent.Pseudocode) {
+        elem= pseudocodeToHTML(card, view);
+    } else if (content == CardViewContent.Code || content == CardViewContent.Minimised) {
+        elem= codeToHTML(card, view);
+    }
+    if (!elem) {
+        console.log("failed to generate HTML!");
+        return element(`<div>AIEEEEEE</div>`);
+    }
+    setTimeout(() => { elem!.scrollLeft = view.xScroll; elem!.scrollTop = view.yScroll;}, 0);
+    listen(elem, 'click', function() { expandOrContract(elem!); });
+    listen(elem, 'scroll', function(event: any) { getScrollPos(elem!); });
+    return elem;
+}
+
+function titleToHTML(card: Card, view: CardView) : HTMLElement {
+    let style = "description"; if (view.size == CardViewSize.Fullsize) { style += " code-expanded"; }
+    let elem : HTMLElement = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
+    elem.innerText = card.title;
+    return elem;
+}
+
+function purposeToHTML(card: Card, view: CardView) : HTMLElement {
+    let style = "description"; if (view.size == CardViewSize.Fullsize) { style += " code-expanded"; }
+    let elem : HTMLElement = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
+    elem.innerText = card.purpose;
+    return elem;
+}
+
+function pseudocodeToHTML(card: Card, view: CardView) : HTMLElement {
+    let style = "code"; if (view.size == CardViewSize.Fullsize) { style += " code-expanded"; }
+    let elem : HTMLElement = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
+    elem.innerText = card.pseudocode;
+    return elem;
+}
+
+// converts code content to HTML
+function codeToHTML(card: Card, view: CardView) : HTMLElement {
+    let style = "code"; if (view.size == CardViewSize.Fullsize) { style += " code-expanded"; }
     let elem : HTMLElement = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
     let text : string = card.code[0].text;
     if (card.dependsOn.length==0) {
@@ -634,12 +702,7 @@ function cardToHTML(card: Card, view: CardView) : HTMLElement {
             elem.appendChild(document.createTextNode(text.slice(iChar, text.length)));
         }
     }
-    setTimeout(() => { elem.scrollLeft = view.xScroll; elem.scrollTop = view.yScroll;}, 0);
-    listen(elem, 'click', function() { expandOrContract(elem); });
-    listen(elem, 'scroll', function(event: any) { getScrollPos(elem); });
-    let container = codeContainer(card.uid, elem, shortName(card));
-    setViewStyle(container, view);
-    return container;
+    return elem;
 }
 
 // given a source card and one of its dependencies, return a decorated link button ID
@@ -666,7 +729,7 @@ function codeContainer(uid: string, codeDiv: HTMLElement, title: string) : HTMLE
     titleDiv.className = 'code-title';
     titleDiv.id = `${containerDiv.id}_title_bar`;
     titleDiv.textContent = title;
-    listen(titleDiv, 'click', () => { toggleMinimise(containerDiv, codeDiv); });
+    listen(titleDiv, 'click', () => { switchContent(card, containerDiv, codeDiv); });
     listen(titleDiv, 'mouseenter', () => { toggleTitle(card, containerDiv, titleDiv, true); });
     listen(titleDiv, 'mouseleave', () => { toggleTitle(card, containerDiv, titleDiv, false); });
     let buttons: HTMLElement = createTitleButtons(card, containerDiv, titleDiv);
@@ -769,25 +832,48 @@ function scrollToView(cards: Card[]) {
     s_app.graph.scrollToView(divs);
 }
 
-// toggle card view minimise
-function toggleMinimise(containerDiv: HTMLElement, codeDiv: HTMLElement) {
+// switch content display option to next option
+function switchContent(card: Card, containerDiv: HTMLElement, codeDiv: HTMLElement) {
+    console.log("switchContent");
     const view = s_app.graph.userInfo(containerDiv)! as CardView;
-    view.minimised = !(view.minimised);
+    view.content = (view.content + 1) % 5;
+    view.selectBestContent(card);
+    let labels = ["Minimised", "Title", "Purpose", "Pseudocode", "Code" ]
+    console.log(labels[view.content]);
+    if (view.content == CardViewContent.Title) console.log(" title", card.title);
+    else if (view.content == CardViewContent.Purpose) console.log(" purpose:", card.purpose);
+    else if (view.content == CardViewContent.Pseudocode) console.log(" pseudocode:", `"${card.pseudocode}"`);
+    else if (view.content == CardViewContent.Code) console.log(" code:", `"${card.code[0].text}"`);
+    setViewContent(containerDiv, view);
     setViewStyle(containerDiv, view);
     s_app.graph.scrollToView([containerDiv]);
+}
+
+// ensure that (div)'s content matches the settings in (view)
+function setViewContent(div: HTMLElement, view: CardView) {
+    let id = div.id;
+    let card = findCard(id);
+    if (!card) return;
+    let elem = generateHTML(card, view);
+    let wrapperDiv = div.children[0];
+    let titleDiv = wrapperDiv.children[0];
+    let contentDiv = wrapperDiv.children[1] as HTMLElement;
+    contentDiv.remove();
+    let newContentDiv = generateHTML(card, view);
+    wrapperDiv.append(newContentDiv);
 }
 
 // ensure that (div)'s styles etc match the settings in (view)
 function setViewStyle(div: HTMLElement, view: CardView) {
     let codeDiv = div.children[0].children[1] as HTMLElement;  // TODO:  better way
-    if (view.minimised) {
+    if (view.content == CardViewContent.Minimised) {
         codeDiv.classList.remove("code-expanded");
         codeDiv.classList.add("code-minimised");
     } else {
         codeDiv.classList.remove("code-minimised");
-        if (view.state == CardViewState.Compact) {
+        if (view.size == CardViewSize.Compact) {
             codeDiv.classList.remove("code-expanded");
-        } else if (view.state == CardViewState.Fullsize) {
+        } else if (view.size == CardViewSize.Fullsize) {
             codeDiv.classList.add("code-expanded");
         }
     }
@@ -828,7 +914,14 @@ function onCloseButtonClick(div: HTMLElement) {
 // user-readable short name, as concise as possible
 function shortName(card: Card) : string {
     let result: string = "";
-    if (card.parent != "null") { result += findCard(card.parent)!.name + "."; }
+    if (card.parent != "null") { 
+        let parentCard = findCard(card.parent);
+        if (!parentCard) {
+            console.log("couldn't find parentCard", card.parent);
+        } else {
+            result += parentCard.name + "."; 
+        }
+    }
     result += card.name;
     if (card.kind=="method" || card.kind=="function") result += "()";
     return result;
@@ -868,11 +961,11 @@ function expandOrContract(elem : HTMLElement) {
     let div = s_app.graph.topLevelDiv(elem)!;
     let view = s_app.graph.userInfo(div) as CardView;
     if (!view) return;
-    if (view.state == CardViewState.Compact) {
-        view.state = CardViewState.Fullsize;
+    if (view.size == CardViewSize.Compact) {
+        view.size = CardViewSize.Fullsize;
 
-    } else if (view.state == CardViewState.Fullsize) {
-         view.state = CardViewState.Compact;
+    } else if (view.size == CardViewSize.Fullsize) {
+         view.size = CardViewSize.Compact;
          elem.scrollLeft = view.xScroll;
          elem.scrollTop = view.yScroll;
     }
@@ -883,7 +976,7 @@ function expandOrContract(elem : HTMLElement) {
 // gets the current scroll offsets for a card view
 function getScrollPos(elem: HTMLElement) {
     let view = s_app.graph.userInfo(elem);
-    if (view.state == CardViewState.Compact) {
+    if (view.size == CardViewSize.Compact) {
         view.xScroll = elem.scrollLeft;
         view.yScroll = elem.scrollTop;
     }
@@ -921,10 +1014,10 @@ function onLinkButtonPress(button: HTMLElement) {
 }
 
 // open all cards pointed to by (button)
-function openCardsFromButton(button: HTMLElement, minimised: boolean= false) {
+function openCardsFromButton(button: HTMLElement, content: CardViewContent=CardViewContent.Purpose) {
     let cards = getTargetCards(button);
     for(let c of cards) {
-        openCardFrom(c.uid, button, minimised);
+        openCardFrom(c.uid, button, content);
     }
     let divs : HTMLElement[] = [];
     for(let c of cards) { divs.push(s_app.graph.findDiv(c.uid)!); }
@@ -959,10 +1052,10 @@ function closeCard(uid: string) {
 }
 
 // opens a card, optionally connected to a button element
-function openCardFrom(uid: string, button: HTMLElement | null, minimised: boolean=false) {
+function openCardFrom(uid: string, button: HTMLElement | null, content: CardViewContent=CardViewContent.Purpose) {
     let card = findCard(uid);
     if (!card) return;
-    let view = new CardView(CardViewState.Compact, minimised);
+    let view = new CardView(CardViewSize.Compact, content);
     let div = s_app.graph.findDiv(uid);
     if (!div) {
         div = cardToHTML(card, view);
@@ -975,11 +1068,11 @@ function openCardFrom(uid: string, button: HTMLElement | null, minimised: boolea
 }
 
 // opens a card that calls to an existing element
-function openCardTo(uid: string, toDiv: HTMLElement, minimised: boolean=false) {
+function openCardTo(uid: string, toDiv: HTMLElement, content: CardViewContent=CardViewContent.Purpose) {
     let div = s_app.graph.findDiv(uid);
     let card = findCard(uid);
     if (!card) return;
-    let view = new CardView(CardViewState.Compact, minimised);
+    let view = new CardView(CardViewSize.Compact, content);
     if (!div) {
         div = cardToHTML(card, view);
         s_app.graph.node(div, view);

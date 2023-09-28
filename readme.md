@@ -277,3 +277,62 @@ all that stuff gets controlled with the style; there's just a different cardToHT
 That's easy enough, right?
 
 OK well let's just fucking try it, I guess.
+
+We'll have two orthogonal parameters - select, and size.
+
+Easypeasy. Let's go.
+
+_ASIDE_
+
+We need a good workflow for doing time-consuming bulk LLM tasks like this.
+For instance: when we get a new repo, we should queue up all card uids for processing; show this progress somehow via a thought bubble or whatever.
+But if we open a card that hasn't been processed yet, it should go to the front of the queue, we should get a busywheel, and then immediately see its pseudocode.
+So for now we have a weird frankenstein non-workflow, but this has to be made ROBUST.
+
+_SECOND GOOD IDEA_
+The idea of a "hierarchy of models"; a task has to be done, expressed as a prompt; and we have an array of models, M0 .. Mn. 
+
+M0 is like cheap, fast, immediate, local.
+Mn is expensive, slow, high-latency, remote.
+
+For any task, we kick off M0..Mn in parallel, understanding that they will deliver progressively better results at time t0, t1, ... tn.
+We abstract this away, so when we ask for something that hasn't been computed yet, we get an immediate approximate result that improves progressively.
+
+Something to consider.
+
+______
+OK so this is super messy.
+We definitely need OpenAI caching, for speed as much as cost.
+Then we do this joblist thing, and run it all again. Take a little time, get it right and do it properly.
+
+_____
+there's a general need to memoise large computations;
+that's what's going on with embeddings, and with pseudocode generation.
+We just kind of broke things, but the system should be self-healing;
+right now I think we accidentally knocked out all class cards, but it should be possible to combine properly.
+We'll fix that tomorrow and write the pseudocode generator properly. For now, press on.
+
+SCRIBBLES:
+
+There's a generic function doSomething(x)
+and there are multiple versions doSomething_1(x), .. doSomething_N(x)
+
+we want a framework that :
+
+1- eventually computes doSomething_1(x) .. doSomething_N(x) for all x
+2- when you call doSomething(x):
+    2.1- check to see if any doSomething_i(x) is in the cache; if so, returns it
+    2.2- if not, moves all doSomething_1..N(x) to the front of the queue
+    2.3- as soon as results come in, adds them to the cache, and returns it
+
+this works for *anything* - in particular, embeddings and pseudocode generation, but any LLM task we want to apply to everything
+
+OK, carry on.
+Next: toggle the contents of the card based on the card view content setting.
+
+SO THINGS TO DO TOMORROW:
+
+1- write the caching API for GPT-4
+2- batch-process everything through GPT-4
+3- simplify the detail level interface (wonder if we can do pinch-to-zoom?)
+

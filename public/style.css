@@ -197,6 +197,35 @@ h3 {
     border-bottom: 6px;
 }
 
+.description {
+    font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji";
+    font-weight: 300;
+    font-size: 9pt;
+    background-color: #87bdb5; 
+    padding: 0.5em;
+    /*border-radius: 8px;*/
+    color: #000000;
+    display: block;
+    overflow-x: auto; /* Enable horizontal scrolling if the content overflows */
+    overflow-y: auto; /* Enable vertical scrolling if the content overflows */
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    min-height: 2.2em;
+    max-width: 320px;
+    max-height: 128px;
+    width: 320px;
+    height: 128px;
+    min-width: 0; /* The div will shrink to fit its content, but not smaller than its content */
+    width: fit-content; /* This makes the div size to its content up to its maximum width */
+    height: fit-content; /* This makes the div size to its content up to its maximum height */
+    position: relative; /* or relative, depending on your layout needs */
+    cursor: pointer;
+    line-height: 125%;
+    transition: max-width 0.3s, max-height 0.3s, background-color 0.3s;
+    border-bottom: 6px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
 .code-expanded {
     max-width: 768px;
     max-height: 720px;
