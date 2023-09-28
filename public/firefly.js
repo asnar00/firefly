@@ -67,10 +67,9 @@ class Card {
 var CardViewContent;
 (function (CardViewContent) {
     CardViewContent[CardViewContent["Minimised"] = 0] = "Minimised";
-    CardViewContent[CardViewContent["Title"] = 1] = "Title";
-    CardViewContent[CardViewContent["Purpose"] = 2] = "Purpose";
-    CardViewContent[CardViewContent["Pseudocode"] = 3] = "Pseudocode";
-    CardViewContent[CardViewContent["Code"] = 4] = "Code"; // actual code
+    CardViewContent[CardViewContent["Documentation"] = 1] = "Documentation";
+    CardViewContent[CardViewContent["Pseudocode"] = 2] = "Pseudocode";
+    CardViewContent[CardViewContent["Code"] = 3] = "Code"; // actual code
 })(CardViewContent || (CardViewContent = {}));
 // possible options for the size of a card-view
 var CardViewSize;
@@ -81,8 +80,8 @@ var CardViewSize;
 })(CardViewSize || (CardViewSize = {}));
 // holds all state about an individual card viewer
 class CardView {
-    constructor(size, content = CardViewContent.Purpose) {
-        this.content = CardViewContent.Purpose; // content option
+    constructor(size, content = CardViewContent.Documentation) {
+        this.content = CardViewContent.Documentation; // content option
         this.size = CardViewSize.Compact; // size of code viewer
         this.xScroll = 0;
         this.yScroll = 0;
@@ -90,12 +89,10 @@ class CardView {
         this.content = content;
     }
     selectBestContent(card) {
-        if (this.content == CardViewContent.Title && card.title == "")
-            this.content = (this.content + 1) % 5;
-        if (this.content == CardViewContent.Purpose && card.purpose == "")
-            this.content = (this.content + 1) % 5;
+        if (this.content == CardViewContent.Documentation && card.title == "")
+            this.content = (this.content + 1) % 4;
         if (this.content == CardViewContent.Pseudocode && card.pseudocode == "")
-            this.content = (this.content + 1) % 5;
+            this.content = (this.content + 1) % 4;
     }
 }
 // holds all state for the application
@@ -658,11 +655,8 @@ function generateHTML(card, view) {
     view.selectBestContent(card); // super important; default to code when we don't have documentation
     const content = view.content;
     let elem = null;
-    if (content == CardViewContent.Title) {
-        elem = titleToHTML(card, view);
-    }
-    else if (content == CardViewContent.Purpose) {
-        elem = purposeToHTML(card, view);
+    if (content == CardViewContent.Documentation) {
+        elem = documentationToHTML(card, view);
     }
     else if (content == CardViewContent.Pseudocode) {
         elem = pseudocodeToHTML(card, view);
@@ -679,22 +673,16 @@ function generateHTML(card, view) {
     listen(elem, 'scroll', function (event) { getScrollPos(elem); });
     return elem;
 }
-function titleToHTML(card, view) {
+function documentationToHTML(card, view) {
     let style = "description";
     if (view.size == CardViewSize.Fullsize) {
         style += " code-expanded";
     }
     let elem = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
-    elem.innerText = card.title;
-    return elem;
-}
-function purposeToHTML(card, view) {
-    let style = "description";
-    if (view.size == CardViewSize.Fullsize) {
-        style += " code-expanded";
-    }
-    let elem = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
-    elem.innerText = card.purpose;
+    let title = element(`<h3>${card.title}</h3>`);
+    let purpose = element(`<p>${card.purpose}</p>`);
+    elem.append(title);
+    elem.append(purpose);
     return elem;
 }
 function pseudocodeToHTML(card, view) {
@@ -869,18 +857,8 @@ function scrollToView(cards) {
 function switchContent(card, containerDiv, codeDiv) {
     console.log("switchContent");
     const view = s_app.graph.userInfo(containerDiv);
-    view.content = (view.content + 1) % 5;
+    view.content = (view.content + 1) % 4;
     view.selectBestContent(card);
-    let labels = ["Minimised", "Title", "Purpose", "Pseudocode", "Code"];
-    console.log(labels[view.content]);
-    if (view.content == CardViewContent.Title)
-        console.log(" title", card.title);
-    else if (view.content == CardViewContent.Purpose)
-        console.log(" purpose:", card.purpose);
-    else if (view.content == CardViewContent.Pseudocode)
-        console.log(" pseudocode:", `"${card.pseudocode}"`);
-    else if (view.content == CardViewContent.Code)
-        console.log(" code:", `"${card.code[0].text}"`);
     setViewContent(containerDiv, view);
     setViewStyle(containerDiv, view);
     s_app.graph.scrollToView([containerDiv]);
@@ -1052,7 +1030,7 @@ function onLinkButtonPress(button) {
     }
 }
 // open all cards pointed to by (button)
-function openCardsFromButton(button, content = CardViewContent.Purpose) {
+function openCardsFromButton(button, content = CardViewContent.Documentation) {
     let cards = getTargetCards(button);
     for (let c of cards) {
         openCardFrom(c.uid, button, content);
@@ -1091,7 +1069,7 @@ function closeCard(uid) {
     }
 }
 // opens a card, optionally connected to a button element
-function openCardFrom(uid, button, content = CardViewContent.Purpose) {
+function openCardFrom(uid, button, content = CardViewContent.Documentation) {
     let card = findCard(uid);
     if (!card)
         return;
@@ -1107,7 +1085,7 @@ function openCardFrom(uid, button, content = CardViewContent.Purpose) {
     }
 }
 // opens a card that calls to an existing element
-function openCardTo(uid, toDiv, content = CardViewContent.Purpose) {
+function openCardTo(uid, toDiv, content = CardViewContent.Documentation) {
     let div = s_app.graph.findDiv(uid);
     let card = findCard(uid);
     if (!card)

@@ -1066,20 +1066,43 @@ def writePseudocode(card):
     t = time.perf_counter() - p0
     print(f"took {t} sec.")
 
-# whatever tests you need to do 
+# write pseudocode for everything
 def testWritePseudocode():
-    print("testing...")
+    print("pseudocode for everything...")
     fname = "../data/repositories/asnar00/firefly/cards/asnar00_firefly.json"
+    fnameSafe = "../data/repositories/asnar00/firefly/cards/asnar00_firefly_safe.json"
     fnameOut = "../data/repositories/asnar00/firefly/cards/asnar00_firefly_pseudocode.json"
-    json = readJsonFromFile(fname)
-    cards = loadOldCards("firefly", json)
-    done = []
-    for card in cards.values():
-        if card.kind == 'method' or card.kind == 'function':
-            writePseudocode(card)
-            done.append(card)
-            out = cardsToJsonDict(done)
-            writeJsonToFile(out, fnameOut)
+
+    cardsSafe = loadOldCards("firefly", readJsonFromFile(fnameSafe))
+    cards = loadOldCards("firefly", readJsonFromFile(fname))
+    cardsToWrite = cardsSafe.values()
+    nCards = len(cardsToWrite)
+
+    print("safe cards:", nCards)
+    print("main cards:", len(cards.values()))
+    i = 1
+    for card in cardsToWrite:
+        print("card", i, "of", nCards)
+        i += 1
+        if card.uid() in cards:     
+            processedCard = cards[card.uid()]
+            if processedCard.title != '':
+                print("transferring:", processedCard.title)
+                card.title = processedCard.title
+                card.purpose = processedCard.purpose
+                card.pseudocode = processedCard.pseudocode
+                card.notes = processedCard.notes
+    
+    writeJsonToFile(cardsToJsonDict(cardsToWrite), fnameOut)
+    i = 0
+    for card in cardsToWrite:
+        print("card", i, "of", nCards)
+        i += 1
+        if card.title == '':
+            if card.kind == 'method' or card.kind == 'function':
+                writePseudocode(card)
+                writeJsonToFile(cardsToJsonDict(cardsToWrite), fnameOut)
+    writeJsonToFile(cardsToJsonDict(cardsToWrite), fnameOut)
 
 def test():
     fname = "../data/repositories/asnar00/firefly/cards/asnar00_firefly.json"
@@ -1104,4 +1127,4 @@ def test():
 # python main
 if __name__ == "__main__":
     startServer()
-    #test()
+    #testWritePseudocode()

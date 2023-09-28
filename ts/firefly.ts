@@ -54,9 +54,8 @@ class Card {
 // possible options for the content of the card view
 enum CardViewContent {
     Minimised,                          // just the title bar
-    Title,                              // one-sentence title
-    Purpose,                            // one-paragraph summary
-    Pseudocode,                         // line-by-line pseudocode
+    Documentation,                      // title, purpose
+    Pseudocode,                         // pseudocode
     Code                                // actual code
 }
 
@@ -69,18 +68,17 @@ enum CardViewSize {
 
 // holds all state about an individual card viewer
 class CardView {
-    content: CardViewContent = CardViewContent.Purpose;           // content option
-    size: CardViewSize = CardViewSize.Compact;                  // size of code viewer
+    content: CardViewContent = CardViewContent.Documentation;           // content option
+    size: CardViewSize = CardViewSize.Compact;                      // size of code viewer
     xScroll: number =0;
     yScroll: number =0;
-    constructor(size: CardViewSize, content: CardViewContent=CardViewContent.Purpose) {
+    constructor(size: CardViewSize, content: CardViewContent=CardViewContent.Documentation) {
         this.size = size;
         this.content = content;
     }
     selectBestContent(card: Card) {
-        if (this.content == CardViewContent.Title && card.title == "") this.content = (this.content + 1) % 5;
-        if (this.content == CardViewContent.Purpose && card.purpose == "") this.content = (this.content + 1) % 5;
-        if (this.content == CardViewContent.Pseudocode && card.pseudocode == "") this.content = (this.content + 1) % 5;
+        if (this.content == CardViewContent.Documentation && card.title == "") this.content = (this.content + 1) % 4;
+        if (this.content == CardViewContent.Pseudocode && card.pseudocode == "") this.content = (this.content + 1) % 4;
     }
 }
 
@@ -629,13 +627,10 @@ function generateHTML(card: Card, view: CardView) : HTMLElement {
     view.selectBestContent(card);   // super important; default to code when we don't have documentation
     const content = view.content;
     let elem: HTMLElement | null = null;
-    
-    if (content == CardViewContent.Title) {
-        elem= titleToHTML(card, view);
-    } else if (content == CardViewContent.Purpose) {
-        elem= purposeToHTML(card, view);
+    if (content == CardViewContent.Documentation) {
+        elem= documentationToHTML(card, view);
     } else if (content == CardViewContent.Pseudocode) {
-        elem= pseudocodeToHTML(card, view);
+        elem = pseudocodeToHTML(card, view);
     } else if (content == CardViewContent.Code || content == CardViewContent.Minimised) {
         elem= codeToHTML(card, view);
     }
@@ -649,24 +644,20 @@ function generateHTML(card: Card, view: CardView) : HTMLElement {
     return elem;
 }
 
-function titleToHTML(card: Card, view: CardView) : HTMLElement {
+function documentationToHTML(card: Card, view: CardView) : HTMLElement {
     let style = "description"; if (view.size == CardViewSize.Fullsize) { style += " code-expanded"; }
-    let elem : HTMLElement = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
-    elem.innerText = card.title;
-    return elem;
-}
-
-function purposeToHTML(card: Card, view: CardView) : HTMLElement {
-    let style = "description"; if (view.size == CardViewSize.Fullsize) { style += " code-expanded"; }
-    let elem : HTMLElement = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
-    elem.innerText = card.purpose;
+    let elem: HTMLElement = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
+    let title: HTMLElement = element(`<h3>${card.title}</h3>`);
+    let purpose: HTMLElement = element(`<p>${card.purpose}</p>`);
+    elem.append(title);
+    elem.append(purpose);
     return elem;
 }
 
 function pseudocodeToHTML(card: Card, view: CardView) : HTMLElement {
     let style = "code"; if (view.size == CardViewSize.Fullsize) { style += " code-expanded"; }
-    let elem : HTMLElement = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
-    elem.innerText = card.pseudocode;
+    let elem: HTMLElement = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
+    elem.innerText= card.pseudocode;
     return elem;
 }
 
@@ -836,14 +827,8 @@ function scrollToView(cards: Card[]) {
 function switchContent(card: Card, containerDiv: HTMLElement, codeDiv: HTMLElement) {
     console.log("switchContent");
     const view = s_app.graph.userInfo(containerDiv)! as CardView;
-    view.content = (view.content + 1) % 5;
+    view.content = (view.content + 1) % 4;
     view.selectBestContent(card);
-    let labels = ["Minimised", "Title", "Purpose", "Pseudocode", "Code" ]
-    console.log(labels[view.content]);
-    if (view.content == CardViewContent.Title) console.log(" title", card.title);
-    else if (view.content == CardViewContent.Purpose) console.log(" purpose:", card.purpose);
-    else if (view.content == CardViewContent.Pseudocode) console.log(" pseudocode:", `"${card.pseudocode}"`);
-    else if (view.content == CardViewContent.Code) console.log(" code:", `"${card.code[0].text}"`);
     setViewContent(containerDiv, view);
     setViewStyle(containerDiv, view);
     s_app.graph.scrollToView([containerDiv]);
@@ -1014,7 +999,7 @@ function onLinkButtonPress(button: HTMLElement) {
 }
 
 // open all cards pointed to by (button)
-function openCardsFromButton(button: HTMLElement, content: CardViewContent=CardViewContent.Purpose) {
+function openCardsFromButton(button: HTMLElement, content: CardViewContent=CardViewContent.Documentation) {
     let cards = getTargetCards(button);
     for(let c of cards) {
         openCardFrom(c.uid, button, content);
@@ -1052,7 +1037,7 @@ function closeCard(uid: string) {
 }
 
 // opens a card, optionally connected to a button element
-function openCardFrom(uid: string, button: HTMLElement | null, content: CardViewContent=CardViewContent.Purpose) {
+function openCardFrom(uid: string, button: HTMLElement | null, content: CardViewContent=CardViewContent.Documentation) {
     let card = findCard(uid);
     if (!card) return;
     let view = new CardView(CardViewSize.Compact, content);
@@ -1068,7 +1053,7 @@ function openCardFrom(uid: string, button: HTMLElement | null, content: CardView
 }
 
 // opens a card that calls to an existing element
-function openCardTo(uid: string, toDiv: HTMLElement, content: CardViewContent=CardViewContent.Purpose) {
+function openCardTo(uid: string, toDiv: HTMLElement, content: CardViewContent=CardViewContent.Documentation) {
     let div = s_app.graph.findDiv(uid);
     let card = findCard(uid);
     if (!card) return;

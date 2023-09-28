@@ -42,9 +42,9 @@ Thank you!
 def writePseudocode(prompt: str) -> str:
     print("gpt.writePseudocode...")
     response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo-16k",
+        model="gpt-4",
         temperature=0,
-        max_tokens=512,
+        max_tokens=1024,
         top_p=1,
         frequency_penalty=0,
         presence_penalty=0,
