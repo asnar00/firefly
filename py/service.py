@@ -1,6 +1,6 @@
 # ᕦ(ツ)ᕤ
 # service.py
-# author: asnaroo (with help from gpt4)
+# author: asnaroo
 # purpose: make it easy to register functions as microservices
 
 # to export a function so it can be called remotely
@@ -25,15 +25,37 @@ import time
 import signal
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-
-global listen_port, app_name, public, root
-listen_port = 0
-app_name = ""
-public = ""
-root = ""
+import threading
 
 global functions
 functions = {}
+
+class Service:
+    def __init__(self, name, port, rootFolder):
+        self.name = name
+        self.port = port
+        self.rootFolder = rootFolder
+        self.publicFolder = self.rootFolder + "/public"
+        self.observer = Observer()
+        event_handler = RestartHandler(self.observer, sys.argv[0])
+        self.observer.schedule(event_handler, path='.', recursive=True)
+        try:
+            self.observer.start()
+            self.runServer()
+        except KeyboardInterrupt:
+            self.observer.stop()
+        self.observer.join()
+
+    # start the server
+    def runServer(self):
+        print(f"starting service '{self.name}' listening on port {self.port}...")
+        handler = CustomHTTPRequestHandler
+        handler.rootFolder = self.rootFolder
+        handler.publicFolder = self.publicFolder
+        handler.appName = self.name
+        with ReusableTCPServer(("", self.port), handler) as httpd:
+            print(f"Serving on port {self.port}")
+            httpd.serve_forever()
 
 # decorator that adds (func) to a list of callables
 def register(func):
@@ -77,7 +99,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         path = self.translate_path(self.path)
         if path is None:
-            print("notfound:", path)
+            print("notfound:", self.path)
             self.send_error(404, "File not found")
             return
         super().do_GET()
@@ -87,7 +109,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         content_length = int(self.headers.get("Content-Length", "0"))
         raw_data = self.rfile.read(content_length).decode("utf-8")
         post_data = json.loads(raw_data)
-        if self.path == f"/{app_name}":
+        if self.path == f"/{self.appName}":
             func = post_data['func']
             args = post_data['args']
             global functions
@@ -111,7 +133,6 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
 
     # convert an external requested path to an internal path
     def translate_path(self, path):
-        global listen_port, app_name, public, root
         #print("requested:", path)
         path = urlparse(path).path
         #print("after urlparse", path)
@@ -119,47 +140,22 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         #print("after normpath", path)
 
         _, ext = os.path.splitext(path)
-        if (path==f"/{app_name}"):
-            path = public + "/index.html"
-        elif path.startswith(f"/{app_name}/"):
-            path = public + path.replace(f"{app_name}/", "", 1)
+        if (path==f"/{self.appName}"):
+            path = self.publicFolder + "/index.html"
+        elif path.startswith(f"/{self.appName}/"):
+            path = self.publicFolder + path.replace(f"{self.appName}/", "", 1)
         else:
             return None
 
         print("resolved path:", path)
         if not os.path.exists(path):
+            print("doesn't exist!!!")
             return None
         
         # Serve files from the specified folder
         return path
-
-# implements auto self-restart (only works if the py files all parse correctly)
-def start(name, port, rootFolder):
-    global listen_port, app_name, public, root
-    app_name = name
-    listen_port = port
-    root = rootFolder
-    public = root + "/public"
-
-    observer = Observer()
-    event_handler = RestartHandler(observer, sys.argv[0])
-    observer.schedule(event_handler, path='.', recursive=True)
-    try:
-        observer.start()
-        runServer()
-    except KeyboardInterrupt:
-        observer.stop()
-    observer.join()
-
+    
 # server gobbledygook
 class ReusableTCPServer(socketserver.TCPServer):
     allow_reuse_address = True
 
-# start the server
-def runServer():
-    global listen_port, app_name, public, root
-    print(f"starting service '{app_name}' listening on port {listen_port}...")
-    Handler = CustomHTTPRequestHandler
-    with ReusableTCPServer(("", listen_port), Handler) as httpd:
-        print(f"Serving on port {listen_port}")
-        httpd.serve_forever()

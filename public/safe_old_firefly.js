@@ -1,6 +1,4 @@
-// ᕦ(ツ)ᕤ
-// firefly.ts
-// author: asnaroo (with a little help from GPT4)
+"use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -17,62 +15,6 @@ var __asyncValues = (this && this.__asyncValues) || function (o) {
     function verb(n) { i[n] = o[n] && function (v) { return new Promise(function (resolve, reject) { v = o[n](v), settle(resolve, reject, v.done, v.value); }); }; }
     function settle(resolve, reject, d, v) { Promise.resolve(v).then(function(v) { resolve({ value: v, done: d }); }, reject); }
 };
-import { element } from "./util.js";
-import { debounce } from "./util.js";
-import { remote } from "./util.js";
-import { rect } from "./util.js";
-import { Graph } from "./graph.js";
-import { EventLog } from "./events.js";
-window.onload = () => { main(); };
-// represents a block of code contained within a card
-class CodeBlock {
-    constructor(code, language, iLine) {
-        this.text = ""; // actual code text
-        this.iLine = 0; // 1-based line index in original code file
-        this.text = code;
-        this.language = language;
-        this.iLine = iLine;
-    }
-}
-// indicates that a character range (iChar--jChar) links to another card
-class Dependency {
-    constructor() {
-        this.iChar = 0; // character index in code of start of symbol
-        this.jChar = 0; // character index in code after symbol
-        this.targets = []; // card uids we link to
-    }
-}
-;
-// represents a piece of code (class, method, function, variable)
-class Card {
-    constructor() {
-        this.uid = ""; // uid; something like lang_module_kind_name, but maybe other decorators too
-        this.language = ""; // language shortname of original code
-        this.module = ""; // module: eg. firefly or graphview
-        this.kind = ""; // "class" or "function" or "other"
-        this.name = ""; // name of function or class being defined
-        this.title = ""; // human-readable title (llm-generated)
-        this.purpose = ""; // paragraph-length purpose (llm-generated)
-        this.pseudocode = ""; // one line per original code (llm-generated)
-        this.notes = ""; // notes (llm-generated)
-        this.unused = ""; // list of unused dependencies (llm-generated)
-        this.code = []; // actual text from code file
-        this.dependsOn = []; // cards we depend on
-        this.dependents = []; // cards that depend on us
-        this.children = []; // if we're a class, cards for methods
-        this.parent = ""; // if we're a method or property, points to parent
-        this.rankFromBottom = 0; // 1 means depends on nothing; x means depends on things with rank < x
-        this.rankFromTop = 0; // 1 means nothing calls this; x means called by things with rank < x
-    }
-}
-// possible options for the content of the card view
-var CardViewContent;
-(function (CardViewContent) {
-    CardViewContent[CardViewContent["Minimised"] = 0] = "Minimised";
-    CardViewContent[CardViewContent["Documentation"] = 1] = "Documentation";
-    CardViewContent[CardViewContent["Pseudocode"] = 2] = "Pseudocode";
-    CardViewContent[CardViewContent["Code"] = 3] = "Code"; // actual code
-})(CardViewContent || (CardViewContent = {}));
 // possible options for the size of a card-view
 var CardViewSize;
 (function (CardViewSize) {
@@ -91,10 +33,12 @@ class CardView {
         this.content = content;
     }
     selectBestContent(card) {
-        if (this.content == CardViewContent.Documentation && card.title == "")
-            this.content = (this.content + 1) % 4;
+        if (this.content == CardViewContent.Title && card.title == "")
+            this.content = (this.content + 1) % 5;
+        if (this.content == CardViewContent.Purpose && card.purpose == "")
+            this.content = (this.content + 1) % 5;
         if (this.content == CardViewContent.Pseudocode && card.pseudocode == "")
-            this.content = (this.content + 1) % 4;
+            this.content = (this.content + 1) % 5;
     }
 }
 // holds all state for the application
@@ -112,7 +56,6 @@ class App {
         this.playMode = "record";
         this.eventLog = new EventLog();
         this.detailTags = [];
-        this.status = "";
     }
 }
 let s_app = new App();
@@ -128,7 +71,6 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         yield init();
         yield loadAll();
-        setInterval(showServerStatus, 1000);
         eventLoop();
     });
 }
@@ -148,17 +90,6 @@ function loadAll() {
         yield animateLogoToLeft();
         yield openSession();
         searchBox();
-    });
-}
-// show server status
-function showServerStatus() {
-    return __awaiter(this, void 0, void 0, function* () {
-        return;
-        let status = yield getServerStatus();
-        if (JSON.stringify(status) != JSON.stringify(s_app.status)) {
-            s_app.status = status;
-            console.log("server:", status);
-        }
     });
 }
 // move the logo to bottom left to signal we are good to go!
@@ -644,16 +575,10 @@ function animateLogoToLeft() {
         });
     });
 }
-// get server status
-function getServerStatus() {
-    return __awaiter(this, void 0, void 0, function* () {
-        return (yield remote("@firefly.status", {})).status;
-    });
-}
 // on server, open github repo, and analyse its contents
-function openRepository(owner, project) {
+function openRepository(owner, repoName) {
     return __awaiter(this, void 0, void 0, function* () {
-        return yield remote("@firefly.openRepository", { owner: owner, project: project });
+        return yield remote("@firefly.openRepository", { owner: owner, repoName: repoName });
     });
 }
 // finds the card with the given UID, or null if doesn't exist
@@ -667,7 +592,7 @@ function findCard(uid) {
 // generates HTML for card, but doesn't connect it yet
 function cardToHTML(card, view) {
     let elem = generateHTML(card, view);
-    let container = codeContainer(card.uid, elem, shortName(card));
+    let container = codeContainer(card.uid, shortName(card));
     setViewStyle(container, view);
     return container;
 }
@@ -675,44 +600,10 @@ function cardToHTML(card, view) {
 function generateHTML(card, view) {
     view.selectBestContent(card); // super important; default to code when we don't have documentation
     const content = view.content;
-    let elem = null;
-    if (content == CardViewContent.Documentation) {
-        elem = documentationToHTML(card, view);
-    }
-    else if (content == CardViewContent.Pseudocode) {
-        elem = pseudocodeToHTML(card, view);
-    }
-    else if (content == CardViewContent.Code || content == CardViewContent.Minimised) {
-        elem = codeToHTML(card, view);
-    }
-    if (!elem) {
-        console.log("failed to generate HTML!");
-        return element(`<div>AIEEEEEE</div>`);
-    }
+    let elem = element(`<div class="inner-wrapper"></div>`);
     setTimeout(() => { elem.scrollLeft = view.xScroll; elem.scrollTop = view.yScroll; }, 0);
     listen(elem, 'click', function () { expandOrContract(elem); });
     listen(elem, 'scroll', function (event) { getScrollPos(elem); });
-    return elem;
-}
-function documentationToHTML(card, view) {
-    let style = "description";
-    if (view.size == CardViewSize.Fullsize) {
-        style += " code-expanded";
-    }
-    let elem = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
-    let title = element(`<h3>${card.title}</h3>`);
-    let purpose = element(`<p>${card.purpose}</p>`);
-    elem.append(title);
-    elem.append(purpose);
-    return elem;
-}
-function pseudocodeToHTML(card, view) {
-    let style = "code";
-    if (view.size == CardViewSize.Fullsize) {
-        style += " code-expanded";
-    }
-    let elem = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
-    elem.innerText = card.pseudocode;
     return elem;
 }
 // converts code content to HTML
@@ -763,8 +654,8 @@ function linkID(sourceId, dep, iDep) {
     }
     return linkId;
 }
-// given a DIV containing card content, wrap it up in a container: title bar, content wrapper, the works
-function codeContainer(uid, codeDiv, title) {
+// create a code container
+function codeContainer(uid, title) {
     let card = findCard(uid);
     let containerDiv = document.createElement('div');
     containerDiv.id = uid;
@@ -776,7 +667,7 @@ function codeContainer(uid, codeDiv, title) {
     titleDiv.className = 'code-title';
     titleDiv.id = `${containerDiv.id}_title_bar`;
     titleDiv.textContent = title;
-    listen(titleDiv, 'click', () => { switchContent(card, containerDiv, codeDiv); });
+    listen(titleDiv, 'click', () => { switchContent(card, containerDiv); });
     listen(titleDiv, 'mouseenter', () => { toggleTitle(card, containerDiv, titleDiv, true); });
     listen(titleDiv, 'mouseleave', () => { toggleTitle(card, containerDiv, titleDiv, false); });
     let buttons = createTitleButtons(card, containerDiv, titleDiv);
@@ -784,7 +675,6 @@ function codeContainer(uid, codeDiv, title) {
     setTimeout(() => { updateTitleButtons(card, containerDiv, titleDiv); }, 310);
     // Append the title and the code div to the container
     wrapperDiv.appendChild(titleDiv);
-    wrapperDiv.appendChild(codeDiv);
     containerDiv.appendChild(wrapperDiv);
     return containerDiv;
 }
@@ -813,16 +703,6 @@ function toggleCallees(card) {
 function createTitleButtons(card, containerDiv, titleDiv) {
     let buttons = element(`<div class="buttons"></div>`);
     titleDiv.append(buttons);
-    let infoButton = element(`<i class="icon-info" "style=filter:invert(1);" id="${containerDiv.id}_info_button"></i>`);
-    listen(infoButton, "click", () => { selectViewContent(card, containerDiv, CardViewContent.Documentation); });
-    let pscodeButton = element(`<i class="icon-share" "style=filter:invert(1);" id="${containerDiv.id}_pscode_button"></i>`);
-    listen(pscodeButton, "click", () => { selectViewContent(card, containerDiv, CardViewContent.Pseudocode); });
-    let codeButton = element(`<i class="icon-code" "style=filter:invert(1);" id="${containerDiv.id}_code_button"></i>`);
-    listen(codeButton, "click", () => { selectViewContent(card, containerDiv, CardViewContent.Code); });
-    buttons.append(infoButton);
-    buttons.append(pscodeButton);
-    buttons.append(codeButton);
-    buttons.append(element(`<div style="width: 16px;"></div>`));
     let cs = callers(card);
     if (cs.length > 0) {
         let divs = getOpenDivs(cs);
@@ -885,40 +765,27 @@ function scrollToView(cards) {
     s_app.graph.scrollToView(divs);
 }
 // switch content display option to next option
-function switchContent(card, containerDiv, codeDiv) {
+function switchContent(card, containerDiv) {
     console.log("switchContent");
     const view = s_app.graph.userInfo(containerDiv);
-    view.content = (view.content + 1) % 4;
+    view.content = (view.content + 1) % 5;
     view.selectBestContent(card);
     setViewContent(containerDiv, view);
     setViewStyle(containerDiv, view);
-    s_app.graph.requestArrange();
-    s_app.graph.scrollToView([containerDiv]);
-}
-// select view content
-function selectViewContent(card, containerDiv, content) {
-    console.log("selectViewContent");
-    const view = s_app.graph.userInfo(containerDiv);
-    view.content = content;
-    view.selectBestContent(card);
-    setViewContent(containerDiv, view);
-    setViewStyle(containerDiv, view);
-    s_app.graph.requestArrange();
     s_app.graph.scrollToView([containerDiv]);
 }
 // ensure that (div)'s content matches the settings in (view)
 function setViewContent(div, view) {
-    let id = div.id;
-    let card = findCard(id);
-    if (!card)
-        return;
-    let elem = generateHTML(card, view);
-    let wrapperDiv = div.children[0];
-    let titleDiv = wrapperDiv.children[0];
-    let contentDiv = wrapperDiv.children[1];
-    contentDiv.remove();
-    let newContentDiv = generateHTML(card, view);
-    wrapperDiv.append(newContentDiv);
+    let wrapper = div.children[0];
+    for (let i = 0; i < div.children.length; i++) {
+        let contentDiv = wrapper.children[i];
+        if (i == view.content) {
+            contentDiv.style.visibility = 'visible';
+        }
+        else {
+            contentDiv.style.visibility = 'hidden';
+        }
+    }
 }
 // ensure that (div)'s styles etc match the settings in (view)
 function setViewStyle(div, view) {

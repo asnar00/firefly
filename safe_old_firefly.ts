@@ -1,64 +1,3 @@
-// ᕦ(ツ)ᕤ
-// firefly.ts
-// author: asnaroo (with a little help from GPT4)
-
-import {element} from "./util.js";
-import {scrollToViewRect} from "./util.js";
-import {Rect} from "./util.js";
-import {debounce} from "./util.js";
-import {remote} from "./util.js";
-import {rect} from "./util.js";
-import {Graph} from "./graph.js";
-import {EventLog} from "./events.js";
-import {Vec2} from "./util.js";
-
-window.onload = () => { main(); };
-
-// represents a block of code contained within a card
-class CodeBlock {
-    text: string = "";                  // actual code text
-    language: string;                   // ".ts", ".py", ".cpp", ".hpp", etc.
-    iLine: number = 0;                  // 1-based line index in original code file
-    constructor(code: string, language: string, iLine: number) {
-        this.text = code; this.language = language; this.iLine = iLine;
-    }
-}
-
-// indicates that a character range (iChar--jChar) links to another card
-class Dependency {
-    iChar: number = 0;                  // character index in code of start of symbol
-    jChar: number = 0;                  // character index in code after symbol
-    targets: string[] = [];             // card uids we link to
-};
-
-// represents a piece of code (class, method, function, variable)
-class Card {
-    uid: string = "";                   // uid; something like lang_module_kind_name, but maybe other decorators too
-    language: string = "";              // language shortname of original code
-    module: string = "";                // module: eg. firefly or graphview
-    kind: string = "";                  // "class" or "function" or "other"
-    name: string = "";                  // name of function or class being defined
-    title: string = "";                 // human-readable title (llm-generated)
-    purpose: string = "";               // paragraph-length purpose (llm-generated)
-    pseudocode: string = "";            // one line per original code (llm-generated)
-    notes: string = "";                 // notes (llm-generated)
-    unused: string = "";                // list of unused dependencies (llm-generated)
-    code: CodeBlock[] = [];             // actual text from code file
-    dependsOn: Dependency[] = [];       // cards we depend on
-    dependents: Dependency[] =[];       // cards that depend on us
-    children: Card[] =[];               // if we're a class, cards for methods
-    parent: string = "";                // if we're a method or property, points to parent
-    rankFromBottom: number = 0;         // 1 means depends on nothing; x means depends on things with rank < x
-    rankFromTop: number = 0;            // 1 means nothing calls this; x means called by things with rank < x
-}
-
-// possible options for the content of the card view
-enum CardViewContent {
-    Minimised,                          // just the title bar
-    Documentation,                      // title, purpose
-    Pseudocode,                         // pseudocode
-    Code                                // actual code
-}
 
 // possible options for the size of a card-view
 enum CardViewSize {
@@ -78,8 +17,9 @@ class CardView {
         this.content = content;
     }
     selectBestContent(card: Card) {
-        if (this.content == CardViewContent.Documentation && card.title == "") this.content = (this.content + 1) % 4;
-        if (this.content == CardViewContent.Pseudocode && card.pseudocode == "") this.content = (this.content + 1) % 4;
+        if (this.content == CardViewContent.Title && card.title == "") this.content = (this.content + 1) % 5;
+        if (this.content == CardViewContent.Purpose && card.purpose == "") this.content = (this.content + 1) % 5;
+        if (this.content == CardViewContent.Pseudocode && card.pseudocode == "") this.content = (this.content + 1) % 5;
     }
 }
 
@@ -97,7 +37,6 @@ class App {
     playMode: string = "record";
     eventLog: EventLog = new EventLog();
     detailTags : DetailTag[] = [];
-    status: string= ""
 }
 
 let s_app : App = new App();
@@ -112,7 +51,6 @@ async function main() {
 async function run() {
     await init();
     await loadAll();
-    setInterval(showServerStatus, 1000);
     eventLoop();
 }
 
@@ -130,16 +68,6 @@ async function loadAll() {
     await animateLogoToLeft();
     await openSession();
     searchBox();
-}
-
-// show server status
-async function showServerStatus() {
-    return;
-    let status = await getServerStatus();
-    if (JSON.stringify(status) != JSON.stringify(s_app.status)) {
-        s_app.status = status;
-        console.log("server:", status);
-    }
 }
 
 // move the logo to bottom left to signal we are good to go!
@@ -615,14 +543,9 @@ async function animateLogoToLeft(): Promise<void> {
     });
 }
 
-// get server status
-async function getServerStatus(): Promise<string> {
-    return (await remote("@firefly.status", {})).status;
-}
-
 // on server, open github repo, and analyse its contents
-async function openRepository(owner: string, project: string) {
-    return await remote("@firefly.openRepository", { owner: owner, project: project });
+async function openRepository(owner: string, repoName: string) {
+    return await remote("@firefly.openRepository", { owner: owner, repoName: repoName });
 }
 
 // finds the card with the given UID, or null if doesn't exist
@@ -635,7 +558,7 @@ function findCard(uid: string) : Card | null {
 // generates HTML for card, but doesn't connect it yet
 function cardToHTML(card: Card, view: CardView) : HTMLElement {
     let elem = generateHTML(card, view);
-    let container = codeContainer(card.uid, elem, shortName(card));
+    let container = codeContainer(card.uid, shortName(card));
     setViewStyle(container, view);
     return container;
 }
@@ -644,38 +567,10 @@ function cardToHTML(card: Card, view: CardView) : HTMLElement {
 function generateHTML(card: Card, view: CardView) : HTMLElement {
     view.selectBestContent(card);   // super important; default to code when we don't have documentation
     const content = view.content;
-    let elem: HTMLElement | null = null;
-    if (content == CardViewContent.Documentation) {
-        elem= documentationToHTML(card, view);
-    } else if (content == CardViewContent.Pseudocode) {
-        elem = pseudocodeToHTML(card, view);
-    } else if (content == CardViewContent.Code || content == CardViewContent.Minimised) {
-        elem= codeToHTML(card, view);
-    }
-    if (!elem) {
-        console.log("failed to generate HTML!");
-        return element(`<div>AIEEEEEE</div>`);
-    }
+    let elem = element(`<div class="inner-wrapper"></div>`);
     setTimeout(() => { elem!.scrollLeft = view.xScroll; elem!.scrollTop = view.yScroll;}, 0);
     listen(elem, 'click', function() { expandOrContract(elem!); });
     listen(elem, 'scroll', function(event: any) { getScrollPos(elem!); });
-    return elem;
-}
-
-function documentationToHTML(card: Card, view: CardView) : HTMLElement {
-    let style = "description"; if (view.size == CardViewSize.Fullsize) { style += " code-expanded"; }
-    let elem: HTMLElement = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
-    let title: HTMLElement = element(`<h3>${card.title}</h3>`);
-    let purpose: HTMLElement = element(`<p>${card.purpose}</p>`);
-    elem.append(title);
-    elem.append(purpose);
-    return elem;
-}
-
-function pseudocodeToHTML(card: Card, view: CardView) : HTMLElement {
-    let style = "code"; if (view.size == CardViewSize.Fullsize) { style += " code-expanded"; }
-    let elem: HTMLElement = element(`<div id="code_${card.uid}" class="${style}" spellcheck="false" contenteditable="false"></div>`);
-    elem.innerText= card.pseudocode;
     return elem;
 }
 
@@ -723,8 +618,8 @@ function linkID(sourceId: string, dep: Dependency, iDep: number) : string {
     return linkId;
 }
 
-// given a DIV containing card content, wrap it up in a container: title bar, content wrapper, the works
-function codeContainer(uid: string, codeDiv: HTMLElement, title: string) : HTMLElement {
+// create a code container
+function codeContainer(uid: string, title: string) : HTMLElement {
     let card = findCard(uid)!;
 
     let containerDiv = document.createElement('div');
@@ -738,7 +633,7 @@ function codeContainer(uid: string, codeDiv: HTMLElement, title: string) : HTMLE
     titleDiv.className = 'code-title';
     titleDiv.id = `${containerDiv.id}_title_bar`;
     titleDiv.textContent = title;
-    listen(titleDiv, 'click', () => { switchContent(card, containerDiv, codeDiv); });
+    listen(titleDiv, 'click', () => { switchContent(card, containerDiv); });
     listen(titleDiv, 'mouseenter', () => { toggleTitle(card, containerDiv, titleDiv, true); });
     listen(titleDiv, 'mouseleave', () => { toggleTitle(card, containerDiv, titleDiv, false); });
     let buttons: HTMLElement = createTitleButtons(card, containerDiv, titleDiv);
@@ -747,7 +642,6 @@ function codeContainer(uid: string, codeDiv: HTMLElement, title: string) : HTMLE
     
     // Append the title and the code div to the container
     wrapperDiv.appendChild(titleDiv);
-    wrapperDiv.appendChild(codeDiv);
     containerDiv.appendChild(wrapperDiv);
     return containerDiv;
 }
@@ -776,17 +670,6 @@ function toggleCallees(card: Card) {
 function createTitleButtons(card: Card, containerDiv: HTMLElement, titleDiv: HTMLElement) : HTMLElement {
     let buttons = element(`<div class="buttons"></div>`);
     titleDiv.append(buttons);
-
-    let infoButton = element(`<i class="icon-info" "style=filter:invert(1);" id="${containerDiv.id}_info_button"></i>`)!;
-    listen(infoButton, "click", () => { selectViewContent(card, containerDiv, CardViewContent.Documentation); });
-    let pscodeButton = element(`<i class="icon-share" "style=filter:invert(1);" id="${containerDiv.id}_pscode_button"></i>`)!;
-    listen(pscodeButton, "click", () => { selectViewContent(card, containerDiv, CardViewContent.Pseudocode); });
-    let codeButton = element(`<i class="icon-code" "style=filter:invert(1);" id="${containerDiv.id}_code_button"></i>`)!;
-    listen(codeButton, "click", () => { selectViewContent(card, containerDiv, CardViewContent.Code); });
-    buttons.append(infoButton);
-    buttons.append(pscodeButton);
-    buttons.append(codeButton);
-    buttons.append(element(`<div style="width: 16px;"></div>`));
 
     let cs = callers(card);
     if (cs.length > 0) {
@@ -853,41 +736,27 @@ function scrollToView(cards: Card[]) {
 }
 
 // switch content display option to next option
-function switchContent(card: Card, containerDiv: HTMLElement, codeDiv: HTMLElement) {
+function switchContent(card: Card, containerDiv: HTMLElement) {
     console.log("switchContent");
     const view = s_app.graph.userInfo(containerDiv)! as CardView;
-    view.content = (view.content + 1) % 4;
+    view.content = (view.content + 1) % 5
     view.selectBestContent(card);
     setViewContent(containerDiv, view);
     setViewStyle(containerDiv, view);
-    s_app.graph.requestArrange();
-    s_app.graph.scrollToView([containerDiv]);
-}
-
-// select view content
-function selectViewContent(card: Card, containerDiv: HTMLElement, content: CardViewContent) {
-    console.log("selectViewContent");
-    const view = s_app.graph.userInfo(containerDiv)! as CardView;
-    view.content = content;
-    view.selectBestContent(card);
-    setViewContent(containerDiv, view);
-    setViewStyle(containerDiv, view);
-    s_app.graph.requestArrange();
     s_app.graph.scrollToView([containerDiv]);
 }
 
 // ensure that (div)'s content matches the settings in (view)
 function setViewContent(div: HTMLElement, view: CardView) {
-    let id = div.id;
-    let card = findCard(id);
-    if (!card) return;
-    let elem = generateHTML(card, view);
-    let wrapperDiv = div.children[0];
-    let titleDiv = wrapperDiv.children[0];
-    let contentDiv = wrapperDiv.children[1] as HTMLElement;
-    contentDiv.remove();
-    let newContentDiv = generateHTML(card, view);
-    wrapperDiv.append(newContentDiv);
+    let wrapper = div.children[0];
+    for(let i = 0; i < div.children.length; i++) {
+        let contentDiv : HTMLElement = wrapper.children[i] as HTMLElement;
+        if (i == view.content) {
+            contentDiv.style.visibility = 'visible';
+        } else {
+            contentDiv.style.visibility = 'hidden';
+        }
+    }
 }
 
 // ensure that (div)'s styles etc match the settings in (view)

@@ -1,6 +1,6 @@
 // ᕦ(ツ)ᕤ
 // util.ts
-// author: asnaroo, with help from gpt4
+// author: asnaroo
 // useful utility functions to manage DOM elements and stuff
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }

@@ -1,6 +1,6 @@
 // ᕦ(ツ)ᕤ
 // util.ts
-// author: asnaroo, with help from gpt4
+// author: asnaroo
 // useful utility functions to manage DOM elements and stuff
 
 export class Vec2 {

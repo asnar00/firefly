@@ -1,1130 +1,152 @@
 # ᕦ(ツ)ᕤ
-# author: asnaroo and gpt4. copyright © nøøb, all rights reserved.
+# author: asnaroo. copyright © nøøb, all rights reserved.
 # firefly.py serves public files, runs commands, returns results
 
-import http.server
-import socketserver
-import json
 import os
-import subprocess
 import threading
 from urllib.parse import parse_qs, urlparse
-from io import BytesIO
-import socket
-from typing import Tuple
-import re
-import select
-import subprocess
-import service
 from typing import List
-import random
-import vectors
-import requests
-import shutil
-import zipfile
 import time
-import gptprompts
+import prompts
+from github import GithubRepo
+from cards import CardBase, Card
+from vectors import VectorDB
+from prompts import PromptQueue
+from service import Service, register
+from util import readJsonFromFile, writeJsonToFile, readFile
+
+class App:
+    def __init__(self, dataFolder: str, owner: str, project: str):
+        self.eventLog = []                                                  # event log from client (TODO: support multiple clients)
+        self.dataFolder = dataFolder                                        # physical path to firefly/data folder
+        self.printed = False                                                # we haven't printed anything yet
+        self.openRepository(owner, project)                                 # get everything up and running
+        self.updateAll()                                                    # start auto-self-update
+        
+    def openRepository(self, owner: str, project: str):
+        self.owner = owner                                                          # github username of owner  
+        self.project = project                                                      # project name as per github
+        self.projectFolder = f'{self.dataFolder}/projects/{owner}/{project}'        # folder in which all project-specific stuff lives
+        self.cards = CardBase(project, f'{self.projectFolder}/cards/cards.json')    # start cardbase
+        self.vectors = VectorDB(f'{self.projectFolder}/vectors')                    # vector database
+        self.prompts = PromptQueue(f'{self.projectFolder}/prompts')                 # prompt queue/cache
+        self.repo = GithubRepo(self.dataFolder, owner, project)                     # github repository
+        self.processRepo()                                                          # get latest code from github, update all cards
+        return self.cards.allCardsAsList()
+
+    # update; calls once per second
+    def updateAll(self):
+        nRequests = self.prompts.serveNext()
+        n = 0
+        nt = 0
+        with self.prompts.threadLock:    # todo: shouldn't have to access innards
+            n = len(self.cards.changedCards)
+            nt = self.prompts.nThreadsRunning
+        if nt > 0 or not(self.printed):
+            print(f"{nt} prompts inflight; {n} changed cards; ")
+            self.printed = True
+        timer = threading.Timer(1.0, self.updateAll)
+        timer.daemon = True
+        timer.start()
+    
+    # download latest repository code from github, update cards as necessary
+    def processRepo(self):
+        changed = self.repo.update()
+        if not changed: return
+        sourceFolder = f'{self.projectFolder}/source'
+        self.cards.importCardsFromRepository(self.project, sourceFolder, self.vectors, self.prompts)
+
+    # semantic search
+    def search(self, query):
+        return self.vectors.search(query, 8)
+        
 
 print("---------------------------------------------------------------------------")
 print("firefly.ps ᕦ(ツ)ᕤ")
-root = "/Users/asnaroo/desktop/experiments/firefly"
 
-global eventLog
-eventLog = []
+global s_app
+s_app = None
+
+def root():
+    return s_app.dataFolder
+
+# return a status object (whatever)
+@register
+def status():
+    global s_app
+    count = int(time.time() / 5)
+    msg = f"count: {count}"
+    return { "status" : {
+        "nPromptsRemaining" : len(s_app.prompts.queue),
+        "nChangedCards" : len(s_app.cards.changedCards)
+    } }
+
+# returns the i-th "changedCard" onwards
+@register
+def getChangedCards(index: int):
+    if index < len(cards.changedCards):
+        cards = s_app.cards.changedCards[index:]
+        return s_app.cards.serialiseCardList(cards)
+    return {}
 
 # opens a github repository, imports and processes all cards
-@service.register
-def openRepository(owner, repoName):
-    print("open repository", owner, repoName)
+@register
+def openRepository(owner: str, project: str):
+    print("open repository", owner, project)
     p0 = time.perf_counter()
-    folder = f'{root}/data/repositories/{owner}/{repoName}'
-    path = root + '/data/repositories.json'
-    repos = readJsonFromFile(path)
-    matching = [r for r in repos if r['owner']==owner and r['repoName']==repoName]
-    if len(matching)==0:
-        return { 'error' : 'unknown repository' }
-    repo = matching[0]
-    owner = repo['owner']
-    repoName = repo['repoName']
-    changed = updateRepository(repo)
-    cardsFile = folder + f'/cards/{owner}_{repoName}.json'
-    vectorsFolder = folder + f'/vectors'
-    vectors.loadEmbeddings(vectorsFolder)
-    if changed:
-        oldCardsFile = folder + f'/cards/{owner}_{repoName}.json' # TEST ONLY; remove the "_old" for production
-        oldCards = loadOldCards(repoName, readJsonFromFile(oldCardsFile))
-        sourceFolder = f'{folder}/source'
-        newCards = importAllCards(repoName, [sourceFolder])
-        computeDependencies(newCards)
-        processChangedCards(newCards, oldCards)
-        cards = cardsToJsonDict(newCards)
-        writeJsonToFile(cards, cardsFile)
-    else:
-        cards = readJsonFromFile(cardsFile)
-    writeJsonToFile(repos, path)
+    cards = s_app.openRepository(owner, project)
     t = time.perf_counter() - p0
     print(f"done! took {t} sec.")
-    return cards
+    return s_app.cards.serialiseCardList(cards)
 
 # saves an individual json object to a file
-@service.register
+@register
 def save(path, obj):
-    path = root + "/data/" + path
+    path = root() + "/data/" + path
     writeJsonToFile(obj, path)
     return { "saved" : True }
 
 # loads an individual json object from a file
-@service.register
+@register
 def load(path):
-    path = root + "/data/" + path
+    path = f'{root()}/{path}'
     print("path:", path)
     if os.path.exists(path):
         json = readJsonFromFile(path)
         return json
     else:
-        return { "error" : f"{path.replace(root, '')} not found" }
+        return { "error" : f"{path.replace(root(), '')} not found" }
 
 # clears the event log
-@service.register
+@register
 def startEventRecording():
     global eventLog
     eventLog = []
     return { "success" : True }
 
 # flushes the event log 
-@service.register
+@register
 def saveEventLog(events):
     global eventLog
     eventLog.extend(events)
     return { "success" : True }
 
 # stops recording, saves all events
-@service.register
+@register
 def stopRecording(events):
     global eventLog
-    writeJsonToFile(eventLog, f"{root}/data/eventlog/eventlog.json")
+    writeJsonToFile(eventLog, f"{root()}/data/eventlog/eventlog.json")
     return { "success" : True }
 
 # semantic search - returns top 8 matches
-@service.register
+@register
 def search(query):
-    dict = vectors.search(query, 8)
+    global s_app
+    return s_app.search(query)
     return dict
-
-# writes an object as a json string to a file
-def writeJsonToFile(obj, path: str):
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, 'w') as file:
-        json.dump(obj, file, indent=4)
-
-# reads a json object from a file
-def readJsonFromFile(filename):
-    with open(filename, 'r') as file:
-        data = json.load(file)
-    return data
-
-# reads code for all cards from a list of folders within a project
-def importAllCards(project, folders):
-    cards = []
-    for folder in folders:
-        print(f"importAllCards: {folder}")
-        files = findAllFiles(folder, ".ts") + findAllFiles(folder, ".py")
-        for file in files:
-            cards.extend(importCardsFromFile(project, file))
-    removeIndents(cards)
-    return cards
-
-# generates embedding vectors for (cards)'s function names (shortName) expressed as words
-def saveEmbeddings(cards):
-    print("saving embeddings for", len(cards), "cards:")
-    cardsFromKeys = {}
-    for card in cards:
-        key = separateWords(card.shortName())
-        if not (key in cardsFromKeys):
-            cardsFromKeys[key] = [ card ]
-        else:
-            cardsFromKeys[key].append(card)
-    for key, cards in cardsFromKeys.items():
-        uids = [c.uid() for c in cards]
-        vectors.set(key, uids)
-
-# removes embeddings for (cards) from the vector database
-def removeEmbeddings(cards):
-    print("removing embeddings for", len(cards), "cards:")
-    for card in cards:
-        key = separateWords(card.shortName())
-        uidToRemove = card.uid()
-        uids = vectors.get(key)
-        if len(uids) > 0:
-            uids = [item for item in uids if item != uidToRemove]
-            if len(uids)==0:
-                vectors.remove(key)
-            else:
-                vectors.set(key, uids)
-
-# converts an identifier to a normal string of words, eg "camelCaseHTTP" and "camel_case_HTTP" to "camel case HTTP"
-def separateWords(name): 
-    symbols = "!@#$%^&*()+-={}[]:\";\',.<>/?\`~_"
-    result = ""
-    for i in range(0, len(name)):
-        pc = ' ' if i == 0 else name[i-1]
-        nc = ' ' if i == len(name)-1 else name[i+1]
-        c = name[i]
-        if c.isupper():
-            if pc.isupper():        # part of an acronym
-                result += c         # so don't change it
-            else:
-                if nc.isupper():    # also part of an acronym, but lead with a space
-                    result += ' ' + c
-                else:               # not part of an acronym
-                    result += ' ' + c.lower()
-        else:
-            if c in symbols: c = ' '
-            result += c
-    return result.replace("\n", " ").strip()
-
-# base class representing a programming language we want to support
-class Language:
-    # the name of the language, eg "python"
-    def name(self) -> str:
-        return ""
-    # short nane of the language, eg "py"
-    def shortName(self) -> str:
-        return ""
-    # character string indicating an end-of-line comment ('#' for python, '//' for c++, etc)
-    def comment(self) -> str:
-        return ""
-    # character string for multi-line comment start
-    def multiLineComment(self) -> str:
-        return ""
-    # character string for multi-line comment end
-    def endMultiLineComment(self) -> str:
-        return ""
-    # if (str[ic:]) starts with an openquote, return the closed-quote string to look for
-    def checkOpenQuote(self, str, ic): 
-        return ""
-    # true if names can contain hyphens, false otherwise
-    def namesCanContainHyphens(self) -> bool:
-        return False
-    # constructor name - 'constructor' for typescript, '__init__' for python, etc
-    def constructorName(self) -> str:
-        return ""
-    # keywords indicating function/etc definition, eg. 'function' for typescript, 'def' for python
-    def definitionKeywords(self) -> List[str]:
-        return []
-    # given some code (text), import all cards and return a list
-    def importCards(self, project, module,  text):
-        return []  
-    # return "this" or "self" or whatever
-    def thisName(self) -> str:
-        return ""
-    # given a raw text block of code, figure out what type, kind, name, etc it is
-    def findTypeAndName(self, card, minIndent) -> (str, str):
-        return ("", "")
-    
-class CodeBlock:
-    def __init__(self, text: str, language: Language, iLine: int, jLine:int =-1):
-        self.text = text
-        self.language = language
-        self.iLine = iLine
-        if jLine==-1: self.jLine = iLine # inclusive: eurgh
-        else: self.jLine = iLine
-
-# represents a unit of code - function, variable, method or class
-class Card:
-    def __init__(self, project: str="", module: str="", code: str="", language: Language=Language(), iLine: int=0) :
-        self.project = project  # global
-        self.module = module    # root-relative path of the file, for disambiguation
-        self.language = language.shortName()    
-        self.kind = ''          # "class" or "function" or "other"
-        self.name = ''          # name of function or class being defined
-        self.title = ''         # title
-        self.purpose = ''       # purpose
-        self.pseudocode = ''    # pseudocode
-        self.notes = ''         # questions and comments
-        self.code = [ CodeBlock(code, language, iLine) ]        # actual text from code file
-        self.dependsOn = []     # cards we depend on
-        self.dependents = []    # cards that depend on us
-        self.children = []      # if we're a class, cards for methods
-        self.parent = None      # if we're a method or property, points to parent
-        self.superclass = None  # if we're a class, points to superclass
-        self.rankFromBottom = 0 # 1 means depends on nothing; x means depends on things with rank < x
-        self.rankFromTop = 0    # 1 means nothing calls this; x means called by things with rank < x 
-
-    # concise human-readable name; var, function(), Class, Class.property, or Class.method()
-    def shortName(self):
-        s = ""
-        if self.parent: s= self.parent.name + "."
-        s += self.name
-        if self.kind == 'function' or self.kind == 'method':
-            s += "()"
-        return s
-    
-    # unique identifier based on all sub-identifiers
-    def uid(self):
-        u = self.language + "_" + self.project + "_" + self.module + "_" + self.kind + "_"
-        if self.parent: u += self.parent.name + "_"
-        u += self.name
-        return u
-
-# converts a card to a JSON object
-def card_serialiser(obj):
-    if isinstance(obj, Card):
-        return {
-            "uid" : obj.uid(),
-            "language" : obj.language,
-            "module" : obj.module,
-            "kind" : obj.kind,
-            "name" : obj.name,
-            "title" : obj.title,
-            "purpose" : obj.purpose,
-            "pseudocode" : obj.pseudocode,
-            "notes" : obj.notes,
-            "code" : [{ "text" : c.text, "language" : c.language.shortName(), "iLine" : c.iLine, "jLine" : c.jLine } for c in obj.code],
-            "dependsOn" : [ { "targets" : [t.uid() for t in d.targets], "iChar": d.iChar, "jChar": d.jChar } for d in obj.dependsOn],
-            "dependents" : [ { "targets" : [t.uid() for t in d.targets], "iChar": d.iChar, "jChar": d.jChar } for d in obj.dependents],
-            "children" : [ c.uid() for c in obj.children],
-            "parent" : obj.parent.uid() if obj.parent else "null"
-        }
-    raise TypeError(f"Type {type(obj)} unfortunately is not serializable")
-
-# represents a dependency from one card to another
-class Dependency:
-    def __init__(self, iChar: int, jChar: int, targets: List[Card]):
-        self.iChar = iChar
-        self.jChar = jChar
-        self.targets = targets
-
-    # combines two dependencies into a single one
-    def combine(self, dep):
-        len0 = self.jChar - self.iChar
-        len1 = dep.jChar - dep.iChar
-        if len1 > len0: # dep wins because longer
-            self.iChar = dep.iChar
-            self.jChar = dep.jChar
-            self.targets = dep.targets
-        elif len1 < len0 : # self wins because longer
-            pass
-        else: # equal length; combine the arrays
-            self.iChar = min(self.iChar, dep.iChar)
-            self.jChar = max(self.jChar, dep.jChar)
-            self.targets += dep.targets
-
-# represents the Python language for processing
-class Python(Language):
-    def name(self): return "python"
-    def shortName(self): return "py"
-    def comment(self): return "#"
-    def checkOpenQuote(self, str, ic):   # if (str) starts with an openquote, return a pair: open and close quote strings
-        if str.startswith('\'', ic): return ('\'', '\'')
-        elif str.startswith('"', ic): return ('"', '"')
-        elif str.startswith('f"', ic): return ('f"', '"')
-        elif str.startswith('"""', ic): return ('"""', '"""')
-        return("", "")
-    def constructorName(self) -> str:
-        return "__init__"
-    def definitionKeywords(self) -> List[str]:
-        return ["def", "class"]
-    def thisName(self) -> str:  # return "this" or "self" or whatever
-        return 'self'
-    def importCards(self, project, module, text, minIndent) -> List[Card]:
-        lines = text.split("\n")
-        card = None
-        cards = []
-        indent = 0
-        for i in range(0, len(lines)):
-            line = lines[i]
-            prevLine = lines[i-1] if i > 0 else ""
-            if not(isBlank(line)):
-                oldIndent = indent
-                indent = nTabsAtStart(line)
-                if indent >= minIndent:
-                    if card == None or (oldIndent > minIndent and indent == minIndent) or (indent==minIndent and oldIndent==indent and (not(prevLine.strip().startswith("#")))):
-                        card = Card(project, module, line, self, i+1)
-                        cards.append(card)
-                    else:
-                        card.code[0].text += "\n" + line
-                        card.code[0].jLine = i+1
-        return cards
-    def findTypeAndName(self, card) -> (str, str):
-        lines = card.code[0].text.split("\n")
-        for line in lines:
-            l = line.strip()
-            if not l.startswith("#"):
-                if l.startswith("def"):
-                    parts = l.split(f"(")   # "def funcName"  "params) -> result:"
-                    funcName = parts[0].split(" ")[1].strip()
-                    if parts[1].startswith("self"):
-                        return ("method", funcName)
-                    else:
-                        return ("function", funcName)
-                elif l.startswith("class"):
-                    return ("class", l.split(" ")[1].split(":")[0].split("(")[0])
-                elif l.startswith('if __name__ == "__main__":'):
-                    return ("function", "__main__")
-                else: # could be property (self.blah = ) or global (blah = ..)
-                    parts = l.split("=")
-                    if "self." in parts[0]:
-                        return ("method", parts[0].strip())
-                    else:
-                        return ("global", parts[0].strip())
-        return ("unknown", "unknown")
-
-# represents the Typescript for processing
-class Typescript(Language):
-    def name(self): return "typescript"
-    def shortName(self): return "ts"
-    def comment(self): return "//"
-    def multiLineComment(self): return "/*"
-    def endMultiLineComment(self): return "*/"
-    def checkOpenQuote(self, str, ic):
-        if str[ic] == '"': return ('"', '"')
-        elif str[ic] == '`': return ('`','`')
-        elif str[ic] == '\'': return ('\'', '\'')
-        return ("", "")
-    def constructorName(self) -> str:
-        return "constructor"
-    def definitionKeywords(self) -> List[str]:
-        return ["function", "class"]
-    def thisName(self) -> str:  # return "this" or "self" or whatever
-        return 'this'
-    def importCards(self, project, module, text, minIndent) -> List[Card]:
-        lines = text.split("\n")
-        cards = []
-        card = None
-        prevLine = ""
-        indent = 0
-        for iLine in range(0, len(lines)):
-            line = lines[iLine]
-            if indent >= minIndent: # only consider lines above the min indent level
-                # should we start a new card?
-                # YES if current line has indent = minIndent, line is not blank and previous line is not a comment
-                # NO if the line is just "}"
-                blank = (line.strip()=="")
-                singleCloseBrace = (line.strip() == "}")
-                prevComment = prevLine.strip().startswith("//")
-                if indent == minIndent and (not blank) and (not prevComment) and (not singleCloseBrace):
-                    card = Card(project, module, line, self, iLine+1)
-                    cards.append(card)
-                elif card:
-                    card.code[0].text += "\n" + line
-                    card.code[0].jLine = iLine + 1
-            indent = indent + countBraces(line)
-            prevLine = line
-        return cards
-    def findTypeAndName(self, card) -> (str, str):
-        lines = card.code[0].text.split("\n")
-        for line in lines:
-            l = line.strip()
-            icom = l.find("//")
-            if icom>=0: l = l[0 : icom]
-            if l != "":
-                l = l.replace("async ", "")
-                w = l.split(" ")
-                classIndex = findString(w, "class")
-                if classIndex >= 0:
-                    return ("class", w[classIndex+1])
-                funcIndex = findString(w, "function")
-                if funcIndex >= 0:
-                    return ("function", w[funcIndex+1].split("(")[0].split("<")[0])
-                elif card.parent != None:
-                    if "(" in w[0]:
-                        return ("method", w[0].split("(")[0])
-                    else:
-                        return ("property", w[0].split(":")[0])
-                elif w[0]=="var" or w[0]=="let" or w[0]=="const":
-                    return ("global", w[1].split(":")[0])
-        return ("unknown", "unknown")
-
-# returns the difference between the number of open-braces and closed-braces in a string
-def countBraces(s: str) -> int:
-    return s.count("{") - s.count("}")
-
-# returns the number of tabs (four spaces) at the start of a line
-def nTabsAtStart(s: str) -> int:
-    return (len(s) - len(s.lstrip(' ')))/4
-
-# returns true if the line is blank / whitespace 
-def isBlank(s: str) -> bool:    
-    return not s.strip()
-
-# reads a file and returns the contents as a string
-def readFile(filename: str) -> str:
-    with open (filename, "r") as f:
-        text = f.read()
-    return text
-
-# given a filename extension or language shortname, returns the corresponding Language object
-def findLanguage(ext: str) -> Language:
-    if ext.startswith('.'): ext = ext[1:]
-    if ext == "py": return Python()
-    elif ext == "ts" or ext == "js": return Typescript()
-    else:
-        raise Exception("Unrecognised file extension")
-
-# returns a dictionary mapping (uid => card) for all (cards)
-def uidDict(cards: List[Card]) -> dict:
-    uids = {}       # uid => Card
-    for card in cards:
-        uids[card.uid()] = card
-    return uids
-
-# load (filename) and import all cards 
-def importCardsFromFile(project, filename) -> List[Card]:
-    #print("importing cards from", filename)
-    root, ext = os.path.splitext(filename)
-    module = root.split('/')[-1]        # eg. firefly or cards
-    text = readFile(filename)
-    return importCards(project, module, text, ext)
-
-# given text for a single file, import all cards (including one level down inside classes)
-def importCards(project: str, module: str, text: str, ext: str) -> List[Card]:
-    language = findLanguage(ext)
-    cards = importCardsFromText(project, module, language, text, None, 0)
-    allChildren = []
-    for c in cards:
-        if c.kind == "class":
-            #print("importing methods for class", c.name)
-            c.children = importCardsFromText(project, module, language, c.code[0].text, c, 1)
-            for child in c.children:
-                #print("  ", child.name)
-                child.code[0].iLine += c.code[0].iLine +1       # not sure why but hey
-                child.code[0].jLine += c.code[0].iLine +1
-            allChildren += c.children
-    cards += allChildren
-    cards = [card for card in cards if card.name != "unknown"] # remove unknown name cards
-    return cards
-
-# given a list of cards, return a json object that we can save
-def cardsToJsonDict(cards: List[Card]) -> dict:
-    print("cardsToJsonDict:", len(cards), "cards")
-    jsonObj = { "cards" : [card_serialiser(c) for c in cards] }
-    return jsonObj
-
-# given a json dict, return a dictionary mapping (uid => Card)
-def loadOldCards(project: str, json: dict) -> dict:  # returns (uid => Card) dictionary
-    uids = {}       # uid => Card
-    cards = []
-    for j in json['cards']:
-        card = Card()
-        cards.append(card)
-        uids[j['uid']] = card
-        card.project = project
-        card.language = j['language']
-        card.module = j['module']
-        card.kind = j['kind']
-        card.name = j['name']
-        card.title = j['title']
-        card.purpose = j['purpose']
-        card.pseudocode = j['pseudocode']
-        card.notes = j['notes']
-    i=0
-    for j in json['cards']:
-        card = cards[i]
-        i +=1
-        # Parse the code, dependsOn, dependents, children, and parent
-        card.code = [CodeBlock(c['text'], findLanguage(c['language']), c['iLine'], c['jLine']) for c in j['code']]
-        try:
-            card.dependsOn = [Dependency(d['iChar'], d['jChar'], [uids[t] for t in d['targets']]) for d in j['dependsOn']]
-            card.dependents = [Dependency(d['iChar'], d['jChar'], [uids[t] for t in d['targets']]) for d in j['dependents']]
-            card.children = [uids[c] for c in j['children']]
-            card.parent = uids[j['parent']] if j['parent'] != 'null' else None
-        except:
-            continue
-    return uids
-
-# represents a single Lexeme, and possible meanings 
-class Lex:
-    def __init__(self, code: str ="", iChar:int =0, jChar:int =0, type:str =""):
-        sub = code[iChar:jChar]
-        ts = sub.lstrip()
-        iChar += len(sub) - len(ts)
-        te = sub.rstrip()
-        jChar -= len(sub) - len(te)
-        self.ic = iChar
-        self.jc = jChar
-        self.text = code[iChar:jChar]
-        self.type = type
-        self.targets = []
-
-    def __eq__(self, other):
-        if isinstance(other, Lex):
-            return self.text == other.text
-        elif isinstance(other, str):
-            return self.text == other
-        return False
-
-# given a list of cards that have changed, run all time-consuming import operations
-def processChangedCards(cards: List[Card], oldCards: dict):
-    cardsToProcess = []
-    removedCards = []
-    for card in cards:
-        if card.uid() in oldCards:
-            oldCard = oldCards[card.uid()]
-            if oldCard.code[0].text != card.code[0].text:
-                cardsToProcess.append(card)
-        else:
-            cardsToProcess.append(card)
-    uids = uidDict(cards)
-    for card in oldCards.values():
-        if not card.uid() in uids:
-            removedCards.append(card)
-    print("cards to process ------------------------")
-    for card in cardsToProcess:
-        print(card.uid())
-    print("removed cards ---------------------------")
-    for card in removedCards:
-        print(card.uid())
-    saveEmbeddings(cardsToProcess)
-    removeEmbeddings(removedCards)
-
-# given a list of cards, map all dependencies between them
-def computeDependencies(cards: List[Card]):
-    # TODO: this is a bit of a behemoth, refactor!
-    # put all cards into a hash table mapping name -> List[Card]
-    cardsFromName = {}
-    #print("--------------- computeDeps -------------")
-    for card in cards:
-        #print(card.shortName())
-        name = card.name
-        if not (name in cardsFromName):
-            cardsFromName[name] = [card]
-        else:
-            cardsFromName[name].append(card)
-
-    # find superclass relationships
-    for card in cards:
-        if card.kind == 'class':
-            code = card.code[0].text
-            lang = card.code[0].language
-            ic = code.find('class ')
-            if ic == -1: continue
-            eol = code.find('\n', ic)
-            line = code[ic:eol]
-            ls = processLexemes(line, lang) # class MyClass(Superclass) or class MyClass : Superclass
-            if len(ls) >=4 and ls[1].type=='identifier' and ls[3].type=='identifier' and (ls[2]==':' or ls[2]=='('):
-                if ls[3].text in cardsFromName:
-                    supers = cardsFromName[ls[3].text]
-                    supers = [s for s in supers if s.kind == "class"]
-                    if len(supers)==1:
-                        card.superclass = supers[0]
-
-    # now check each card for words that might map to others
-    for card in cards:
-        code = card.code[0].text
-        lang = card.code[0].language
-        ls = processLexemes(code, lang)
-        # first, get the types of all local variables, if they're declared
-        typeFromVar = {}
-        typeFromVar[lang.thisName()] = card.parent.name if card.parent else ''
-        for i in range(0, len(ls)-2):
-            if ls[i].type == 'identifier' and ls[i+1]==':' and ls[i+2].type == 'identifier':
-                typeFromVar[ls[i].text] = ls[i+2].text
-        # now get an array of possible cards for each identifier
-        for l in ls:
-            if l.type == 'identifier':
-                p = []
-                if l.text in cardsFromName:
-                    p = cardsFromName[l.text]
-                l.targets = p
-        # get the type of each global, if you can
-        for l in ls:
-            if l.type == 'identifier' and len(l.targets)==1:
-                t = l.targets[0]
-                if t.kind == 'global':
-                    # split the global def into lexemes
-                    gls = processLexemes(t.code[0].text, t.code[0].language)
-                    # look for a : b and grab b
-                    for i in range(0, len(gls)-2):
-                        if gls[i].type == 'identifier' and gls[i] == t.name and gls[i+1] == ':' and gls[i+2].type=='identifier':
-                            typeFromVar[l.text] = gls[i+2].text
-        # now whittle down the potentials list using various filters
-        # 1- remove the targets for the definition
-        for l in ls:
-            if l.text == card.name and len(l.targets)>0:
-                l.targets= []
-                break
-        # 2- remove targets from b that don't match type of a.b
-        for i in range(2, len(ls)):
-            pred = ls[i-2]
-            if ls[i].type == 'identifier' and ls[i-1] == '.' and pred.type == 'identifier':
-                if pred.text in typeFromVar:
-                    predType = typeFromVar[pred.text]
-                    ls[i].targets = [t for t in ls[i].targets if t.parent and (t.parent.name == predType or (t.parent.superclass and t.parent.superclass.name == predType))]
-         # 3- if you matched a property or method but there's no dot before, get rid
-        for i in range(1, len(ls)):
-            if ls[i].type == 'identifier' and ls[i-1] != '.':
-                ls[i].targets = [t for t in ls[i].targets if t.kind != 'method' and t.kind != 'property']
-        # 4- if you matched a function or method but there's no bracket after, get rid; but only if the match is ambiguous! (i.e. keep function ptrs)
-        for i in range(0, len(ls)-1):
-            if ls[i].type == 'identifier' and ls[i+1] != '(' and len(ls[i].targets) > 1:
-                ls[i].targets = [t for t in ls[i].targets if t.kind != 'function' and t.kind != 'method']
-        # 4.1 - if you matched a function or global but there's a dot before, remove it
-        for i in range(1, len(ls)-1):
-            if ls[i].type == 'identifier' and ls[i-1] == '.':
-                # actually though, if the identifier BEFORE that is the module and we're in python, don't filter
-                module = "" if i < 2 else ls[i-2].text
-                ls[i].targets = [t for t in ls[i].targets if (t.kind != 'function' and t.kind != 'global') or (module == t.module)]
-        # 5- if you matched something in a different language, remove it (TBC)
-        for l in ls:
-            if l.type == 'identifier':
-                l.targets = [t for t in l.targets if t.code[0].language.shortName() == lang.shortName()]
-        # 6 - if you matched a class name followed by a "(", redirect to constructor
-        for i in range(0, len(ls)-1):
-            if ls[i].type == 'identifier' and len(ls[i].targets)==1 and ls[i].targets[0].kind == 'class':
-                if ls[i+1] == '(':
-                    constructors = cardsFromName[lang.constructorName()]
-                    constructors = [c for c in constructors if c.parent and c.parent.name == ls[i].text]
-                    if len(constructors)==1:
-                        ls[i].targets = constructors
-                
-        # CUSTOM: remote("@service.function" ... gets linked to function
-        for i in range(2, len(ls)-2):
-            if ls[i-2] == 'remote' and ls[i-1]=='(' and ls[i].type == 'quote':
-                id = ls[i].text[1:-1]        # strip quotations
-                if id.startswith('@'):
-                    id = id[1:]
-                    parts = id.split('.')
-                    service = parts[0]
-                    function = parts[1]
-                    potentials = cardsFromName[function]
-                    for p in potentials:
-                        if p.name == function and p.project == service:
-                            ls[i].targets.append(p)
-
-        # and create dependencies from the potentials
-        for i in range(0, len(ls)):
-            l = ls[i]
-            l.targets = [t for t in l.targets if t != card]
-            if len(l.targets) > 0:
-                dep = Dependency(l.ic, l.jc, l.targets)
-                card.dependsOn.append(dep)
-                for t in l.targets:
-                    if t != card:
-                        t.dependents.append(Dependency(l.ic, l.jc, [card]))
-
-# for debug - given a string of lexemes, print them out            
-def printLs(msg, ls): 
-    print(msg)
-    for l in ls:
-        out = '[ '
-        for t in l.targets:
-            out += f"{t.shortName()} "
-        out += ']'
-        print(' ', l.text, out)
-
-# convert text to a string of lexemes
-def processLexemes(code: str, lang: Language) -> List[Lex]:
-    mlc = lang.multiLineComment()
-    elmc = lang.endMultiLineComment()
-    result = []
-    ic = 0
-    while ic < len(code):
-        ic = skipToNextNonWhitespace(code, ic)
-        type = ''
-        if ic < len(code):
-            if code.startswith(lang.comment(), ic):         # single-line comment
-                jc = skipPast('\n', code, ic)
-                type = 'comment'
-            elif mlc != '' and code.startswith(mlc, ic):    # multi-line comment
-                jc = skipPast(elmc, code, ic)
-                type = 'comment'
-            else:
-                (openQuote, closeQuote) = lang.checkOpenQuote(code, ic)          # quotes
-                if closeQuote != '':
-                    jc = skipPastCloseQuote(closeQuote, code, ic + len(openQuote))
-                    type = 'quote'
-                elif isAlpha(code[ic]):
-                    jc = skipPastNextWord(code, ic, lang)
-                    type = 'identifier'
-                elif isOperator(code[ic]):
-                    jc = skipPastOperator(code, ic)
-                    type = 'operator'
-                else:
-                    jc = ic + 1
-            result.append(Lex(code, ic, jc, type))
-            ic = jc
-    return result
-
-# search for (searchFor), return index after or len() if not found
-def skipPast(searchFor, inText, ic) -> int: 
-    jc = inText.find(searchFor, ic)
-    return (jc + len(searchFor)) if jc >= 0 else len(inText)
-
-# search for (searchFor), ignoring occurrences inside quotes
-def skipPastCloseQuote(searchFor, inText, ic) -> int:
-    while(ic < len(inText)):
-        ic = inText.find(searchFor, ic)
-        if ic < 0: return len(inText)
-        if ic == 0 or inText[ic-1] != '\\': return ic + len(searchFor)
-        ic = ic + len(searchFor)
-    return len(inText)
-
-# skip past end of next word
-def skipPastNextWord(inText, ic, lang: Language) -> int:
-    while(ic < len(inText)):
-        char = inText[ic]
-        if not isWordChar(char, lang): return ic
-        ic += 1
-    return len(inText)
-
-# true if character returns whitespace
-def isWhitespace(char) -> bool:
-    return char in ' \n\t'
-
- # skip to next nonwhitespace character
-def skipToNextNonWhitespace(inText, ic) -> int:
-    while(ic < len(inText)):
-        if not isWhitespace(inText[ic]):
-            return ic
-        ic += 1
-    return ic
-
-# true if character is a--z or "_"
-def isAlpha(char) -> bool:
-    l = char.lower()
-    return (l >= 'a' and l <= 'z') or l == '_'
-
-# true if character is one of a list of operator characters
-def isOperator(char) -> bool:
-    return char in '!@#$%^&*_+-=:;<>.,/?'
-
-# skip past the next operator
-def skipPastOperator(inText, ic) -> int:
-    if ic < len(inText)-1 and isOperator(inText[ic+1]): return ic+2
-    return ic+1
-
-# true if a character can occur within a word
-def isWordChar(char, lang: Language) -> bool:
-    l = char.lower()
-    if (l >= 'a' and l <= 'z'): return True
-    if (l >= '0' and l <= '9'): return True
-    if (l == '_'): return True
-    if (lang.namesCanContainHyphens() and l == '-'): return True
-    return False
-
-# sort callable cards into levels from top down and bottom up (set rank properties)
-def computeLevels(cards: List[Card]):
-    # now compute the levels of all callable things (not classes or properties)
-    callables = [c for c in cards if c.kind == 'method' or c.kind == 'function']
-    #print('\ncomputing rank from top...')
-    queue = []
-    for c in callables:
-        count=0
-        for d in c.dependents:
-            for t in d.targets:
-                if t in callables:
-                    count += 1
-        if count == 0:
-            c.rankFromTop = 1
-            queue.append(c)
-    level = 1
-    while len(queue) > 0 and level < 100:
-        rp = f"level {level}: "
-        for c in queue: rp += c.shortName() + " "
-        #print(rp)
-        nextQueue = []
-        for c in queue:
-            for d in c.dependsOn:
-                for t in d.targets:
-                    if t in callables and t.rankFromTop == 0:
-                        t.rankFromTop = c.rankFromTop + 1
-                        if not t in nextQueue:
-                            nextQueue.append(t)
-        queue = nextQueue
-        level += 1
-
-    #print("\ncomputing rank from bottom...")
-    queue = []
-    for c in callables:
-        count=0
-        for d in c.dependsOn:
-            for t in d.targets:
-                if t in callables:
-                    count += 1
-        if count == 0:
-            c.rankFromBottom = 1
-            queue.append(c)
-    level = 1
-    while len(queue) > 0 and level < 100:
-        rp = f"level {level}: "
-        for c in queue: rp += c.shortName() + " "
-        #print(rp)
-        nextQueue = []
-        for c in queue:
-            for d in c.dependents:
-                for t in d.targets:
-                    if t in callables and t.rankFromBottom == 0:
-                        t.rankFromBottom = c.rankFromBottom + 1
-                        if not t in nextQueue:
-                            nextQueue.append(t)
-        queue = nextQueue
-        level += 1
-
-# write a text string to a file
-def writeTextToFile(text: str, path: str):
-    folder = os.path.dirname(path)
-    if folder != '':
-        os.makedirs(folder, exist_ok=True)
-    with open(path, 'w') as file:
-        file.write(text)
-
-# given some raw text, import all cards
-def importCardsFromText(project: str, module: str, language: Language, text: str, parent: Card, minIndent: int)-> List[Card]:
-    cards = language.importCards(project, module, text, minIndent)
-    for c in cards:
-        c.parent = parent
-        (c.kind, c.name) = language.findTypeAndName(c)
-    return cards
-
-# remove indents from the code block of all cards
-def removeIndents(cards: List[Card]):
-    for card in cards:
-        lines = card.code[0].text.split('\n')
-        if (lines[-1].strip(' ') == ''): lines = lines[0:-1]
-        minLeadingSpaces = 10000
-        for line in lines:
-            if len(line) > 0:
-                nLeadingSpaces = len(line) - len(line.lstrip(' '))
-                minLeadingSpaces = min(minLeadingSpaces, nLeadingSpaces)
-        if minLeadingSpaces > 0:
-            lines = [l[minLeadingSpaces:] for l in lines]
-        card.code[0].text = '\n'.join(lines)
-
-# return true if (target) exists in a list of strings
-def findString(strings: list, target: str) -> int:
-    try:
-        return strings.index(target)
-    except ValueError:
-        return -1
-
-# return a list of files in the given directory (and its subdirectories) that end with the given extension.
-def findAllFiles(directory, extension):
-    matched_files = []
-
-    # Ensure the extension starts with a dot
-    if not extension.startswith("."):
-        extension = "." + extension
-
-    # Recursively walk the directory
-    for dirpath, dirnames, filenames in os.walk(directory):
-        for filename in filenames:
-            if filename.endswith(extension):
-                full_path = os.path.join(dirpath, filename)
-                matched_files.append(full_path)
-
-    return matched_files
-
-# start server listening for commands from the client
-def startServer():
-    vectors.loadSbertModel()
-    service.start("firefly", 8003, root)
-
-# download the latest version of the code for a github repository to the specified folder
-def getGithubCode(repo_url: str, save_path: str, extract_path: str, pat_token: str =''):
-    # clean out the destination folder
-    if os.path.exists(extract_path):
-        shutil.rmtree(extract_path)
-    if os.path.exists(save_path):
-        os.remove(save_path)
-
-    # make sure all folders exist
-    os.makedirs(os.path.dirname(save_path), exist_ok=True)
-    os.makedirs(os.path.dirname(extract_path), exist_ok=True)
-
-    # Construct the URL for the ZIP file
-    zip_url = f"{repo_url.rstrip('/')}/archive/refs/heads/main.zip"
-    
-    # Set up the headers for the request, including the PAT
-    if pat_token == '':
-        headers = {}
-    else:
-        headers = { 'Authorization': f'token {pat_token}' }
-    
-    # Download the ZIP file
-    print("downloading zip file")
-    print(headers)
-    print(zip_url)
-    response = requests.get(zip_url, headers=headers, stream=True)
-    
-    if response.status_code == 200:
-        with open(save_path, 'wb') as f:
-            response.raw.decode_content = True
-            shutil.copyfileobj(response.raw, f)
-            
-        # Extract the ZIP file
-        print("unzipping...")
-        with zipfile.ZipFile(save_path, 'r') as zip_ref:
-            zip_ref.extractall(extract_path)
-            
-        # Remove the ZIP file
-        os.remove(save_path)
-        
-    else:
-        print(f"Failed to get file: {response.content}")
-
-# download github repository to the right folder
-def downloadRepository(owner: str, repo: str, token: str=''):
-    folder = f"{root}/data/repositories/{owner}/{repo}"
-    zip = folder + '/code.zip'
-    source = folder + '/source'
-    url = f"https://github.com/{owner}/{repo}"
-    getGithubCode(url, zip, source, token)
-
-# find the SHA of the tip of "main" branch of a github repo
-def getRepositorySHA(owner: str, repoName: str, token: str=''):
-    #print(f"getting SHA for {owner}/{repoName}")
-    repoURL = "https://github.com/{owner}/{repoName}"
-    branch = "main"
-    apiURL = f"https://api.github.com/repos/{owner}/{repoName}/branches/{branch}"
-    headers = { 'Authorization': f'token {token}' } if token != '' else {}
-    response = requests.get(apiURL, headers=headers)
-    if response.status_code == 200:
-        latestSHA = response.json()["commit"]["sha"]
-        #print(latestSHA)
-        return latestSHA
-    else:
-        print("Failed to fetch the latest commit SHA:", response.content)
-        return ''
-
-# download repository, return true if the code changed since last time
-def updateRepository(repo) -> bool:
-    owner = repo['owner']
-    repoName = repo['repoName']
-    token = repo['token']
-    print(f"checking repository {owner}/{repoName}...")
-    latestSHA = getRepositorySHA(owner, repoName, token)
-    if latestSHA==repo['SHA']:
-        print("SHA unchanged; nothing to do.")
-        return False
-    else:
-        downloadRepository(owner, repoName, token)
-        repo['SHA'] = latestSHA
-        return True
-    
-# generates component description list for a card (name/comment/signature for each callee)
-def componentDescriptions(card: Card) -> str:
-    text = card.code[0].text
-    lang = card.code[0].language
-    lines = text.split("\n")
-    useLines = []
-    addedDescLabel = False
-    for i in range(0, len(lines)):
-        isComment = (lines[i].strip().startswith(lang.comment()))
-        if isComment:
-            if not addedDescLabel:
-                useLines.append('description: ' + lines[i].strip().removeprefix(lang.comment()).strip())
-                addedDescLabel = True
-            else:
-                useLines.append(lines[i].strip().removeprefix(lang.comment()).strip())
-        else:
-            useLines.append('signature: ' + lines[i].strip())
-        if not isComment:
-            break
-    return '\n'.join(useLines)
-
-# separate text into tags
-def separateTaggedText(text: str, tags: List[str]) -> List[str]:
-    iTags = []
-    for tag in tags:
-        iTag = text.find(tag)
-        iTags.append(iTag)
-    sections = []
-    for i in range(0, len(iTags)):
-        iChar = iTags[i] + len(tags[i])
-        jChar = iTags[i+1] if i < len(iTags)-1 else len(text)
-        section = text[iChar:jChar]
-        sections.append(section.strip())
-    return sections
-
-# find purpose / pseudocode / clarification-requests for (uid => card) dictionary
-def writePseudocode(card):
-    print("writePseudocode", card.uid(), "----------------------")
-    called = []
-    for dep in card.dependsOn:
-        for t in dep.targets:
-            if not (t in called): called.append(t)
-    prompt = ''
-    prompt += "Function:\n\n" + card.code[0].text + "\n\n"
-    prompt += "Components:\n\n"
-    for c in called:
-        prompt += "name: " + c.shortName() + "\n"
-        prompt += componentDescriptions(c) + "\n\n"
-    prompt += "\nClarifications: None\n"
-    p0 = time.perf_counter()
-    pseudocode = gptprompts.writePseudocode(prompt)
-    print("raw output", pseudocode)
-    sections = separateTaggedText(pseudocode, ['TITLE:', 'PURPOSE:', 'PSEUDOCODE:', 'CLARIFICATION:'])
-    print("  title:", sections[0])
-    print("  purpose:", sections[1])
-    print("  pseudocode:", sections[2])
-    print("  clarifications:", sections[3])
-    card.title = sections[0]
-    card.purpose = sections[1]
-    card.pseudocode = sections[2]
-    card.notes = sections[3]
-    t = time.perf_counter() - p0
-    print(f"took {t} sec.")
-
-# write pseudocode for everything
-def testWritePseudocode():
-    print("pseudocode for everything...")
-    fname = "../data/repositories/asnar00/firefly/cards/asnar00_firefly.json"
-    fnameSafe = "../data/repositories/asnar00/firefly/cards/asnar00_firefly_safe.json"
-    fnameOut = "../data/repositories/asnar00/firefly/cards/asnar00_firefly_pseudocode.json"
-
-    cardsSafe = loadOldCards("firefly", readJsonFromFile(fnameSafe))
-    cards = loadOldCards("firefly", readJsonFromFile(fname))
-    cardsToWrite = cardsSafe.values()
-    nCards = len(cardsToWrite)
-
-    print("safe cards:", nCards)
-    print("main cards:", len(cards.values()))
-    i = 1
-    for card in cardsToWrite:
-        print("card", i, "of", nCards)
-        i += 1
-        if card.uid() in cards:     
-            processedCard = cards[card.uid()]
-            if processedCard.title != '':
-                print("transferring:", processedCard.title)
-                card.title = processedCard.title
-                card.purpose = processedCard.purpose
-                card.pseudocode = processedCard.pseudocode
-                card.notes = processedCard.notes
-    
-    writeJsonToFile(cardsToJsonDict(cardsToWrite), fnameOut)
-    i = 0
-    for card in cardsToWrite:
-        print("card", i, "of", nCards)
-        i += 1
-        if card.title == '':
-            if card.kind == 'method' or card.kind == 'function':
-                writePseudocode(card)
-                writeJsonToFile(cardsToJsonDict(cardsToWrite), fnameOut)
-    writeJsonToFile(cardsToJsonDict(cardsToWrite), fnameOut)
-
-def test():
-    fname = "../data/repositories/asnar00/firefly/cards/asnar00_firefly.json"
-    fnamePS = "../data/repositories/asnar00/firefly/cards/asnar00_firefly_pseudocode.json"
-    fnameOut = "../data/repositories/asnar00/firefly/cards/asnar00_firefly_combined.json"
-    json = readJsonFromFile(fname)
-    cards = loadOldCards("firefly", json)
-    jsonPS = readJsonFromFile(fnamePS)
-    cardsPS = loadOldCards("firefly", jsonPS)
-    for cardPS in cardsPS.values():
-        try:
-            card = cards[cardPS.uid()]
-            card.title = cardPS.title
-            card.purpose = cardPS.purpose
-            card.pseudocode = cardPS.pseudocode
-            card.notes = cardPS.notes
-        except:
-            continue
-    outObj = cardsToJsonDict(cards.values())
-    writeJsonToFile(outObj, fnameOut)
 
 # python main
 if __name__ == "__main__":
-    startServer()
-    #testWritePseudocode()
+    folder = '/Users/asnaroo/desktop/experiments/firefly'
+    s_app = App(f'{folder}/data', 'asnar00', 'firefly')
+    service = Service('firefly', 8003, folder)

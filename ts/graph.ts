@@ -1,6 +1,6 @@
 // ᕦ(ツ)ᕤ
 // graphview.ts
-// author: asnaroo, with help from gpt4
+// author: asnaroo
 // manages a graph of nodes and edges
 
 import {getBodyWidth, getChildNodeIndex} from "./util.js";
@@ -247,7 +247,7 @@ export class Graph {
         });
     }
 
-    // update; call every frame; pass the "focal" element that all others arrange around
+    // update graph; call every frame
     update() {
         if (this.nodes.size == 0) return;
         if (!this.rootNode) return;
@@ -332,6 +332,7 @@ export class Graph {
                 for(let edge of node.edgesOut) { // callees
                     if (!edge.visited()) {
                         edge.visit();
+                        if (!edge.toNode()) { console.log(node.div.id, "!!! null toNode"); }
                         doNodes.push({node: edge.toNode(), iCol: node.iColumn+1, fromNode: node, edge: edge, dir: 1, indent: indent+1});
                     }
                 }
@@ -340,6 +341,7 @@ export class Graph {
                 for(let edge of node.edgesIn) { // callers
                     if (!edge.visited()) {
                         edge.visit();
+                        if (!edge.fromNode()) { console.log(node.div.id, "!!! null fromNode"); }
                         doNodes.push({node: edge.fromNode(), iCol: node.iColumn-1, fromNode: node, edge: edge, dir: -1, indent: indent+1});
                     }
                 }
@@ -569,11 +571,15 @@ export class Node {
 export class Edge {
     fromDiv: HTMLElement;           // source div
     toDiv: HTMLElement;             // destination div
+    parentDiv: HTMLElement;         // highest-level parent of (fromDiv)
     userInfo: any = null;           // user info
     path: SVGPathElement;
     visitCount: number =0;
     constructor(fromDiv: HTMLElement, toDiv: HTMLElement, userInfo: any=null) {
         this.fromDiv = fromDiv; this.toDiv = toDiv; this.userInfo = userInfo;
+        let parentDiv = fromDiv.parentElement!;
+        while(parentDiv && parentDiv.parentElement != s_graph.container) { parentDiv = parentDiv.parentElement!; }
+        this.parentDiv = parentDiv;
         this.path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
         this.path.setAttribute('stroke', '#87bdb5');
         this.path.setAttribute('stroke-width', '3');
@@ -586,11 +592,17 @@ export class Edge {
     update() {
         let fromDiv = refind(this.fromDiv)!;
         let toDiv = refind(this.toDiv)!;
-        if (!fromDiv || !toDiv) { this.removeFromSVG(); return; }
+        if (!fromDiv || !toDiv) { 
+            if (!fromDiv && this.parentDiv) {
+                this.fromDiv = this.parentDiv;
+                fromDiv = this.parentDiv;
+            } else {
+                this.removeFromSVG(); 
+               return; 
+            }
+        }
         this.fromDiv = fromDiv; this.toDiv = toDiv;
-        let parentDiv = fromDiv.parentElement!;
-        while(parentDiv && parentDiv.parentElement != s_graph.container) { parentDiv = parentDiv.parentElement!; }
-        const parentRect = rect(parentDiv);
+        const parentRect = rect(this.parentDiv);
         const linkRect = rect(fromDiv);
         const targetRect = rect(toDiv);
         const xFrom = parentRect.right + 2;
@@ -652,6 +664,9 @@ export class Edge {
 
     // returns the edge's source node
     fromNode() : Node {
+        let fromDiv = refind(this.fromDiv);
+        if (!fromDiv) { fromDiv = this.parentDiv; }
+        if (!fromDiv) { console.log("edge can't find fromNode!!"); }
         return s_graph.findNode(this.fromDiv)!;
     }
 

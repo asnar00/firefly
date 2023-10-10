@@ -332,7 +332,192 @@ Next: toggle the contents of the card based on the card view content setting.
 
 SO THINGS TO DO TOMORROW:
 
+0- get the UI and graph stuff right for the current dataset
 1- write the caching API for GPT-4
-2- batch-process everything through GPT-4
-3- simplify the detail level interface (wonder if we can do pinch-to-zoom?)
+2- batch-process everything through GPT-4 again, with better prompts
 
+I'm kind of wondering whether we should actually generate comments for the function.
+
+OK so this is kind of whatever, and I'm now getting super bored of this UI framework, so it's time to write a new one.
+FOLLOW YOUR NOSE, DO THE THING THAT NEEDS DOING.
+
+_________________________________________________________
+OK so prompt architecture:
+
+1- system prompts in system/ folder
+2- per-card prompts in prompts/ folder
+3- pseudocode in pseudocode folder.
+
+but there's a general theme here: 
+
+llm_function(data) => output
+
+pseudocode(card) => preprocess => prompt => cache => result
+if not in cache, then => process queue
+
+we don't necessarily want to store those inside the card.
+instead we want to get back a json object with { title, purpose, pseudocode } based on the uid.
+
+so there should be a folder called 
+
+data/repositories/blah/pseudocode
+
+with a json file for each card;
+
+in general, there's a set of such processes we want to apply.
+but we need a cache, and that's that.
+
+so the code should be:
+
+def pseudocode(card) -> dict:
+    make the prompt
+    issue the request
+    cache hit -> immediate response
+    cache miss -> go to queue
+
+
+
+OK so where are we trying to get to?
+we want automatic updating of all documentation with minimum fuss.
+
+so items are:
+
+1- update the serve queue constantly
+2- need to scoop up the results and put them into the cards also
+3- or do we actually want to compute this using a roundtrip to the server?
+
+=> I kind of like the idea that actually, no, we don't.
+but then again, maybe we don't want to try and hold all cards on the client.
+because there will be x-hundred thousand cards, when working at scale.
+and that's the thing we have to think about.
+
+OK: so what changes do we need to make?
+1- when you make a request, if it's already in the queue, don't add it.
+2- when you make a request, if the file exists, grab it and process it (add it to the card)
+3- keep going until there's nothing left to do.
+
+OK, we're almost there now. The last and final stage is to just go and compute all docs from the list of cards when we process.
+And we're good. That we'll do tomorrow. Fresh eyes.
+
+End of day: proper rate-limited prompting system is live and working: PromptQueue.
+Seems to work pretty well, and code is followable. Commit now.
+
+To finish this feature, which we're going to do before we fix the UI:
+- when we process the repo, we put all cards through generatePseudocode
+- browser asks server for status() every now and then, gets back a status object.
+- this holds the number of requests pending, and the expected time remaining.
+
+it's taken (x) seconds for (y) requests, therefore time remaining is (nRemaining * x/y)
+every ten seconds report status
+
+reportStatus: get status, say result, but only if different to last one.
+OK: that's what we're doing.
+
+_________________________________________________________________________
+This whole thing is so fucking stupid. It really is
+SCRIBBLE TIME
+
+1- update cards based on documentation
+2- fix UI bugs, but no major upgrades
+3- get documentation indexed and searchable
+4- demonstrate card retrieval to answer questions and suggest code
+5- ability to visualise edits to code based on LLM input
+
+Right, so this is the workflow:
+
+you type something into the "miso" box.
+we fetch the context, LLM takes question and returns a list of answers, a plan, and the edits.
+=> apply the edits, rebuild and see what happens. oh yeah I forgot, live testing.
+all in one place.
+
+__________________________________________________________________________
+IDEA: Generate docview by example.
+
+The idea is that there's actually just one document per card, and it's a zerp-style markdown .md,
+but with smart links in there somehow. We'll figure that part out.
+
+Of course, it DOES NOT HAVE TO BE TRADITIONAL MARKDOWN, since markdown doesn't support links from code.
+But we can just do a pirate extension to markdown that allows it. Lovely, everyone's happy.
+
+So you can write WHATEVER DOCUMENTATION YOU LIKE for each function (or indeed use code to generate it).
+But once it's there, it includes everything you'll need, to whatever complexity. 
+
+So it would be interesting to do something purely by example.
+A very handy programming mechanism that would let us try a whole bunch of different things.
+
+original => doc
+
+the DOC is the full description of the code. You should just edit the prompt in the playground, and auto-reload the result.
+of course, you can implement all this yourself if you want.
+I'm just thinking : what should be the actual app here? 
+
+I think the nicest thing is to be able to design the prompt as a markdown file.
+
+[code]
+
+[pseudocode(code)]
+
+
+# ${title(code)}
+
+${purpose(code)}
+
+# pseudocode
+
+'''
+${pseudocode(code)}
+...
+
+But this is a nice line to follow - you make it completely customisable, just by letting people edit the prompt.
+Obviously, right? everything is editable.
+
+make it fast for people to modify it in any way they want.
+
+Where we're trying to get to is MISO.
+
+make it so.
+
+two kinds of commands:
+
+"run a function of miso" (i.e. do something with the miso instance currently running)
+
+eg. change the background colour to dark green
+    => write some code, run the code, everyone's happy
+
+and those features can be patched between codebases. That's it.
+
+we'll get there. I'm ready to go to bed.
+
+_________
+Thoughts on next steps:
+
+1. Have to simplify the relationship between the server and client.
+Instead of loading all cards in a single JSON, the client should only request the cards it needs.
+The server might as well store cards as single uid.json files, although that's much less efficient (lots of small files are bad)
+But we're doing this anyway for the vector database and LLM cache.
+
+Quickest way forward: store the cards locally as a uid => cards hash table, and iterate always through cards.values().
+When client asks for uid, just read card[uid] and send it back. Super super easy.
+
+This way we don't need tons of cards sitting around on the client, most of which we'll never look at anyway.
+
+We need some way to check which cards have changed and reload their new state on the client.
+We could use a "generation counter"; whenever a change gets made, we increment the global generation counter.
+When the client sends an "update(mygen)" message, we return (currentgen, list of changed objects)
+But this is kind of exactly what we were about to do, wasn't it?
+
+Changes needed on server:
+1) we have to store all cards
+
+
+In general, there's a need for either (uid => data) or (hash => data)
+We'd like to store these in a database of some kind. But in general, super large dictionary probably works just as well.
+
+Quickest way to get this working: finish the "changedCards" thing.
+Let's do that: it'll feel more polished then.
+
+_____ 
+let's just do this PROPERLY.
+
+ok; we're almost there. Need to figure out why the cache isn't working quite right.
+*BUT* I think there's something that needs to change.
