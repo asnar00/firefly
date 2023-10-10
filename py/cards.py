@@ -454,7 +454,7 @@ class CardBase:
                 callables.append(card)
         print(len(callables), 'callable')
         system = readFile('../gpt/pseudocode.md')
-        for card in callables[0:16]:
+        for card in callables:
             uid = card.uid()
             prompt = self.pseudocodePrompt(card)
             prompts.request(card.uid(), system, prompt, lambda text, card=card: self.setDoc(card, text))
