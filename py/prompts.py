@@ -110,14 +110,14 @@ class PromptQueue:
             except Exception as e:  # Catch any exception
                 if 'Rate limit reached' in str(e):
                     print(f"RATE LIMIT: {prompt.name}; waiting {backoff} sec.")
-                    nRetries -= 1
-                    time.sleep(backoff)
-                    backoff *= 2
-                    print("RETRYING", prompt.name, nRetries, "tries left")
                     if didRetry == False:
                         didRetry = True    
                         with self.threadLock:
                             self.nThreadsRetrying += 1
+                    time.sleep(backoff)
+                    backoff *= 2
+                    print("RETRYING", prompt.name, nRetries, "tries left")
+                    nRetries -= 1
                 else:
                     print(f"issue with {prompt.name}: {e}")
                     break
