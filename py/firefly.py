@@ -103,7 +103,7 @@ def openRepository(owner: str, project: str):
 # saves an individual json object to a file
 @register
 def save(path, obj):
-    path = root() + "/data/" + path
+    path = root() + "/" + path
     writeJsonToFile(obj, path)
     return { "saved" : True }
 
