@@ -7,7 +7,7 @@ A request consists of :
 2- code for the function to be documented
 3- (optionally) a list of notes clarifying things that may not be obvious from the code.
 
-Your response should be a markdown string consisting of four sections:
+Your response should be a markdown string consisting of three sections:
 
 # Pseudocode
 

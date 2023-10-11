@@ -157,7 +157,7 @@ class CardBase:
     def saveCards(self):
         obj = self.serialiseCardList(self.cards.values())
         writeJsonToFile(obj, self.cardsFile)
-        print("saved cards")
+        print("------------------- saved cards -------------------------")
         self.tLastSave = time.time()
         self.needToSave = False
 
