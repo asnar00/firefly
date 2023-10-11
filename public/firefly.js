@@ -68,33 +68,33 @@ class Card {
 // possible options for the content of the card view
 var CardViewContent;
 (function (CardViewContent) {
-    CardViewContent[CardViewContent["Minimised"] = 0] = "Minimised";
-    CardViewContent[CardViewContent["Documentation"] = 1] = "Documentation";
-    CardViewContent[CardViewContent["Pseudocode"] = 2] = "Pseudocode";
-    CardViewContent[CardViewContent["Code"] = 3] = "Code"; // actual code
+    CardViewContent[CardViewContent["Documentation"] = 0] = "Documentation";
+    CardViewContent[CardViewContent["Pseudocode"] = 1] = "Pseudocode";
+    CardViewContent[CardViewContent["Code"] = 2] = "Code"; // actual code
 })(CardViewContent || (CardViewContent = {}));
 // possible options for the size of a card-view
 var CardViewSize;
 (function (CardViewSize) {
     CardViewSize[CardViewSize["Compact"] = 0] = "Compact";
     CardViewSize[CardViewSize["Fullsize"] = 1] = "Fullsize";
-    CardViewSize[CardViewSize["Editing"] = 2] = "Editing";
 })(CardViewSize || (CardViewSize = {}));
 // holds all state about an individual card viewer
 class CardView {
-    constructor(size, content = CardViewContent.Code) {
+    constructor(size, content = CardViewContent.Code, minimised = false) {
+        this.minimised = false;
         this.content = CardViewContent.Code; // content option
         this.size = CardViewSize.Compact; // size of code viewer
         this.xScroll = 0;
         this.yScroll = 0;
         this.size = size;
         this.content = content;
+        this.minimised = minimised;
     }
     selectBestContent(card) {
         if (this.content == CardViewContent.Documentation && card.title == "")
-            this.content = (this.content + 1) % 4;
+            this.content = (this.content + 1) % 3;
         if (this.content == CardViewContent.Pseudocode && card.pseudocode == "")
-            this.content = (this.content + 1) % 4;
+            this.content = (this.content + 1) % 3;
     }
 }
 // holds all state for the application
@@ -499,7 +499,7 @@ function openCallees(card) {
             let linkId = linkID(card.uid, dep, iDep);
             let buttons = codeDiv.querySelectorAll(`[id="${linkId}"]`);
             if (buttons.length > 0) {
-                openCardsFromButton(buttons[0], CardViewContent.Minimised);
+                openCardsFromButton(buttons[0], CardViewContent.Code, true);
             }
         }
     }
@@ -525,7 +525,7 @@ function openCallers(card) {
     if (!div)
         return;
     for (let caller of callers(card)) {
-        openCardTo(caller.uid, div, CardViewContent.Minimised);
+        openCardTo(caller.uid, div, CardViewContent.Code, true);
     }
 }
 // returns a list of all cards that call (card) [upstream]
@@ -682,7 +682,7 @@ function generateHTML(card, view) {
     else if (content == CardViewContent.Pseudocode) {
         elem = pseudocodeToHTML(card, view);
     }
-    else if (content == CardViewContent.Code || content == CardViewContent.Minimised) {
+    else if (content == CardViewContent.Code) {
         elem = codeToHTML(card, view);
     }
     if (!elem) {
@@ -776,7 +776,7 @@ function codeContainer(uid, codeDiv, title) {
     titleDiv.className = 'code-title';
     titleDiv.id = `${containerDiv.id}_title_bar`;
     titleDiv.textContent = title;
-    listen(titleDiv, 'click', () => { switchContent(card, containerDiv, codeDiv); });
+    listen(titleDiv, 'click', () => { toggleMinimise(card, containerDiv, codeDiv); });
     listen(titleDiv, 'mouseenter', () => { toggleTitle(card, containerDiv, titleDiv, true); });
     listen(titleDiv, 'mouseleave', () => { toggleTitle(card, containerDiv, titleDiv, false); });
     let buttons = createTitleButtons(card, containerDiv, titleDiv);
@@ -884,16 +884,14 @@ function scrollToView(cards) {
         divs.push(s_app.graph.findDiv(c.uid));
     s_app.graph.scrollToView(divs);
 }
-// switch content display option to next option
-function switchContent(card, containerDiv, codeDiv) {
-    console.log("switchContent");
+// toggle view minimised status
+function toggleMinimise(card, containerDiv, codeDiv) {
+    console.log("toggleMinimise");
     const view = s_app.graph.userInfo(containerDiv);
-    view.content = (view.content + 1) % 4;
-    view.selectBestContent(card);
+    view.minimised = !(view.minimised);
     setViewContent(containerDiv, view);
     setViewStyle(containerDiv, view);
     s_app.graph.requestArrange();
-    s_app.graph.scrollToView([containerDiv]);
 }
 // select view content
 function selectViewContent(card, containerDiv, content) {
@@ -923,7 +921,7 @@ function setViewContent(div, view) {
 // ensure that (div)'s styles etc match the settings in (view)
 function setViewStyle(div, view) {
     let codeDiv = div.children[0].children[1]; // TODO:  better way
-    if (view.content == CardViewContent.Minimised) {
+    if (view.minimised) {
         codeDiv.classList.remove("code-expanded");
         codeDiv.classList.add("code-minimised");
     }
@@ -1073,10 +1071,10 @@ function onLinkButtonPress(button) {
     }
 }
 // open all cards pointed to by (button)
-function openCardsFromButton(button, content = CardViewContent.Code) {
+function openCardsFromButton(button, content = CardViewContent.Code, minimised = false) {
     let cards = getTargetCards(button);
     for (let c of cards) {
-        openCardFrom(c.uid, button, content);
+        openCardFrom(c.uid, button, content, minimised);
     }
     let divs = [];
     for (let c of cards) {
@@ -1112,11 +1110,11 @@ function closeCard(uid) {
     }
 }
 // opens a card, optionally connected to a button element
-function openCardFrom(uid, button, content = CardViewContent.Code) {
+function openCardFrom(uid, button, content = CardViewContent.Code, minimised = false) {
     let card = findCard(uid);
     if (!card)
         return;
-    let view = new CardView(CardViewSize.Compact, content);
+    let view = new CardView(CardViewSize.Compact, content, minimised);
     let div = s_app.graph.findDiv(uid);
     if (!div) {
         div = cardToHTML(card, view);
@@ -1128,12 +1126,12 @@ function openCardFrom(uid, button, content = CardViewContent.Code) {
     }
 }
 // opens a card that calls to an existing element
-function openCardTo(uid, toDiv, content = CardViewContent.Code) {
+function openCardTo(uid, toDiv, content = CardViewContent.Code, minimised = false) {
     let div = s_app.graph.findDiv(uid);
     let card = findCard(uid);
     if (!card)
         return;
-    let view = new CardView(CardViewSize.Compact, content);
+    let view = new CardView(CardViewSize.Compact, content, minimised);
     if (!div) {
         div = cardToHTML(card, view);
         s_app.graph.node(div, view);
