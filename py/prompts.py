@@ -4,6 +4,7 @@
 # prompt manager! prompts, cache, queues, threads, retries, fun times
 
 from typing import List
+import random
 import os
 import time
 import threading
@@ -83,16 +84,16 @@ class PromptQueue:
             return
         with self.threadLock:
             self.nThreadsRunning -= 1
-            print("calling onCompletion")
+            print("completed", prompt.name)
             prompt.onCompletion(response)
-        print("-------------------------------")
-        print(f"{prompt.name}:")
-        print(response)
-        print("-------------------------------")
+        #print("-------------------------------")
+        #print(f"{prompt.name}:")
+        #print(response)
+        #print("-------------------------------")
 
     # retries GPT request if it fails because of rate-limits (20sec backoff)
     def retryGpt4Prompt(self, prompt, nRetries) -> str:
-        backoff = 10
+        backoff = random.uniform(5, 10)
         didRetry = False
         while(nRetries > 0):
             try:
@@ -108,9 +109,10 @@ class PromptQueue:
                 return response
             except Exception as e:  # Catch any exception
                 if 'Rate limit reached' in str(e):
+                    print(f"RATE LIMIT: {prompt.name}; waiting {backoff} sec.")
                     nRetries -= 1
                     time.sleep(backoff)
-                    backoff += 5
+                    backoff *= 2
                     print("RETRYING", prompt.name, nRetries, "tries left")
                     if didRetry == False:
                         didRetry = True    
@@ -126,7 +128,7 @@ class PromptQueue:
         response = openai.ChatCompletion.create(
             model="gpt-4",
             temperature=0,
-            max_tokens=1024,
+            max_tokens=2048,
             top_p=1,
             frequency_penalty=0,
             presence_penalty=0,

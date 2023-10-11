@@ -9,6 +9,7 @@ from vectors import VectorDB
 from lexer import Lexer, Lex
 from languages import Snippet, Language, findLanguage
 from prompts import PromptQueue
+import time
 
 # a block of code: a card can have multiple blocks
 class CodeBlock:
@@ -86,6 +87,8 @@ class CardBase:
         self.cards = {}                 # maps (uid) => card
         self.changedCards = []          # list of cards changed since load
         self.loadCards()                # load'em
+        self.tLastSave = time.time()    # time we last saved all cards
+        self.needToSave = False         # set to true to indicate we need to save
 
     # given uid, find card, or None if uid doesn't exist
     def card(self, uid):
@@ -101,6 +104,9 @@ class CardBase:
 
     # load cards from single json file 
     def loadCards(self):
+        if not (os.path.exists(self.cardsFile)):
+            self.cards = {}
+            return
         json = readJsonFromFile(self.cardsFile)
         uids = {}       # uid => Card
         cards = []      # temp array
@@ -142,10 +148,24 @@ class CardBase:
         self.cards = self.uidDict(newCards)
         self.saveCards()
 
+    # notify that a card changed
+    def notifyCardChanged(self, card):
+        self.needToSave = True
+        self.changedCards.append(card)
+
     # save cards to json file
     def saveCards(self):
         obj = self.serialiseCardList(self.cards.values())
         writeJsonToFile(obj, self.cardsFile)
+        print("saved cards")
+        self.tLastSave = time.time()
+        self.needToSave = False
+
+    # save cards if necessary and enough time has elapsed
+    def saveCardsIfRequired(self):
+        tNow = time.time()
+        if (self.tLastSave + 10) >= tNow and self.needToSave:
+            self.saveCards()
 
     # reads code for all cards from a list of folders within a project
     def importAllCards(self, folders: List[str]) -> List[Card]:
@@ -467,7 +487,7 @@ class CardBase:
         card.purpose = sections[1]
         card.pseudocode = sections[0]
         card.unused = sections[3]
-        self.changedCards.append(card)
+        self.notifyCardChanged(card)
 
     # generates a "user:" prompt for the card
     def pseudocodePrompt(self, card) -> str:

@@ -19,10 +19,6 @@ a one-paragraph summary of the purpose of the function as gleaned from the pseud
 
 # Title
 
- a one-line summary of the purpose of the function. Don't capitalise words unless they are acronyms.
-
-# Unused
-
-a list of component names (functions or methods) that are unused by the function.
+a one-line summary of the purpose of the function. Don't capitalise words unless they are acronyms.
 
 Thank you !

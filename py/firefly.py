@@ -37,6 +37,7 @@ class App:
     # update; calls once per second
     def updateAll(self):
         nRequests = self.prompts.serveNext()
+        self.cards.saveCardsIfRequired()
         n = 0
         nt = 0
         with self.prompts.threadLock:    # todo: shouldn't have to access innards
