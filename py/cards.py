@@ -482,11 +482,10 @@ class CardBase:
 
     # sets documentation properties from a response
     def setDoc(self, card: Card, text: str):
-        sections = self.separateTaggedText(text, ['# Pseudocode', '# Purpose', '# Title', '# Unused'])
+        sections = self.separateTaggedText(text, ['# Pseudocode', '# Purpose', '# Title'])
         card.title = sections[2]
         card.purpose = sections[1]
         card.pseudocode = sections[0]
-        card.unused = sections[3]
         self.notifyCardChanged(card)
 
     # generates a "user:" prompt for the card
