@@ -43,6 +43,12 @@ export class Graph {
         this.requestArrange();
         this.rootNode = null;
         this.canvasRect = new Rect(0,0, document.body.clientWidth, document.body.clientHeight);
+        this.columns = new NodeColumns();
+        this.closed = [];
+        this.reopen = [];
+        this.nodes = new Map();
+        this.edges = new Map();
+        this.arrangeAll();
     }
 
     // create a new node from a div, do nothing if exists  already
@@ -177,13 +183,13 @@ export class Graph {
         node.visit();
         let closeNodes: Node[] = [node];
         for(let e of node.edgesIn) { 
-            let fromNode = e.fromNode();
+            let fromNode = e.fromNode;
             if (fromNode.parentNode == node && closeNodes.indexOf(fromNode)==-1) { 
                 closeNodes.push(... this.nodesToCloseRec(fromNode));
             }
         }
         for(let e of node.edgesOut) { 
-            let toNode = e.toNode();
+            let toNode = e.toNode;
             if (toNode.parentNode == node && closeNodes.indexOf(toNode)==-1) { 
                 closeNodes.push(... this.nodesToCloseRec(toNode));
             }
@@ -202,14 +208,14 @@ export class Graph {
 
     // remove an incoming edge (remove edge from source node)
     removeEdgeIn(edge: Edge) {
-        let source = edge.fromNode();
+        let source = edge.fromNode;
         source.edgesOut = source.edgesOut.filter((e) => e !== edge);
         this.removeEdge(edge);
     }
 
     // remove an outgoing edge (remove edge from dest node)
     removeEdgeOut(edge: Edge) {
-        let dest = edge.toNode();
+        let dest = edge.toNode;
         dest.edgesIn = dest.edgesIn.filter((e) => e !== edge);
         this.removeEdge(edge);
     }
@@ -306,7 +312,9 @@ export class Graph {
             let d = doNodes[0];
             doNodes.shift();
             let node = d.node; let iCol = d.iCol; let fromNode = d.fromNode; let edge= d.edge; let dir = d.dir; let indent = d.indent;
-
+            if (!node) {
+                console.log("AAAAAA");
+            }
             // set column and sort-index based on who called us and which direction we're going; TODO: make better
             if (!fromNode) {
             } else {
@@ -332,8 +340,8 @@ export class Graph {
                 for(let edge of node.edgesOut) { // callees
                     if (!edge.visited()) {
                         edge.visit();
-                        if (!edge.toNode()) { console.log(node.div.id, "!!! null toNode"); }
-                        doNodes.push({node: edge.toNode(), iCol: node.iColumn+1, fromNode: node, edge: edge, dir: 1, indent: indent+1});
+                        if (!edge.toNode) { console.log(node.div.id, "!!! null toNode"); }
+                        doNodes.push({node: edge.toNode, iCol: node.iColumn+1, fromNode: node, edge: edge, dir: 1, indent: indent+1});
                     }
                 }
             }
@@ -341,8 +349,8 @@ export class Graph {
                 for(let edge of node.edgesIn) { // callers
                     if (!edge.visited()) {
                         edge.visit();
-                        if (!edge.fromNode()) { console.log(node.div.id, "!!! null fromNode"); }
-                        doNodes.push({node: edge.fromNode(), iCol: node.iColumn-1, fromNode: node, edge: edge, dir: -1, indent: indent+1});
+                        if (!edge.fromNode) { console.log(node.div.id, "!!! null fromNode"); }
+                        doNodes.push({node: edge.fromNode, iCol: node.iColumn-1, fromNode: node, edge: edge, dir: -1, indent: indent+1});
                     }
                 }
             }
@@ -351,6 +359,7 @@ export class Graph {
                     if (!edge.visited()) {
                         edge.visit();
                         //console.log("      R", edge.fromNode().div.id, "<=", node.iColumn-1);
+                        if (!edge.fromNode) { console.log(node.div.id, "!!! null fromNode (R)"); }
                         remaining.push({node: edge.fromNode(), iCol: node.iColumn-1, fromNode: node, dir: -1, indent: indent+1});
                     }
                 }
@@ -360,7 +369,8 @@ export class Graph {
                     if (!edge.visited()) {
                         edge.visit();
                         //console.log("      R", edge.toNode().div.id, "=>", node.iColumn+1);
-                        remaining.push({node: edge.toNode(), iCol: node.iColumn+1, fromNode: node, dir: 1, indent: indent+1});
+                        if (!edge.toNode) { console.log(node.div.id, "!!! null toNode (R)"); }
+                        remaining.push({node: edge.toNode, iCol: node.iColumn+1, fromNode: node, dir: 1, indent: indent+1});
                     }
                 }
             }
@@ -571,12 +581,16 @@ export class Node {
 export class Edge {
     fromDiv: HTMLElement;           // source div
     toDiv: HTMLElement;             // destination div
+    fromNode: Node;                 // source node
+    toNode: Node;                   // destination node
     parentDiv: HTMLElement;         // highest-level parent of (fromDiv)
     userInfo: any = null;           // user info
     path: SVGPathElement;
     visitCount: number =0;
     constructor(fromDiv: HTMLElement, toDiv: HTMLElement, userInfo: any=null) {
         this.fromDiv = fromDiv; this.toDiv = toDiv; this.userInfo = userInfo;
+        this.fromNode = s_graph.findNode(fromDiv)!;
+        this.toNode = s_graph.findNode(toDiv)!;
         let parentDiv = fromDiv.parentElement!;
         while(parentDiv && parentDiv.parentElement != s_graph.container) { parentDiv = parentDiv.parentElement!; }
         this.parentDiv = parentDiv;
@@ -655,19 +669,6 @@ export class Edge {
             this.path.setAttribute('stroke-dasharray', '4,2');
         }
         this.path.setAttribute('d', d);
-    }
-
-    // returns the edge's destination node
-    toNode() : Node {
-        return s_graph.findNode(this.toDiv)!;
-    }
-
-    // returns the edge's source node
-    fromNode() : Node {
-        let fromDiv = refind(this.fromDiv);
-        if (!fromDiv) { fromDiv = this.parentDiv; }
-        if (!fromDiv) { console.log("edge can't find fromNode!!"); }
-        return s_graph.findNode(this.fromDiv)!;
     }
 
     // adds the edge's path to the main SVG

@@ -521,3 +521,17 @@ let's just do this PROPERLY.
 
 ok; we're almost there. Need to figure out why the cache isn't working quite right.
 *BUT* I think there's something that needs to change.
+
+OK:
+
+The goal is to fix the layout bug using only GPT-based methods.
+
+1- put all documentation into vectordb
+2- question-answering (static)
+3- question-answering (dynamic/diagnostic)
+4- modification-planning
+5- modification-execution
+6- modification-testing
+7- iterative approach to converge on correct solution
+
+___________
