@@ -148,6 +148,9 @@ def search(query):
 
 # python main
 if __name__ == "__main__":
+    scriptPath = os.path.abspath(__file__)
+    scriptDir = os.path.dirname(scriptPath)
+    os.chdir(scriptDir)
     folder = '/Users/asnaroo/desktop/experiments/firefly'
     s_app = App(f'{folder}/data', 'asnar00', 'firefly')
     service = Service('firefly', 8003, folder)
