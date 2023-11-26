@@ -10,7 +10,10 @@ import time
 import threading
 import openai
 from util import makeDirs, stringToHash
-openai.api_key = "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"
+import dotenv
+
+dotenv.load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
+openai.api_key = os.getenv('OPENAI_KEY')
 
 # Prompt holds messages, file to store result in, and function to call (synchronously) on completion
 class Prompt:

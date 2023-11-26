@@ -1,3 +1,4 @@
 /.DS_Store
 data
 py/__pycache__
+.env

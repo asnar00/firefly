@@ -7,6 +7,9 @@ import os
 import shutil
 import zipfile
 from util import readJsonFromFile, writeJsonToFile
+import dotenv
+
+dotenv.load_dotenv(os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 class GithubRepo:
     def __init__(self, dataFolder: str, owner: str, project: str):
@@ -18,7 +21,7 @@ class GithubRepo:
     def update(self) -> bool:
         githubFile =f'{self.folder}/github/github.json'
         githubInfo = readJsonFromFile(githubFile)
-        token = githubInfo['token']
+        token = os.getenv(githubInfo['token'])
         print(f"checking repository {self.owner}/{self.project}...")
         latestSHA = self.getRepositorySHA(token)
         if latestSHA == githubInfo['SHA']:
