@@ -23,7 +23,10 @@ class GithubRepo:
         githubInfo = readJsonFromFile(githubFile)
         token = os.getenv(githubInfo['token'])
         print(f"checking repository {self.owner}/{self.project}...")
-        latestSHA = self.getRepositorySHA(token)
+        try:
+            latestSHA = self.getRepositorySHA(token)
+        except: # failed to connect
+            latestSHA = githubInfo['SHA']
         if latestSHA == githubInfo['SHA']:
             print("SHA unchanged; nothing to do.")
             return False
