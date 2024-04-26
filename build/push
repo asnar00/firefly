@@ -1,0 +1,17 @@
+#!/bin/bash
+# ᕦ(ツ)ᕤ
+# author: asnaroo
+# pushes a file or directory to microclub.org
+# specify source file or folder, dest file or folder
+# only run this on your development machine!
+
+# Perform the rsync operation
+rsync -avz -e "ssh -i /Users/asnaroo/.ssh/id_rsa_asnaroo" "/Users/asnaroo/desktop/experiments/firefly" "asnaroo@microclub.org:/Users/asnaroo/projects"
+
+# Check if rsync was successful
+if [ "$?" -eq 0 ]; then
+    echo "File(s) successfully pushed."
+else
+    echo "Error: rsync failed."
+    exit 1
+fi

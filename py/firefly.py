@@ -14,6 +14,7 @@ from vectors import VectorDB
 from prompts import PromptQueue
 from service import Service, register
 from util import readJsonFromFile, writeJsonToFile, readFile
+import sys
 
 class App:
     def __init__(self, dataFolder: str, owner: str, project: str):
@@ -63,7 +64,7 @@ class App:
         
 
 print("---------------------------------------------------------------------------")
-print("firefly.ps ᕦ(ツ)ᕤ")
+print("firefly.py ᕦ(ツ)ᕤ")
 
 global s_app
 s_app = None
@@ -146,11 +147,48 @@ def search(query):
     return s_app.search(query)
     return dict
 
+
+# arg processing
+def argList(name, resultDict):      # for (name), returns a (possibly empty) list of args matching it
+    if name in resultDict.keys():
+        return resultDict[name]
+    return []
+
+def singleArg(name, resultDict):    # for (name), returns a single item that follows, or "" if there's zero or more than one
+    list = argList(name, resultDict)
+    if len(list)== 1:
+        return list[0]
+    return ""
+
+def argPresent(name, resultDict):    # for (name), returns True if -name is present, False otherwise
+    return (name in resultDict.keys())
+
+def processArgs(argv):  # returns a dictionary mapping --name to a list of args
+    name = ''
+    result = {}
+    for iArg in range(len(argv)):
+        if iArg > 0:
+            arg = argv[iArg]
+            if arg.startswith('-'):
+                name = arg
+                result[name] = []
+            else:
+                if name in result.keys():
+                    result[name].append(arg)
+                else:
+                    result[name] = [arg]
+    return result
+
 # python main
 if __name__ == "__main__":
+    print("firefly.py main")
+    args = processArgs(sys.argv)
+    port = singleArg('-port', args)
+    if port == "": port = "8003"
     scriptPath = os.path.abspath(__file__)
     scriptDir = os.path.dirname(scriptPath)
     os.chdir(scriptDir)
-    folder = '/Users/asnaroo/desktop/experiments/firefly'
+    print(os.getcwd())
+    folder = scriptDir[0:-3] # remove "/py"
     s_app = App(f'{folder}/data', 'asnar00', 'firefly')
-    service = Service('firefly', 8003, folder)
+    service = Service('firefly', int(port), folder)

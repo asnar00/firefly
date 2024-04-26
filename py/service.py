@@ -90,7 +90,7 @@ class RestartHandler(FileSystemEventHandler):
 class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_OPTIONS(self):
         self.send_response(200, "ok")
-        self.send_header("Access-Control-Allow-Origin", "http://localhost:8000")
+        self.send_header("Access-Control-Allow-Origin", "https://www.microclub.org:4433")
         self.send_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
         self.end_headers()
@@ -109,7 +109,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         content_length = int(self.headers.get("Content-Length", "0"))
         raw_data = self.rfile.read(content_length).decode("utf-8")
         post_data = json.loads(raw_data)
-        if self.path == f"/{self.appName}":
+        if self.path == f"/":
             func = post_data['func']
             args = post_data['args']
             global functions
@@ -127,7 +127,7 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(encoded_output)))
-        self.send_header("Access-Control-Allow-Origin", "http://localhost:8000")
+        self.send_header("Access-Control-Allow-Origin", "https://www.microclub.org:4433")
         self.end_headers()
         self.wfile.write(encoded_output)
 
@@ -140,10 +140,10 @@ class CustomHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
         #print("after normpath", path)
 
         _, ext = os.path.splitext(path)
-        if (path==f"/{self.appName}"):
+        if (path==f"/"):
             path = self.publicFolder + "/index.html"
-        elif path.startswith(f"/{self.appName}/"):
-            path = self.publicFolder + path.replace(f"{self.appName}/", "", 1)
+        elif path.startswith(f"/"):
+            path = self.publicFolder + path
         else:
             return None
 

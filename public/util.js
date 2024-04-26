@@ -174,7 +174,7 @@ export function remote(endpointAndFunc, args) {
         const endpoint = parts[0].slice(1);
         const func = parts[1];
         try {
-            const response = yield fetch(`http://localhost:8000/${endpoint}`, {
+            const response = yield fetch(`https://www.microclub.org:4433/${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ func: func, args: args })

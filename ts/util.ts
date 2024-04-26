@@ -179,7 +179,7 @@ export async function remote(endpointAndFunc: string, args: any) : Promise<any> 
     const endpoint = parts[0].slice(1);
     const func = parts[1];
     try {
-        const response = await fetch(`http://localhost:8000/${endpoint}`, {
+        const response = await fetch(`https://www.microclub.org:4433/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ func: func, args: args })
